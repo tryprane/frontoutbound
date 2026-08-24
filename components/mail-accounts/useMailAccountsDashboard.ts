@@ -1,0 +1,637 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import {
+  connectTrulyInbox,
+  startTrulyInboxWarmup,
+  createWarmupRecipient,
+  deleteMailAccount,
+  fetchMailAccountDetail,
+  deleteWarmupRecipient,
+  patchMailboxMessage,
+  patchMailAccount,
+  patchWarmupRecipient,
+} from '@/lib/mailAccountsClient'
+import type {
+  ActiveTab,
+  DomainDiagnostics,
+  MailAccount,
+  MailboxMessage,
+  PaginatedResponse,
+  WarmupLog,
+  WarmupOverview,
+  WarmupRecipient,
+} from '@/components/mail-accounts/types'
+
+async function readJson<T>(url: string, fallback: T): Promise<T> {
+  try {
+    const response = await fetch(url)
+    const data = await response.json()
+    return data as T
+  } catch {
+    return fallback
+  }
+}
+
+function emptyPage<T>(limit: number): PaginatedResponse<T> {
+  return {
+    items: [],
+    total: 0,
+    page: 1,
+    pages: 1,
+    limit,
+  }
+}
+
+export function useMailAccountsDashboard() {
+  const searchParams = useSearchParams()
+  const [accountsPage, setAccountsPage] = useState(1)
+  const [accountsLimit, setAccountsLimit] = useState(10)
+  const [accountsData, setAccountsData] = useState<PaginatedResponse<MailAccount>>(emptyPage(10))
+  const [recipientPage, setRecipientPage] = useState(1)
+  const [recipientLimit, setRecipientLimit] = useState(10)
+  const [recipientData, setRecipientData] = useState<PaginatedResponse<WarmupRecipient>>(emptyPage(10))
+  const [warmupLogPage, setWarmupLogPage] = useState(1)
+  const [warmupLogLimit, setWarmupLogLimit] = useState(10)
+  const [warmupLogData, setWarmupLogData] = useState<PaginatedResponse<WarmupLog>>(emptyPage(10))
+  const [warmupOverview, setWarmupOverview] = useState<WarmupOverview | null>(null)
+  const [domainDiagnostics, setDomainDiagnostics] = useState<DomainDiagnostics[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<ActiveTab>('accounts')
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
+  const [pendingDailyLimits, setPendingDailyLimits] = useState<Record<string, string>>({})
+  const [pendingWarmupLimits, setPendingWarmupLimits] = useState<Record<string, string>>({})
+  const [pendingWarmupReplyLimits, setPendingWarmupReplyLimits] = useState<Record<string, string>>({})
+  const [pendingTrackingDomains, setPendingTrackingDomains] = useState<Record<string, string>>({})
+  const [pendingWarmupTimezones, setPendingWarmupTimezones] = useState<Record<string, string>>({})
+  const [pendingWarmupBusinessHoursStart, setPendingWarmupBusinessHoursStart] = useState<Record<string, string>>({})
+  const [pendingWarmupBusinessHoursEnd, setPendingWarmupBusinessHoursEnd] = useState<Record<string, string>>({})
+  const [recipientForm, setRecipientForm] = useState({ email: '', name: '', isActive: true })
+  const [recipientSaving, setRecipientSaving] = useState(false)
+  const [bulkRecipients, setBulkRecipients] = useState('')
+  const [activeMailboxAccountId, setActiveMailboxAccountId] = useState<string | null>(null)
+  const [activeMailboxFolder, setActiveMailboxFolder] = useState<'INBOX' | 'SPAM' | 'SENT'>('INBOX')
+  const [mailboxPage, setMailboxPage] = useState(1)
+  const [mailboxLimit, setMailboxLimit] = useState(25)
+  const [mailboxData, setMailboxData] = useState<PaginatedResponse<MailboxMessage>>(emptyPage(25))
+  const [mailboxLoading, setMailboxLoading] = useState(false)
+  const [accountDetailsLoading, setAccountDetailsLoading] = useState<Record<string, boolean>>({})
+  const [pendingTrulyInboxApiKeys, setPendingTrulyInboxApiKeys] = useState<Record<string, string>>({})
+  const [trulyInboxConnecting, setTrulyInboxConnecting] = useState<Record<string, boolean>>({})
+  const [trulyInboxStarting, setTrulyInboxStarting] = useState<Record<string, boolean>>({})
+  const [showTrulyInboxApiKeys, setShowTrulyInboxApiKeys] = useState<Record<string, boolean>>({})
+
+  const showToast = useCallback((type: 'success' | 'error', msg: string) => {
+    setToast({ type, msg })
+    setTimeout(() => setToast(null), 4000)
+  }, [])
+
+  useEffect(() => {
+    const success = searchParams.get('success')
+    const error = searchParams.get('error')
+    if (success) showToast('success', decodeURIComponent(success))
+    if (error) showToast('error', decodeURIComponent(error))
+  }, [searchParams, showToast])
+
+  const loadMailboxMessages = useCallback(async (
+    mailAccountId: string,
+    folderKind: 'INBOX' | 'SPAM' | 'SENT',
+    page = 1,
+    limit = mailboxLimit
+  ) => {
+    setMailboxLoading(true)
+    const sp = new URLSearchParams({
+      resource: 'mailbox-messages',
+      mailAccountId,
+      folderKind,
+      page: String(page),
+      limit: String(limit),
+    })
+    const result = await readJson<PaginatedResponse<MailboxMessage>>(
+      `/api/mail-accounts?${sp.toString()}`,
+      emptyPage(limit)
+    )
+    setMailboxData(result)
+    setMailboxPage(result.page)
+    setMailboxLimit(result.limit)
+    setMailboxLoading(false)
+  }, [mailboxLimit])
+
+  const loadMailAccountDetail = useCallback(async (id: string) => {
+    if (accountDetailsLoading[id]) return
+    setAccountDetailsLoading((prev) => ({ ...prev, [id]: true }))
+    const detail = await fetchMailAccountDetail(id)
+    if (detail) {
+      setAccountsData((prev) => ({
+        ...prev,
+        items: prev.items.map((account) => (account.id === id ? { ...account, ...detail, detailsLoaded: true } : account)),
+      }))
+    }
+    setAccountDetailsLoading((prev) => ({ ...prev, [id]: false }))
+  }, [accountDetailsLoading])
+
+  const loadAll = useCallback(async (background = false) => {
+    if (!background) setLoading(true)
+
+    const [
+      accounts,
+    ] = await Promise.all([
+      readJson<PaginatedResponse<MailAccount>>(
+        `/api/mail-accounts?page=${accountsPage}&limit=${accountsLimit}`,
+        emptyPage(accountsLimit)
+      ),
+    ])
+
+    setAccountsData((prev) => ({
+      ...accounts,
+      items: accounts.items.map((account) => {
+        const existing = prev.items.find((item) => item.id === account.id)
+        return existing?.detailsLoaded ? { ...existing, ...account } : account
+      }),
+    }))
+
+    if (!background) setLoading(false)
+  }, [accountsLimit, accountsPage])
+
+  useEffect(() => {
+    void loadAll()
+  }, [loadAll])
+
+  useEffect(() => {
+    setPendingDailyLimits((prev) => {
+      const next: Record<string, string> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? String(account.dailyLimit)
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  useEffect(() => {
+    setPendingWarmupLimits((prev) => {
+      const next: Record<string, string> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? String(account.warmupDailyLimit)
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  useEffect(() => {
+    setPendingWarmupReplyLimits((prev) => {
+      const next: Record<string, string> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? String(account.warmupReplyDailyLimit)
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  useEffect(() => {
+    setPendingTrackingDomains((prev) => {
+      const next: Record<string, string> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? (account.trackingDomain || '')
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  useEffect(() => {
+    setPendingWarmupTimezones((prev) => {
+      const next: Record<string, string> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? (account.warmupTimezone || '')
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  useEffect(() => {
+    setPendingWarmupBusinessHoursStart((prev) => {
+      const next: Record<string, string> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? (account.warmupBusinessHoursStart || '')
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  useEffect(() => {
+    setPendingWarmupBusinessHoursEnd((prev) => {
+      const next: Record<string, string> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? (account.warmupBusinessHoursEnd || '')
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  useEffect(() => {
+    setPendingTrulyInboxApiKeys((prev) => {
+      const next: Record<string, string> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? ''
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  useEffect(() => {
+    setShowTrulyInboxApiKeys((prev) => {
+      const next: Record<string, boolean> = {}
+      for (const account of accountsData.items) {
+        next[account.id] = prev[account.id] ?? false
+      }
+      return next
+    })
+  }, [accountsData.items])
+
+  const handlePatchMailAccount = useCallback(async (body: Record<string, unknown>, successMessage?: string) => {
+    const res = await patchMailAccount(body)
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ error: 'Update failed' }))
+      showToast('error', data.error || 'Update failed')
+      return false
+    }
+    if (successMessage) showToast('success', successMessage)
+    void loadAll(true)
+    const accountId = typeof body.id === 'string' ? body.id : null
+    if (accountId) {
+      void loadMailAccountDetail(accountId)
+    }
+    return true
+  }, [loadAll, loadMailAccountDetail, showToast])
+
+  const handleToggleMailActive = useCallback(async (id: string, current: boolean, warmupStatus: MailAccount['warmupStatus']) => {
+    const account = accountsData.items.find((item) => item.id === id)
+    if (account?.type === 'zoho' && account.connectionReady === false) {
+      showToast('error', 'Finish both Zoho SMTP and OAuth on the same email before activating this mailbox.')
+      return
+    }
+    if (!current && warmupStatus !== 'WARMED') {
+      showToast('error', 'Only WARMED mailboxes can be activated.')
+      return
+    }
+    await handlePatchMailAccount({ id, isActive: !current })
+  }, [accountsData.items, handlePatchMailAccount, showToast])
+
+  const handleWarmupStatusChange = useCallback(async (id: string, warmupStatus: MailAccount['warmupStatus']) => {
+    await handlePatchMailAccount({ id, warmupStatus }, `Warmup status updated to ${warmupStatus}`)
+  }, [handlePatchMailAccount])
+
+  const handleWarmupAutoToggle = useCallback(async (id: string, current: boolean) => {
+    await handlePatchMailAccount({ id, warmupAutoEnabled: !current })
+  }, [handlePatchMailAccount])
+
+  const handleUpdateMailDailyLimit = useCallback(async (id: string) => {
+    const rawValue = pendingDailyLimits[id]
+    const dailyLimit = Math.max(1, Number(rawValue || 1))
+    await handlePatchMailAccount({ id, dailyLimit }, 'Daily send limit updated')
+  }, [handlePatchMailAccount, pendingDailyLimits])
+
+  const handleUpdateMailWarmupLimit = useCallback(async (id: string) => {
+    const rawValue = pendingWarmupLimits[id]
+    const warmupDailyLimit = Math.max(1, Number(rawValue || 1))
+    await handlePatchMailAccount({ id, warmupDailyLimit }, 'Warmup limit updated')
+  }, [handlePatchMailAccount, pendingWarmupLimits])
+
+  const handleUpdateMailWarmupReplyLimit = useCallback(async (id: string) => {
+    const rawValue = pendingWarmupReplyLimits[id]
+    const warmupReplyDailyLimit = Math.max(1, Number(rawValue || 1))
+    await handlePatchMailAccount({ id, warmupReplyDailyLimit }, 'Warmup reply limit updated')
+  }, [handlePatchMailAccount, pendingWarmupReplyLimits])
+
+  const handleWarmupProviderPreferenceChange = useCallback(async (
+    id: string,
+    warmupProviderPreference: 'random' | 'gmail' | 'zoho' | 'outlook'
+  ) => {
+    await handlePatchMailAccount(
+      { id, warmupProviderPreference },
+      `Warmup partner mode updated to ${warmupProviderPreference}`
+    )
+  }, [handlePatchMailAccount])
+
+  const handleUpdateTrackingDomain = useCallback(async (id: string) => {
+    const trackingDomain = pendingTrackingDomains[id]?.trim() || null
+    await handlePatchMailAccount({ id, trackingDomain }, 'Tracking domain updated')
+  }, [handlePatchMailAccount, pendingTrackingDomains])
+
+  const handleUpdateMailWarmupSchedule = useCallback(async (id: string) => {
+    const warmupTimezone = pendingWarmupTimezones[id]?.trim() || null
+    const warmupBusinessHoursStart = pendingWarmupBusinessHoursStart[id]?.trim() || null
+    const warmupBusinessHoursEnd = pendingWarmupBusinessHoursEnd[id]?.trim() || null
+    await handlePatchMailAccount(
+      {
+        id,
+        warmupTimezone,
+        warmupBusinessHoursStart,
+        warmupBusinessHoursEnd,
+      },
+      'Warmup schedule overrides updated'
+    )
+  }, [
+    handlePatchMailAccount,
+    pendingWarmupBusinessHoursEnd,
+    pendingWarmupBusinessHoursStart,
+    pendingWarmupTimezones,
+  ])
+
+  const handleZohoImapToggle = useCallback(async (id: string, current: boolean) => {
+    await handlePatchMailAccount({ id, zohoImapEnabled: !current }, `Zoho IMAP turned ${current ? 'off' : 'on'}`)
+  }, [handlePatchMailAccount])
+
+  const handleUseZohoApi = useCallback(async (id: string) => {
+    await handlePatchMailAccount({ id, zohoMailboxMode: 'api' }, 'Zoho mailbox switched to API mode')
+  }, [handlePatchMailAccount])
+
+  const handleOpenMailboxFolder = useCallback(async (mailAccountId: string, folderKind: 'INBOX' | 'SPAM' | 'SENT') => {
+    setActiveMailboxAccountId(mailAccountId)
+    setActiveMailboxFolder(folderKind)
+    await loadMailboxMessages(mailAccountId, folderKind, 1)
+  }, [loadMailboxMessages])
+
+  const handleMailboxPageChange = useCallback(async (page: number) => {
+    if (!activeMailboxAccountId) return
+    await loadMailboxMessages(activeMailboxAccountId, activeMailboxFolder, page)
+  }, [activeMailboxAccountId, activeMailboxFolder, loadMailboxMessages])
+
+  const handleMailboxLimitChange = useCallback(async (limit: number) => {
+    setMailboxLimit(limit)
+    if (!activeMailboxAccountId) return
+    await loadMailboxMessages(activeMailboxAccountId, activeMailboxFolder, 1, limit)
+  }, [activeMailboxAccountId, activeMailboxFolder, loadMailboxMessages])
+
+  const handleMailboxAction = useCallback(async (
+    mailAccountId: string,
+    mailboxMessageId: string,
+    action: 'mark-read' | 'rescue-to-inbox' | 'reply'
+  ) => {
+    const payload: Record<string, unknown> = { mailAccountId, mailboxMessageId, action }
+    if (action === 'reply') {
+      const html = window.prompt('Reply HTML/body', '<p>Thanks for your message. Sharing a quick reply from the dashboard.</p>')
+      if (!html) return
+      const subject = window.prompt('Reply subject', 'Re: Quick follow-up')
+      payload.html = html
+      payload.subject = subject || 'Re: Quick follow-up'
+    }
+    const res = await patchMailboxMessage(payload)
+    const data = await res.json().catch(() => ({ error: 'Mailbox action failed' }))
+    if (!res.ok) {
+      showToast('error', data.error || 'Mailbox action failed')
+      return
+    }
+    showToast('success', action === 'reply' ? 'Reply sent' : 'Mailbox updated')
+    if (activeMailboxAccountId) {
+      void loadMailboxMessages(activeMailboxAccountId, activeMailboxFolder, mailboxPage, mailboxLimit)
+    }
+    void loadAll(true)
+  }, [activeMailboxAccountId, activeMailboxFolder, loadAll, loadMailboxMessages, mailboxLimit, mailboxPage, showToast])
+
+  const handleCreateWarmupRecipient = useCallback(async () => {
+    if (!recipientForm.email.trim()) {
+      showToast('error', 'Recipient email is required')
+      return
+    }
+    setRecipientSaving(true)
+    const res = await createWarmupRecipient({
+      email: recipientForm.email.trim(),
+      name: recipientForm.name.trim() || undefined,
+      isActive: recipientForm.isActive,
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      showToast('error', data.error || 'Failed to save warmup recipient')
+      setRecipientSaving(false)
+      return
+    }
+    showToast('success', 'Warmup recipient saved')
+    setRecipientForm({ email: '', name: '', isActive: true })
+    setRecipientSaving(false)
+    setRecipientPage(1)
+    void loadAll()
+  }, [loadAll, recipientForm, showToast])
+
+  const handleToggleWarmupRecipient = useCallback(async (id: string, current: boolean) => {
+    const res = await patchWarmupRecipient({ id, isActive: !current })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ error: 'Failed to update warmup recipient' }))
+      showToast('error', data.error || 'Failed to update warmup recipient')
+      return
+    }
+    void loadAll(true)
+  }, [loadAll, showToast])
+
+  const handleBulkWarmupRecipients = useCallback(async () => {
+    if (!bulkRecipients.trim()) {
+      showToast('error', 'Paste at least one email address')
+      return
+    }
+    setRecipientSaving(true)
+    const res = await fetch('/api/mail-accounts?resource=warmup-recipients-bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        entries: bulkRecipients,
+        isActive: recipientForm.isActive,
+      }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      showToast('error', data.error || 'Failed to import recipients')
+      setRecipientSaving(false)
+      return
+    }
+    showToast('success', `Imported ${data.count || 0} warmup recipients`)
+    setBulkRecipients('')
+    setRecipientSaving(false)
+    setRecipientPage(1)
+    void loadAll()
+  }, [bulkRecipients, loadAll, recipientForm.isActive, showToast])
+
+  const handleDeleteWarmupRecipient = useCallback(async (id: string, email: string) => {
+    if (!confirm(`Remove warmup recipient "${email}"?`)) return
+    const res = await deleteWarmupRecipient(id)
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ error: 'Failed to delete warmup recipient' }))
+      showToast('error', data.error || 'Failed to delete warmup recipient')
+      return
+    }
+    showToast('success', 'Warmup recipient removed')
+    void loadAll(true)
+  }, [loadAll, showToast])
+
+  const handleRunWarmupNow = useCallback(async (id: string) => {
+    await handlePatchMailAccount({ id, runWarmupNow: true }, 'Warmup tick queued. Watch the logs and sent count.')
+  }, [handlePatchMailAccount])
+
+  const handleRunMailboxSyncNow = useCallback(async (id: string) => {
+    await handlePatchMailAccount({ id, runMailboxSyncNow: true }, 'Mailbox sync queued')
+  }, [handlePatchMailAccount])
+
+  const handleDeleteMail = useCallback(async (id: string, email: string) => {
+    if (!confirm(`Remove ${email}?`)) return
+    await deleteMailAccount(id)
+    showToast('success', `${email} removed`)
+    void loadAll(true)
+  }, [loadAll, showToast])
+
+  const handleReconnectGmail = useCallback(() => {
+    window.location.href = '/api/mail-accounts/gmail'
+  }, [])
+
+  const handleReconnectZohoApi = useCallback(() => {
+    window.location.href = '/api/mail-accounts/zoho/connect'
+  }, [])
+
+  const handleConnectTrulyInbox = useCallback(async (id: string) => {
+    const apiKey = pendingTrulyInboxApiKeys[id]?.trim()
+    const account = accountsData.items.find((item) => item.id === id)
+    if (!apiKey && !account?.trulyInboxHasApiKey) {
+      showToast('error', 'Enter a TrulyInbox API key first')
+      return
+    }
+
+    setTrulyInboxConnecting((prev) => ({ ...prev, [id]: true }))
+    try {
+      const res = await connectTrulyInbox(apiKey ? { id, apiKey } : { id })
+      const data = await res.json().catch(() => ({ error: 'Failed to connect TrulyInbox' }))
+      if (!res.ok) {
+        showToast('error', data.error || 'Failed to connect TrulyInbox')
+        return
+      }
+      showToast('success', 'TrulyInbox connected — click "Start Warmup" to activate warmup')
+      void loadAll(true)
+      void loadMailAccountDetail(id)
+    } finally {
+      setTrulyInboxConnecting((prev) => ({ ...prev, [id]: false }))
+    }
+  }, [accountsData.items, loadAll, loadMailAccountDetail, pendingTrulyInboxApiKeys, showToast])
+
+  const handleStartTrulyInboxWarmup = useCallback(async (id: string) => {
+    setTrulyInboxStarting((prev) => ({ ...prev, [id]: true }))
+    try {
+      const res = await startTrulyInboxWarmup({ id })
+      const data = await res.json().catch(() => ({ error: 'Failed to start warmup' }))
+      if (!res.ok) {
+        showToast('error', data.error || 'Failed to start TrulyInbox warmup')
+        return
+      }
+      if (data.started) {
+        showToast('success', `TrulyInbox warmup started — status: ${data.status || 'active'}`)
+      } else {
+        showToast('error', `Start request sent but warmup not yet active. Status: ${data.status || 'paused'}. Try again in a moment.`)
+      }
+      void loadAll(true)
+      void loadMailAccountDetail(id)
+    } finally {
+      setTrulyInboxStarting((prev) => ({ ...prev, [id]: false }))
+    }
+  }, [loadAll, loadMailAccountDetail, showToast])
+
+  const derived = useMemo(() => {
+    const warmedAccounts = accountsData.items.filter((a) => a.warmupStatus === 'WARMED')
+    const warmingAccounts = accountsData.items.filter((a) => a.warmupStatus === 'WARMING')
+    const pausedAccounts = accountsData.items.filter((a) => a.warmupStatus === 'PAUSED')
+    const autoWarmupAccounts = warmingAccounts.filter((a) => a.warmupAutoEnabled)
+    const coldAccounts = accountsData.items.filter((a) => a.warmupStatus === 'COLD')
+    const activeCustomRecipients = warmupOverview?.activeCustomRecipients ?? recipientData.items.filter((r) => r.isActive && !r.isSystem).length
+    const activeMailboxPool = warmupOverview?.activeMailboxes ?? accountsData.items.filter((a) => a.isActive).length
+    const recipientPoolHealthy = activeCustomRecipients > 0 || activeMailboxPool > 1
+    const pausedGmailAccounts = accountsData.items.filter((a) => a.type === 'gmail' && a.warmupStatus === 'PAUSED')
+    return {
+      warmedAccounts,
+      warmingAccounts,
+      pausedAccounts,
+      autoWarmupAccounts,
+      coldAccounts,
+      activeCustomRecipients,
+      activeMailboxPool,
+      recipientPoolHealthy,
+      pausedGmailAccounts,
+    }
+  }, [accountsData.items, recipientData.items, warmupOverview])
+
+  return {
+    accounts: accountsData.items,
+    accountsPagination: accountsData,
+    setAccountsPage,
+    setAccountsLimit,
+    warmupRecipients: recipientData.items,
+    warmupRecipientsPagination: recipientData,
+    setRecipientPage,
+    setRecipientLimit,
+    warmupOverview,
+    warmupLogs: warmupLogData.items,
+    warmupLogsPagination: warmupLogData,
+    setWarmupLogPage,
+    setWarmupLogLimit,
+    domainDiagnostics,
+    loading,
+    activeTab,
+    setActiveTab,
+    toast,
+    pendingDailyLimits,
+    setPendingDailyLimits,
+    pendingWarmupLimits,
+    setPendingWarmupLimits,
+    pendingWarmupReplyLimits,
+    setPendingWarmupReplyLimits,
+    pendingTrackingDomains,
+    setPendingTrackingDomains,
+    pendingWarmupTimezones,
+    setPendingWarmupTimezones,
+    pendingWarmupBusinessHoursStart,
+    setPendingWarmupBusinessHoursStart,
+    pendingWarmupBusinessHoursEnd,
+    setPendingWarmupBusinessHoursEnd,
+    pendingTrulyInboxApiKeys,
+    setPendingTrulyInboxApiKeys,
+    showTrulyInboxApiKeys,
+    setShowTrulyInboxApiKeys,
+    trulyInboxConnecting,
+    trulyInboxStarting,
+    recipientForm,
+    setRecipientForm,
+    recipientSaving,
+    bulkRecipients,
+    setBulkRecipients,
+    showToast,
+    loadAll,
+    handleToggleMailActive,
+    handleWarmupStatusChange,
+    handleWarmupAutoToggle,
+    handleUpdateMailDailyLimit,
+    handleUpdateMailWarmupLimit,
+    handleUpdateMailWarmupReplyLimit,
+    handleWarmupProviderPreferenceChange,
+    handleUpdateTrackingDomain,
+    handleUpdateMailWarmupSchedule,
+    handleZohoImapToggle,
+    handleUseZohoApi,
+    handleOpenMailboxFolder,
+    handleMailboxAction,
+    handleMailboxPageChange,
+    handleMailboxLimitChange,
+    handleCreateWarmupRecipient,
+    handleToggleWarmupRecipient,
+    handleBulkWarmupRecipients,
+    handleDeleteWarmupRecipient,
+    handleRunWarmupNow,
+    handleRunMailboxSyncNow,
+    handleDeleteMail,
+    handleReconnectGmail,
+    handleReconnectZohoApi,
+    handleConnectTrulyInbox,
+    handleStartTrulyInboxWarmup,
+    activeMailboxAccountId,
+    activeMailboxFolder,
+    mailboxMessages: mailboxData.items,
+    mailboxPagination: mailboxData,
+    mailboxLoading,
+    accountDetailsLoading,
+    loadMailAccountDetail,
+    ...derived,
+  }
+}
