@@ -71,6 +71,33 @@ npm run cf:deploy     # build, then deploy
 Set `API_ORIGIN` in the project's **build** environment variables (not as a
 runtime secret). `public/_headers` already marks `/_next/static/*` immutable.
 
+#### Cloudflare project settings
+
+Two settings have to line up, and the defaults Wrangler detects do not:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| Build command | `npm run cf:build` | Plain `next build` only writes `.next`. `wrangler.jsonc` deploys `.open-next/worker.js`, which only `opennextjs-cloudflare build` produces. |
+| Deploy command | `npx wrangler deploy` | Reads the committed `wrangler.jsonc`. |
+
+Because `wrangler.jsonc` declares `main` and `assets`, `wrangler deploy` skips
+framework auto-detection entirely. Without it, Wrangler tries to *automatically
+configure* the project as a Next.js app and fails on the version check before it
+deploys anything:
+
+```
+Detected Project Settings:
+ - Framework: Next.js
+ - Build Command: npm run build
+ - Output Directory: .next
+✘ [ERROR] The version of Next.js used in the project (...) cannot be
+  automatically configured.
+```
+
+Node is pinned by `.node-version` to 24. The build image's default is already
+newer than Next 16's 20.9 floor, but Cloudflare refreshes that default
+regularly, so the pin keeps builds reproducible.
+
 #### Version constraints, and why Next is on 16
 
 Three separate version gates apply, and the first two are what earlier builds
