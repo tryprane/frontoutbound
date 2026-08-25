@@ -311,7 +311,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="bg-white p-3 rounded-xl border border-[#121316]/08 flex items-center justify-between text-xs text-[#52504b]">
-                  <span>Step 1: "Quick question regarding outbound stack..."</span>
+                  <span>Step 1: &ldquo;Quick question regarding outbound stack...&rdquo;</span>
                   <span className="font-semibold text-[#0f8a5f]">64.2% open • 9.4% reply</span>
                 </div>
               </div>
@@ -397,7 +397,7 @@ export default function LandingPage() {
                     <span className="font-bold text-[#121316]">John Doe (Stripe)</span>
                     <span className="px-2 py-0.5 bg-[#0f8a5f]/10 text-[#0f8a5f] font-semibold rounded">Positive Reply</span>
                   </div>
-                  <p className="text-[#52504b] italic">"Hi Sumit, this looks relevant to our team. Are you free for a 15-minute call tomorrow at 2 PM?"</p>
+                  <p className="text-[#52504b] italic">&ldquo;Hi Sumit, this looks relevant to our team. Are you free for a 15-minute call tomorrow at 2 PM?&rdquo;</p>
                 </div>
               </div>
             )}
@@ -410,9 +410,9 @@ export default function LandingPage() {
         <div className="founder-note-card grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Text column — the hero of this section */}
           <div className="lg:col-span-8">
-            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-3">FOUNDER'S NOTE</span>
+            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-3">FOUNDER&rsquo;S NOTE</span>
             <h3 className="uneevo-serif-headline text-2xl sm:text-3xl md:text-4xl text-[#121316] mb-5 leading-tight">
-              "We built Outreach OS because paying $600/mo across 4 broken tools was killing our agency economics."
+              &ldquo;We built Outreach OS because paying $600/mo across 4 broken tools was killing our agency economics.&rdquo;
             </h3>
 
             {/* Price chips — scannable proof instead of buried prose */}
@@ -477,7 +477,7 @@ export default function LandingPage() {
             {/* Card 1 */}
             <div className="p-5 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
               <p className="text-sm text-[#3b3a36] leading-relaxed mb-4 font-normal">
-                "Stack cost down <strong className='text-[#121316] font-bold'>60%</strong>, inbox placement at <strong className='text-[#121316] font-bold'>99%</strong> across 24 mailboxes."
+                &ldquo;Stack cost down <strong className='text-[#121316] font-bold'>60%</strong>, inbox placement at <strong className='text-[#121316] font-bold'>99%</strong> across 24 mailboxes.&rdquo;
               </p>
               <div className="text-xs">
                 <strong className="block text-[#121316] font-bold">Rohan Mehta</strong>
@@ -488,7 +488,7 @@ export default function LandingPage() {
             {/* Card 2 */}
             <div className="p-5 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
               <p className="text-sm text-[#3b3a36] leading-relaxed mb-4 font-normal">
-                "SPF/DKIM diagnostics caught a bad domain before we blasted <strong className='text-[#121316] font-bold'>5,000 leads</strong>."
+                &ldquo;SPF/DKIM diagnostics caught a bad domain before we blasted <strong className='text-[#121316] font-bold'>5,000 leads</strong>.&rdquo;
               </p>
               <div className="text-xs">
                 <strong className="block text-[#121316] font-bold">Marcus Vance</strong>
@@ -499,7 +499,7 @@ export default function LandingPage() {
             {/* Card 3 */}
             <div className="p-5 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
               <p className="text-sm text-[#3b3a36] leading-relaxed mb-4 font-normal">
-                "<strong className='text-[#121316] font-bold'>19 meetings</strong> booked in the first 3 weeks — unified inbox, zero missed replies."
+                &ldquo;<strong className='text-[#121316] font-bold'>19 meetings</strong> booked in the first 3 weeks — unified inbox, zero missed replies.&rdquo;
               </p>
               <div className="text-xs">
                 <strong className="block text-[#121316] font-bold">Priya Sharma</strong>

@@ -2,12 +2,13 @@ import { CampaignWizard } from '@/components/campaigns/CampaignWizard'
 import Link from 'next/link'
 import { ArrowLeft, Megaphone, Sparkles } from 'lucide-react'
 
-export default function NewCampaignPage({
+export default async function NewCampaignPage({
   searchParams,
 }: {
-  searchParams?: { mode?: string }
+  searchParams?: Promise<{ mode?: string }>
 }) {
-  const initialMode = searchParams?.mode === 'gdrive' ? 'gdrive' : 'email'
+  const resolvedSearchParams = await searchParams
+  const initialMode = resolvedSearchParams?.mode === 'gdrive' ? 'gdrive' : 'email'
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">

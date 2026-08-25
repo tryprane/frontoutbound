@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "frontoutbound",
+  "main": ".open-next/worker.js",
+
+  // nodejs_compat is required by the adapter, and the compatibility date must be
+  // 2024-09-23 or later. This date is also kept within the last six months, or
+  // `opennextjs-cloudflare build` warns about it.
+  //
+  // global_fetch_strictly_public makes a fetch() to this Worker's own hostname go
+  // out over the public internet instead of looping back inside the isolate. The
+  // /api/* rewrite targets a different host (API_ORIGIN), so this only guards
+  // against accidental self-fetch recursion.
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  // Build-time variables. API_ORIGIN is compiled into the routes manifest by
+  // next.config.js `rewrites()`, so setting it as a runtime secret in the
+  // dashboard does nothing — it has to be present when the build runs.
+  //
+  // Values are intentionally left empty here: set them in the Cloudflare
+  // project's *build* environment variables, or override them locally in
+  // .dev.vars (which is gitignored).
+  "vars": {}
+}

@@ -51,23 +51,66 @@ all provider credentials live only in the backend.
 
 ## Deploying
 
-### Cloudflare
+### Cloudflare Workers
 
-Next.js is pinned to **14.2.35**. Wrangler's automatic Next.js configuration
-refuses anything below that:
+Built with [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare). The
+config is committed, so Cloudflare does not have to auto-detect anything:
 
+- `wrangler.jsonc` — `nodejs_compat`, the compatibility date, and the
+  `.open-next/worker.js` / `.open-next/assets` output paths
+- `open-next.config.ts` — `defineCloudflareConfig({})`
+
+Build command:
+
+```bash
+npm run cf:build      # opennextjs-cloudflare build
+npm run cf:preview    # build, then serve locally in the workerd runtime
+npm run cf:deploy     # build, then deploy
 ```
-✘ [ERROR] The version of Next.js used in the project ("14.2.18") cannot be
-  automatically configured. Please update the Next.js version to at least
-  "14.2.35" and try again.
-```
 
-`output: 'standalone'` is deliberately *not* set by default — the Cloudflare
-adapter builds its own bundle from the default `.next` output. Set
-`NEXT_STANDALONE=true` only for Node/container targets.
+Set `API_ORIGIN` in the project's **build** environment variables (not as a
+runtime secret). `public/_headers` already marks `/_next/static/*` immutable.
 
-Set `API_ORIGIN` in the project's **build** environment variables. `public/_headers`
-already marks `/_next/static/*` immutable.
+#### Version constraints, and why Next is on 16
+
+Three separate version gates apply, and the first two are what earlier builds
+tripped over:
+
+1. **Wrangler's Next.js autoconfiguration** refuses anything below `14.2.35`.
+2. **The adapter enforces the [Next.js support policy](https://nextjs.org/support-policy)** —
+   majors are supported for two years from release. Next 14 shipped 2023-10-26,
+   so it went out of support on 2025-10-26 and the build fails with
+   `Next.js version 14.2.35 is not supported by the Next.js team`. Next 15
+   shipped 2024-10-21 and goes out of support on **2026-10-21**, so it was never
+   a durable answer. Next 16 shipped 2025-10-21 and is supported to 2027-10-21.
+3. **`@opennextjs/cloudflare@1.20.x` peers `next: ">=15.5.21 <16 || >=16.2.11"`** —
+   Next 14 sits entirely outside the adapter's supported range, so
+   `--dangerouslyUseUnsupportedNextVersion` would have run an untested
+   combination rather than merely accepting known CVEs.
+
+Next 16.1+ additionally needs `wrangler >= 4.59.2` for a workerd `setImmediate`
+fix; this repo pins `wrangler ^4.125.0`.
+
+`output: 'standalone'` is deliberately *not* set by default. The adapter forces
+standalone mode itself during `opennextjs-cloudflare build`, so the
+`NEXT_STANDALONE` flag exists only for the plain Node/container path below.
+
+#### Caching
+
+`open-next.config.ts` uses the adapter's default `dummy` incremental cache, tag
+cache and queue. Nothing here uses ISR — every data-bearing page is a client
+component fetching at runtime — so there is no R2 bucket and no
+`WORKER_SELF_REFERENCE` service binding. Adding `revalidate` or `updateTag` to a
+route means wiring up all three together.
+
+#### Auth behind the proxy
+
+`signIn()` posts to `/api/auth/...`, which the rewrite forwards to the backend.
+The backend's `Set-Cookie` comes back through this origin, so the session cookie
+lands as first-party on the frontend domain — provided the backend does **not**
+pin an explicit `Domain=` on it. The backend's `NEXTAUTH_URL` must be set to this
+frontend's public origin, or next-auth will build callback URLs and CSRF checks
+against the wrong host.
 
 ### Node / container
 
@@ -82,12 +125,17 @@ node .next/standalone/server.js
 ```bash
 npm install
 npm run dev      # http://localhost:3000
+npm run lint     # eslint (next lint was removed in Next 16)
 ```
 
 ```bash
-npm run build    # next build (output: 'standalone')
+npm run build
 npm start
 ```
+
+For `npm run cf:preview`, create a `.dev.vars` (gitignored) containing
+`NEXTJS_ENV=development` so Next loads your local `.env` files rather than
+production ones.
 
 ## Architecture notes
 
@@ -107,7 +155,10 @@ npm start
 - **There is no `middleware.ts`.** Middleware would need `NEXTAUTH_SECRET` to
   read the session token, which this repo deliberately does not have. Access
   control is enforced by the backend on every request; the client gate only
-  decides what to render while that happens.
+  decides what to render while that happens. Two things make adding one awkward
+  anyway: Next 16 renamed the convention to `proxy.ts` and fixed it to the
+  Node.js runtime, and `opennextjs-cloudflare build` exits with
+  `Node.js middleware is not currently supported` when it finds one.
 
 ## Endpoints consumed
 
