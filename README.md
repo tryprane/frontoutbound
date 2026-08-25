@@ -40,9 +40,42 @@ Copy `.env.example` to `.env.local`:
 | `API_ORIGIN` | proxy mode | Backend origin that `/api/*` is rewritten to |
 | `NEXT_PUBLIC_API_BASE_URL` | direct mode | Absolute backend base URL used by `lib/api.ts` |
 | `NEXT_PUBLIC_SITE_URL` | no | Public URL of this frontend, used for absolute metadata URLs |
+| `NEXT_STANDALONE` | no | Set to `true` to emit `.next/standalone` for a Node server or container |
+
+All four are read at **build** time. `API_ORIGIN` in particular is compiled into
+the routes manifest by `rewrites()`, so on a hosted builder it must be set as a
+build variable — a runtime-only secret leaves the proxy doing nothing.
 
 No secrets belong in this repo. `NEXTAUTH_SECRET`, the database URL, Redis, and
 all provider credentials live only in the backend.
+
+## Deploying
+
+### Cloudflare
+
+Next.js is pinned to **14.2.35**. Wrangler's automatic Next.js configuration
+refuses anything below that:
+
+```
+✘ [ERROR] The version of Next.js used in the project ("14.2.18") cannot be
+  automatically configured. Please update the Next.js version to at least
+  "14.2.35" and try again.
+```
+
+`output: 'standalone'` is deliberately *not* set by default — the Cloudflare
+adapter builds its own bundle from the default `.next` output. Set
+`NEXT_STANDALONE=true` only for Node/container targets.
+
+Set `API_ORIGIN` in the project's **build** environment variables. `public/_headers`
+already marks `/_next/static/*` immutable.
+
+### Node / container
+
+```bash
+NEXT_STANDALONE=true npm run build
+node .next/standalone/server.js
+```
+
 
 ## Develop
 
