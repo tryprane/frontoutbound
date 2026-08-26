@@ -140,7 +140,7 @@ export default function LandingPage() {
     },
     {
       q: 'What is included in the ₹999/mo plan?',
-      a: 'Everything is included under one flat monthly price: unlimited connected mailboxes, automated mailbox warmup, domain health diagnostics, CSV lead scrubber, multi-step sequence builder, unified master inbox, and priority deliverability support.'
+      a: 'Everything is included under one flat monthly price: 30 mailboxes or accounts, 9,000 mails per month, automated mailbox warmup, domain health diagnostics, CSV lead scrubber, multi-step sequence builder, unified master inbox, and priority deliverability support.'
     },
     {
       q: 'Why do you onboard in batches of 50 teams at a time?',
@@ -658,7 +658,7 @@ export default function LandingPage() {
               <ul className="space-y-2.5 text-xs text-white">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#ee382b]" />
-                  <span>Unlimited Connected Mailboxes & Rotations</span>
+                  <span>30 Mailboxes or Accounts & 9,000 Mails Per Month</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#ee382b]" />
@@ -734,7 +734,7 @@ export default function LandingPage() {
             One Flat Price. Zero Per-Seat Upcharges.
           </h2>
           <p className="text-[#52504b] text-sm md:text-base">
-            Get complete access to Outreach OS with unlimited connected mailboxes, automated warmup, and 100% deliverability monitoring.
+            Get complete access to Outreach OS with 30 mailboxes or accounts, 9,000 mails per month, automated warmup, and 100% deliverability monitoring.
           </p>
         </div>
 
@@ -758,7 +758,7 @@ export default function LandingPage() {
             <ul className="space-y-2.5 text-sm text-[#3b3a36]">
               <li className="flex items-center gap-2.5 font-semibold">
                 <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] flex-shrink-0" />
-                <span>Unlimited Connected Mailboxes (Google, Outlook, Zoho, SMTP)</span>
+                <span>30 Mailboxes or Accounts (9,000 Mails / Month • Google, Outlook, Zoho, SMTP)</span>
               </li>
               <li className="flex items-center gap-2.5 font-semibold">
                 <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] flex-shrink-0" />
