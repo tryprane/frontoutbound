@@ -317,10 +317,10 @@ function LoginFormContent() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { label: 'Smartlead', price: '$94/mo' },
-                  { label: 'Warmup', price: '$50/mo' },
-                  { label: 'Domain Health', price: '$49/mo' },
-                  { label: 'CSV Scrubber', price: '$35/mo' },
+                  { label: 'Smartlead', price: '₹94/mo' },
+                  { label: 'Warmup', price: '₹50/mo' },
+                  { label: 'Domain Health', price: '₹49/mo' },
+                  { label: 'CSV Scrubber', price: '₹35/mo' },
                 ].map((chip) => (
                   <span
                     key={chip.label}

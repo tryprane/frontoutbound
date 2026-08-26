@@ -14,7 +14,7 @@ export default function GetStartedPage() {
   const [registration, setRegistration] = useState({ organizationName: '', email: '', password: '', confirmPassword: '' })
   const [message, setMessage] = useState('')
   const isInr = currency === 'INR'
-  const price = isInr ? '₹999' : '$12'
+  const price = '₹999'
 
   const showInviteOnly = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()

@@ -28,7 +28,6 @@ import {
   ChevronDown,
   History,
   Lock,
-  DollarSign,
   XCircle,
   Star,
   Globe
@@ -140,7 +139,7 @@ export default function LandingPage() {
       a: 'Yes. You can mix and match Google Workspace, Outlook / Microsoft 365, Zoho, and custom SMTP/IMAP mailboxes in the same campaign sender pool. Outreach OS smoothly rotates outgoing sends across all connected providers.'
     },
     {
-      q: 'What is included in the $999/mo plan?',
+      q: 'What is included in the ₹999/mo plan?',
       a: 'Everything is included under one flat monthly price: unlimited connected mailboxes, automated mailbox warmup, domain health diagnostics, CSV lead scrubber, multi-step sequence builder, unified master inbox, and priority deliverability support.'
     },
     {
@@ -202,7 +201,7 @@ export default function LandingPage() {
 
         {/* Headline stating concrete outcome (Point 1) */}
         <h1 className="zoho-puvi-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#121316] max-w-5xl mx-auto mb-4 tracking-tight">
-          Book 15+ Qualified Meetings Every Month — Without Paying $300/mo Across 4 Different Outbound Tools.
+          Book 15+ Qualified Meetings Every Month — Without Paying ₹300/mo Across 4 Different Outbound Tools.
         </h1>
 
         {/* Humanized Subheadline (Point 4) */}
@@ -213,7 +212,7 @@ export default function LandingPage() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
           <Link href="#pricing" className="uneevo-btn-red text-base px-8 py-3.5 w-full sm:w-auto">
-            <span>Get Started for $999/mo</span>
+            <span>Get Started for ₹999/mo</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <a href="#comparison" className="uneevo-btn-secondary text-base px-8 py-3.5 w-full sm:w-auto">
@@ -412,16 +411,16 @@ export default function LandingPage() {
           <div className="lg:col-span-8">
             <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">FOUNDER&rsquo;S NOTE</span>
             <h3 className="uneevo-serif-headline text-2xl sm:text-3xl md:text-4xl text-[#121316] mb-3.5 leading-tight">
-              &ldquo;We built Outreach OS because paying $600/mo across 4 broken tools was killing our agency economics.&rdquo;
+              &ldquo;We built Outreach OS because paying ₹600/mo across 4 broken tools was killing our agency economics.&rdquo;
             </h3>
 
             {/* Price chips — scannable proof instead of buried prose */}
             <div className="flex flex-wrap gap-2 mb-4">
               {[
-                { label: 'Smartlead', price: '$94/mo' },
-                { label: 'Warmup', price: '$50/mo' },
-                { label: 'Domain Health', price: '$49/mo' },
-                { label: 'CSV Scrubber', price: '$35/mo' },
+                { label: 'Smartlead', price: '₹94/mo' },
+                { label: 'Warmup', price: '₹50/mo' },
+                { label: 'Domain Health', price: '₹49/mo' },
+                { label: 'CSV Scrubber', price: '₹35/mo' },
               ].map((chip) => (
                 <span
                   key={chip.label}
@@ -610,7 +609,7 @@ export default function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-7">
             <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">COST COMPARISON</span>
             <h2 className="uneevo-serif-headline text-3xl md:text-5xl text-white mb-3">
-              Stop Paying $228+/mo Across 4 Fragmented Tools
+              Stop Paying ₹228+/mo Across 4 Fragmented Tools
             </h2>
             <p className="text-[#a09e97] text-sm md:text-base">
               Here is how Outreach OS stacks up against purchasing separate outreach, warmup, domain diagnostic, and scrubbing tools.
@@ -625,24 +624,24 @@ export default function LandingPage() {
                   <h4 className="font-bold text-white text-base md:text-lg">Traditional Scattered Stack</h4>
                   <p className="text-xs text-[#a09e97]">4 separate subscriptions & broken sync</p>
                 </div>
-                <span className="text-xl font-extrabold text-[#ee382b]">$228/mo</span>
+                <span className="text-xl font-extrabold text-[#ee382b]">₹228/mo</span>
               </div>
               <ul className="space-y-2.5 text-xs text-[#d0ceb8]">
                 <li className="flex items-center justify-between">
                   <span>Smartlead / Instantly Plan</span>
-                  <span className="font-bold text-white">$94/mo</span>
+                  <span className="font-bold text-white">₹94/mo</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Standalone Warmup Service</span>
-                  <span className="font-bold text-white">$50/mo</span>
+                  <span className="font-bold text-white">₹50/mo</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Domain Health & SPF Monitor</span>
-                  <span className="font-bold text-white">$49/mo</span>
+                  <span className="font-bold text-white">₹49/mo</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>CSV Lead Scrubbing Utility</span>
-                  <span className="font-bold text-white">$35/mo</span>
+                  <span className="font-bold text-white">₹35/mo</span>
                 </li>
               </ul>
             </div>
@@ -654,7 +653,7 @@ export default function LandingPage() {
                   <h4 className="font-bold text-white text-base md:text-lg">Outreach OS Complete System</h4>
                   <p className="text-xs text-[#ee382b] font-semibold">Everything unified under one flat plan</p>
                 </div>
-                <span className="text-2xl font-extrabold text-white">$999/mo</span>
+                <span className="text-2xl font-extrabold text-white">₹999/mo</span>
               </div>
               <ul className="space-y-2.5 text-xs text-white">
                 <li className="flex items-center gap-2">
@@ -727,7 +726,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Main Pricing Section ($999/mo) (Point 6) */}
+      {/* Main Pricing Section (₹999/mo) (Point 6) */}
       <section id="pricing" className="py-10 px-4 md:px-8 max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-7">
           <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">TRANSPARENT PRICING</span>
@@ -748,7 +747,7 @@ export default function LandingPage() {
               <h3 className="font-extrabold text-[#121316] text-xl md:text-2xl mt-1.5">Agency & Growth Plan</h3>
             </div>
             <div className="text-right">
-              <div className="text-3xl md:text-4xl font-extrabold text-[#121316]">$999</div>
+              <div className="text-3xl md:text-4xl font-extrabold text-[#121316]">₹999</div>
               <div className="text-xs text-[#62605c] font-medium">/ month flat</div>
             </div>
           </div>
@@ -810,7 +809,7 @@ export default function LandingPage() {
           </div>
 
           <Link href="/login?tab=invite" className="uneevo-btn-red text-center text-sm md:text-base py-3.5 w-full justify-center">
-            <span>Claim Your Batch Seat ($999/mo)</span>
+            <span>Claim Your Batch Seat (₹999/mo)</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
