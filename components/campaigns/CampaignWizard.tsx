@@ -22,7 +22,12 @@ import {
   Shuffle,
   Sparkles,
   Trash2,
+  AlertTriangle,
+  AlertCircle,
+  ExternalLink,
+  Info,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   getGradualSendingPercent,
   type CampaignSenderAccountPreference,
@@ -163,6 +168,10 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Validation feedback states
+  const [attemptedProceed, setAttemptedProceed] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
+
   const [name, setName] = useState('')
   const [csvFileId, setCsvFileId] = useState('')
   const [csvFiles, setCsvFiles] = useState<CsvFile[]>([])
@@ -264,14 +273,111 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
     [columnMap]
   )
   const hasEmailMapping = Boolean(getMappedPredefinedField(columnMap, 'email'))
-  const variableChips = useMemo(
-    () =>
-      variables.map((variable) => ({
-        ...variable,
-        token: `{{${variable.key}}}`,
-      })),
-    [variables]
-  )
+  const selectedCsv = useMemo(() => csvFiles.find((f) => f.id === csvFileId), [csvFiles, csvFileId])
+
+  // Clear validation errors on state changes if valid
+  useEffect(() => {
+    if (attemptedProceed) {
+      const errors = getStepValidationErrors(step)
+      setValidationErrors(errors)
+    }
+  }, [name, csvFileId, hasEmailMapping, driveSelections, bodyTemplate, subjectTemplate, sequenceSteps, sequenceEnabled, step]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const getStepValidationErrors = (stepNum: number): string[] => {
+    const errs: string[] = []
+
+    if (stepNum === 1) {
+      if (!name.trim()) {
+        errs.push('Please enter a Campaign Identifier Name.')
+      }
+      if (!csvFileId) {
+        errs.push('Please select a Source Contact Dataset (CSV).')
+      } else if (!hasEmailMapping) {
+        errs.push(
+          `The selected CSV dataset ("${selectedCsv?.originalName || 'file'}") does not have an Email column mapped. Click "Edit Mapping" to assign an email column.`
+        )
+      }
+      if (isGDrive) {
+        const selected = Object.entries(driveSelections)
+        if (selected.length === 0) {
+          errs.push('Please connect or select at least one Google Drive sender account.')
+        } else {
+          const missingFile = selected.some(([, sel]) => !sel.driveFileId)
+          if (missingFile) {
+            errs.push('Please choose a Google Drive file to share for all connected accounts.')
+          }
+        }
+      }
+    }
+
+    if (stepNum === 2) {
+      if (isGDrive) {
+        if (!bodyTemplate.trim()) {
+          errs.push('Please enter the GDrive share note message content.')
+        }
+      } else if (sequenceEnabled) {
+        if (sequenceSteps.length === 0) {
+          errs.push('Please add at least one sequence step.')
+        }
+        if (!sequenceSteps[0]?.subjectTemplate?.trim()) {
+          errs.push('Step 1 requires an Email Subject Line.')
+        }
+        sequenceSteps.forEach((s) => {
+          if (!s.bodyTemplate?.trim()) {
+            errs.push(`Step ${s.stepNumber} is missing message body content.`)
+          }
+        })
+      } else {
+        if (!subjectTemplate.trim()) {
+          errs.push('Please enter an Email Subject Line.')
+        }
+        if (!bodyTemplate.trim()) {
+          errs.push('Please enter an Email Message Body.')
+        }
+      }
+    }
+
+    return errs
+  }
+
+  const canGoNext = () => {
+    return getStepValidationErrors(step).length === 0
+  }
+
+  const handleNextClick = () => {
+    const errors = getStepValidationErrors(step)
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      setAttemptedProceed(true)
+      toast.error(errors[0], {
+        description: errors.length > 1 ? `Plus ${errors.length - 1} other issue(s)` : undefined,
+      })
+      // Smooth scroll to top of wizard to see the highlighted missing fields
+      window.scrollTo({ top: 100, behavior: 'smooth' })
+      return
+    }
+
+    setValidationErrors([])
+    setAttemptedProceed(false)
+    setStep((prev) => Math.min(maxStep, prev + 1))
+  }
+
+  const handleLaunchClick = () => {
+    const allErrors = [
+      ...getStepValidationErrors(1),
+      ...getStepValidationErrors(2),
+      ...getStepValidationErrors(3),
+    ]
+
+    if (allErrors.length > 0) {
+      setValidationErrors(allErrors)
+      setAttemptedProceed(true)
+      toast.error(allErrors[0])
+      return
+    }
+
+    handleLaunch()
+  }
 
   const handleSequencePreview = async (stepNumber: number, offset = 0) => {
     const currentRowIndex = sequencePreviewRowIndexes[stepNumber] ?? 0
@@ -310,32 +416,6 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
     } finally {
       setSequencePreviewLoading((current) => ({ ...current, [stepNumber]: false }))
     }
-  }
-
-  const canGoNext = () => {
-    if (step === 1) {
-      if (!name.trim() || csvFileId === '' || !hasEmailMapping) return false
-      if (isGDrive) {
-        const selected = Object.entries(driveSelections)
-        return selected.length > 0 && selected.every(([, selection]) => selection.driveFileId)
-      }
-      return true
-    }
-    if (step === 2) {
-      if (isGDrive) return bodyTemplate.trim().length > 0
-      if (sequenceEnabled) {
-        return (
-          sequenceSteps.length > 0 &&
-          sequenceSteps.every(
-            (stepItem) =>
-              stepItem.bodyTemplate.trim().length > 0 &&
-              (stepItem.stepNumber !== 1 || stepItem.subjectTemplate.trim().length > 0)
-          )
-        )
-      }
-      return subjectTemplate.trim().length > 0 && bodyTemplate.trim().length > 0
-    }
-    return true
   }
 
   const handleLaunch = async () => {
@@ -400,6 +480,7 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
         throw new Error(startData?.error || 'Campaign created but failed to start')
       }
 
+      toast.success('Campaign created and launched successfully!')
       router.push('/campaigns')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
@@ -407,48 +488,97 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
     }
   }
 
-  const renderCsvSelector = () => (
-    <div className="space-y-2">
-      <label className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b]">
-        SOURCE CONTACT DATASET (CSV)
-      </label>
-      {csvLoading ? (
-        <div className="p-4 text-center text-xs text-[#62605c] bg-[#faf8f4] rounded-[16px] border border-[#121316]/08">
-          Loading contact datasets...
-        </div>
-      ) : csvFiles.length === 0 ? (
-        <div className="p-4 bg-[#ee382b]/05 border border-dashed border-[#ee382b]/30 rounded-[16px] text-xs text-[#ee382b]">
-          No CSV files found in workspace.{' '}
-          <Link href="/csv/upload" className="font-bold underline text-[#121316]">
-            Upload a CSV first
-          </Link>.
-        </div>
-      ) : (
-        <select
-          value={csvFileId}
-          onChange={(event) => setCsvFileId(event.target.value)}
-          className="w-full rounded-[14px] border border-[#121316]/12 bg-[#faf8f4] px-4 py-3 text-sm text-[#121316] transition focus:border-[#ee382b] focus:bg-white focus:outline-none"
-        >
-          <option value="" disabled>
-            Select a prospect dataset...
-          </option>
-          {csvFiles.map((csv) => (
-            <option key={csv.id} value={csv.id}>
-              {csv.originalName} ({csv.rowCount.toLocaleString()} contacts)
+  const renderCsvSelector = () => {
+    const isMissingCsv = attemptedProceed && !csvFileId
+    const isMissingEmailCol = attemptedProceed && csvFileId && !hasEmailMapping
+
+    return (
+      <div className="space-y-2">
+        <label className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b] flex items-center justify-between">
+          <span>SOURCE CONTACT DATASET (CSV)</span>
+          {csvFileId && hasEmailMapping && (
+            <span className="text-[11px] font-mono font-bold text-[#0f8a5f] flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3" />
+              Email Column Mapped
+            </span>
+          )}
+        </label>
+
+        {csvLoading ? (
+          <div className="p-4 text-center text-xs text-[#62605c] bg-[#faf8f4] rounded-[16px] border border-[#121316]/08">
+            Loading contact datasets...
+          </div>
+        ) : csvFiles.length === 0 ? (
+          <div className="p-4 bg-[#ee382b]/05 border border-dashed border-[#ee382b]/30 rounded-[16px] text-xs text-[#ee382b]">
+            No CSV files found in workspace.{' '}
+            <Link href="/csv/upload" className="font-bold underline text-[#121316]">
+              Upload a CSV first
+            </Link>.
+          </div>
+        ) : (
+          <select
+            value={csvFileId}
+            onChange={(event) => {
+              setCsvFileId(event.target.value)
+              if (validationErrors.length > 0) setValidationErrors([])
+            }}
+            className={`w-full rounded-[14px] border px-4 py-3 text-sm text-[#121316] transition focus:bg-white focus:outline-none ${
+              isMissingCsv || isMissingEmailCol
+                ? 'border-[#ee382b] bg-[#ee382b]/05 ring-2 ring-[#ee382b]/15'
+                : 'border-[#121316]/12 bg-[#faf8f4] focus:border-[#ee382b]'
+            }`}
+          >
+            <option value="" disabled>
+              Select a prospect dataset...
             </option>
-          ))}
-        </select>
-      )}
-      {csvFileId && !hasEmailMapping && (
-        <div className="text-xs text-[#b7791f] bg-[#b7791f]/10 p-3 rounded-[12px] border border-[#b7791f]/20">
-          This CSV needs an Email column mapping before it can be used in campaigns.{' '}
-          <Link href={`/csv/${csvFileId}`} className="font-bold underline">
-            Edit mapping here
-          </Link>.
-        </div>
-      )}
-    </div>
-  )
+            {csvFiles.map((csv) => (
+              <option key={csv.id} value={csv.id}>
+                {csv.originalName} ({csv.rowCount.toLocaleString()} contacts)
+              </option>
+            ))}
+          </select>
+        )}
+
+        {isMissingCsv && (
+          <p className="text-[11px] font-semibold text-[#ee382b]">
+            Please select a prospect CSV dataset to proceed.
+          </p>
+        )}
+
+        {/* Prominent Missing Email Mapping Callout */}
+        {csvFileId && !hasEmailMapping && (
+          <div className="rounded-[16px] border-2 border-[#ee382b]/30 bg-[#ee382b]/08 p-4 text-xs text-[#121316] space-y-2.5 shadow-xs animate-shake">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="h-5 w-5 text-[#ee382b] shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-bold text-[#ee382b] text-xs uppercase tracking-wider">
+                  Action Required: Missing Email Column Mapping
+                </div>
+                <p className="text-[11px] text-[#5c1d19] leading-relaxed">
+                  This CSV has not mapped an <strong>Email Address</strong> column yet. Campaigns require an email column to know where to deliver messages.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <Link
+                href={`/csv/${csvFileId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#121316] px-4 py-1.5 text-xs font-bold text-white hover:bg-black transition shadow-xs"
+              >
+                <span>Edit CSV Column Mapping</span>
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+              <span className="text-[10px] text-[#62605c]">
+                (Opens in new tab so you don't lose this draft)
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   const rampPercent = getGradualSendingPercent(
     gradualSendingEnabled,
@@ -684,6 +814,8 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
 
   const renderStep = () => {
     if (step === 1) {
+      const isMissingName = attemptedProceed && !name.trim()
+
       return (
         <div className="space-y-6">
           <div>
@@ -701,9 +833,21 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
               type="text"
               placeholder={isGDrive ? 'e.g. Q3 Founders Drive Outreach' : 'e.g. Q3 SaaS Sales Executives'}
               value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="w-full rounded-[14px] border border-[#121316]/12 bg-[#faf8f4] px-4 py-3 text-sm text-[#121316] transition focus:border-[#ee382b] focus:bg-white focus:outline-none"
+              onChange={(event) => {
+                setName(event.target.value)
+                if (validationErrors.length > 0) setValidationErrors([])
+              }}
+              className={`w-full rounded-[14px] border px-4 py-3 text-sm text-[#121316] transition focus:bg-white focus:outline-none ${
+                isMissingName
+                  ? 'border-[#ee382b] bg-[#ee382b]/05 ring-2 ring-[#ee382b]/15'
+                  : 'border-[#121316]/12 bg-[#faf8f4] focus:border-[#ee382b]'
+              }`}
             />
+            {isMissingName && (
+              <p className="text-[11px] font-semibold text-[#ee382b]">
+                Please enter a campaign name to continue.
+              </p>
+            )}
           </div>
 
           {renderCsvSelector()}
@@ -752,169 +896,119 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
 
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setSequenceSteps((current) => [
                     ...current,
                     {
                       stepNumber: current.length + 1,
                       subjectTemplate: '',
-                      bodyTemplate: 'Wanted to follow up once more in case this is still relevant.',
+                      bodyTemplate: `Hi {{firstName}},\n\nWanted to follow up once more in case this is still relevant.`,
                       delayDays: 3,
                       stopOnReply: true,
                     },
                   ])
-                }
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#121316] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-black transition"
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-3.5 py-1.5 text-xs font-bold text-[#121316] hover:bg-[#faf8f4] transition shadow-2xs"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>Add Sequence Step</span>
+                <span>Add Step {sequenceSteps.length + 1}</span>
               </button>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-6">
               {sequenceSteps.map((stepItem, index) => (
                 <div
                   key={stepItem.stepNumber}
                   className="uneevo-card p-6 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4"
                 >
-                  <div className="flex items-center justify-between border-b border-[#121316]/08 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ee382b] text-white font-mono text-xs font-bold">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <div className="text-sm font-bold text-[#121316]">
-                          {index === 0 ? 'Initial Outreach Message' : `Follow-up Step ${index + 1}`}
-                        </div>
-                        <div className="text-xs text-[#62605c]">
-                          {index === 0 ? 'Dispatches on campaign launch' : `Wait ${stepItem.delayDays} day(s) after previous message`}
-                        </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#121316] text-white font-bold text-xs">
+                        {stepItem.stepNumber}
                       </div>
+                      <span className="font-bold text-sm text-[#121316]">
+                        {index === 0 ? 'Step 1 (Initial Message)' : `Step ${stepItem.stepNumber} (Follow-up)`}
+                      </span>
                     </div>
 
                     {index > 0 && (
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-[#62605c]">Delay (days):</label>
+                      <div className="flex items-center gap-2 bg-[#faf8f4] border border-[#121316]/08 px-3 py-1.5 rounded-full">
+                        <Clock className="h-3.5 w-3.5 text-[#ee382b]" />
+                        <span className="text-[11px] font-bold text-[#62605c]">Delay:</span>
                         <input
                           type="number"
                           min={1}
                           max={30}
                           value={stepItem.delayDays}
                           onChange={(event) => {
-                            const val = Number(event.target.value || 0)
+                            const val = Math.max(1, Number(event.target.value) || 1)
                             setSequenceSteps((current) =>
-                              current.map((entry, entryIndex) =>
-                                entryIndex === index ? { ...entry, delayDays: Math.max(1, val) } : entry
+                              current.map((s, idx) =>
+                                idx === index ? { ...s, delayDays: val } : s
                               )
                             )
                           }}
-                          className="w-16 rounded-[10px] border border-[#121316]/12 bg-[#faf8f4] px-2.5 py-1 text-xs text-center font-mono font-bold"
+                          className="w-12 rounded-[6px] border border-[#121316]/12 bg-white px-1.5 py-0.5 text-center font-mono font-bold text-[#121316]"
                         />
+                        <span className="text-[11px] font-bold text-[#62605c]">days</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="space-y-4">
-                    {index === 0 ? (
-                      <div>
-                        <label className="text-xs font-bold text-[#121316] mb-1 block">Subject line</label>
-                        <input
-                          type="text"
-                          value={stepItem.subjectTemplate}
-                          placeholder={`Step ${index + 1} subject`}
-                          onChange={(event) => {
-                            const val = event.target.value
-                            setSequenceSteps((current) =>
-                              current.map((entry, entryIndex) =>
-                                entryIndex === index ? { ...entry, subjectTemplate: val } : entry
-                              )
-                            )
-                          }}
-                          className="w-full rounded-[12px] border border-[#121316]/12 bg-[#faf8f4] px-3.5 py-2.5 text-xs text-[#121316] focus:border-[#ee382b] focus:outline-none"
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-xs text-[#62605c] bg-[#faf8f4] p-3 rounded-[12px] border border-[#121316]/06">
-                        Subject: Follow-up messages automatically thread under the initial email subject line.
-                      </div>
-                    )}
+                  <TemplateEditor
+                    mode="email"
+                    csvFileId={csvFileId}
+                    subjectTemplate={stepItem.subjectTemplate}
+                    bodyTemplate={stepItem.bodyTemplate}
+                    messageTemplate=""
+                    onSubjectTemplateChange={(val) => {
+                      setSequenceSteps((current) =>
+                        current.map((s, idx) =>
+                          idx === index ? { ...s, subjectTemplate: val } : s
+                        )
+                      )
+                    }}
+                    onBodyTemplateChange={(val) => {
+                      setSequenceSteps((current) =>
+                        current.map((s, idx) =>
+                          idx === index ? { ...s, bodyTemplate: val } : s
+                        )
+                      )
+                    }}
+                    onMessageTemplateChange={() => {}}
+                    variables={variables}
+                  />
 
-                    <div>
-                      <label className="text-xs font-bold text-[#121316] mb-1 block">Message content</label>
-                      <textarea
-                        value={stepItem.bodyTemplate}
-                        placeholder={`Step ${index + 1} body`}
-                        onChange={(event) => {
-                          const val = event.target.value
+                  <div className="flex items-center justify-between pt-2 border-t border-[#121316]/06">
+                    <button
+                      type="button"
+                      onClick={() => handleSequencePreview(stepItem.stepNumber, 0)}
+                      disabled={sequencePreviewLoading[stepItem.stepNumber]}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#ee382b] hover:underline"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>
+                        {sequencePreviewLoading[stepItem.stepNumber] ? 'Rendering...' : 'Test Row Preview'}
+                      </span>
+                    </button>
+
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() =>
                           setSequenceSteps((current) =>
-                            current.map((entry, entryIndex) =>
-                              entryIndex === index ? { ...entry, bodyTemplate: val } : entry
-                            )
+                            current.filter((_, idx) => idx !== index).map((entry, idx) => ({
+                              ...entry,
+                              stepNumber: idx + 1,
+                            }))
                           )
-                        }}
-                        rows={6}
-                        className="w-full rounded-[14px] border border-[#121316]/12 bg-[#faf8f4] p-3.5 text-xs text-[#121316] leading-relaxed focus:border-[#ee382b] focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {variableChips.map((variable) => (
-                        <button
-                          key={`body-${stepItem.stepNumber}-${variable.key}`}
-                          type="button"
-                          onClick={() => {
-                            setSequenceSteps((current) =>
-                              current.map((entry, entryIndex) =>
-                                entryIndex === index
-                                  ? { ...entry, bodyTemplate: `${entry.bodyTemplate}${variable.token}` }
-                                  : entry
-                              )
-                            )
-                          }}
-                          className="inline-flex items-center gap-1 rounded-full border border-[#121316]/10 bg-white px-2.5 py-0.5 text-[11px] font-medium text-[#121316] hover:border-[#ee382b] hover:text-[#ee382b]"
-                        >
-                          <span className="font-mono text-[#ee382b]">+</span>
-                          <span>{variable.label}</span>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2">
-                      <label className="flex items-center gap-2 text-xs text-[#62605c] cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={stepItem.stopOnReply}
-                          onChange={(event) => {
-                            const checked = event.target.checked
-                            setSequenceSteps((current) =>
-                              current.map((entry, entryIndex) =>
-                                entryIndex === index ? { ...entry, stopOnReply: checked } : entry
-                              )
-                            )
-                          }}
-                          className="h-3.5 w-3.5 rounded text-[#ee382b]"
-                        />
-                        <span>Automatically halt cadence if recipient replies</span>
-                      </label>
-
-                      {index > 0 && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSequenceSteps((current) =>
-                              current.filter((_, idx) => idx !== index).map((entry, idx) => ({
-                                ...entry,
-                                stepNumber: idx + 1,
-                              }))
-                            )
-                          }
-                          className="text-xs text-[#c2414c] hover:underline flex items-center gap-1"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>Delete step</span>
-                        </button>
-                      )}
-                    </div>
+                        }
+                        className="text-xs text-[#c2414c] hover:underline flex items-center gap-1 font-semibold"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Delete step</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -1030,6 +1124,8 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
     )
   }
 
+  const isValid = canGoNext()
+
   return (
     <div className="space-y-6">
       {/* 3-Step Pill Bar */}
@@ -1067,8 +1163,23 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
       <div className="uneevo-card p-6 md:p-8 rounded-[28px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6">
         {renderStep()}
 
+        {/* Dynamic Validation Errors Warning Box */}
+        {validationErrors.length > 0 && (
+          <div className="p-4 rounded-[18px] bg-[#ee382b]/08 border-2 border-[#ee382b]/30 text-xs text-[#121316] space-y-2 animate-shake shadow-xs">
+            <div className="flex items-center gap-2 font-bold text-sm text-[#ee382b]">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>Please resolve the following required item{validationErrors.length > 1 ? 's' : ''} to proceed:</span>
+            </div>
+            <ul className="list-disc list-inside space-y-1 pl-1 text-[#5c1d19] font-medium">
+              {validationErrors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {error && (
-          <div className="p-4 rounded-[16px] bg-[#ee382b]/08 border border-[#ee382b]/20 text-xs text-[#ee382b]">
+          <div className="p-4 rounded-[16px] bg-[#ee382b]/08 border border-[#ee382b]/20 text-xs text-[#ee382b] font-medium">
             {error}
           </div>
         )}
@@ -1077,7 +1188,11 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
         <div className="flex items-center justify-between pt-6 border-t border-[#121316]/08">
           <button
             type="button"
-            onClick={() => setStep((prev) => Math.max(1, prev - 1))}
+            onClick={() => {
+              setValidationErrors([])
+              setAttemptedProceed(false)
+              setStep((prev) => Math.max(1, prev - 1))
+            }}
             className={`inline-flex items-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-5 py-2.5 text-xs font-bold text-[#121316] hover:bg-[#faf8f4] transition ${
               step === 1 ? 'invisible' : 'visible'
             }`}
@@ -1089,9 +1204,12 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
           {step < maxStep ? (
             <button
               type="button"
-              onClick={() => setStep((prev) => Math.min(maxStep, prev + 1))}
-              disabled={!canGoNext()}
-              className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_6px_20px_rgba(238,56,43,0.22)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_10px_28px_rgba(238,56,43,0.32)] disabled:opacity-40"
+              onClick={handleNextClick}
+              className={`inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                isValid
+                  ? 'bg-[#ee382b] text-white shadow-[0_6px_20px_rgba(238,56,43,0.22)] hover:bg-[#d92b1f] hover:shadow-[0_10px_28px_rgba(238,56,43,0.32)]'
+                  : 'bg-[#ee382b]/80 text-white/90 hover:bg-[#ee382b] hover:shadow-xs ring-1 ring-[#121316]/10'
+              }`}
             >
               <span>Next: {steps[step]?.label || 'Continue'}</span>
               <ArrowRight className="h-4 w-4" />
@@ -1099,9 +1217,13 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
           ) : (
             <button
               type="button"
-              onClick={handleLaunch}
-              disabled={saving || !canGoNext()}
-              className="inline-flex items-center gap-2 rounded-full bg-[#0f8a5f] px-7 py-2.5 text-xs sm:text-sm font-bold text-white shadow-[0_6px_20px_rgba(15,138,95,0.22)] transition-all hover:bg-[#0c724e] hover:shadow-[0_10px_28px_rgba(15,138,95,0.32)] disabled:opacity-40"
+              onClick={handleLaunchClick}
+              disabled={saving}
+              className={`inline-flex items-center gap-2 rounded-full px-7 py-2.5 text-xs sm:text-sm font-bold text-white transition-all cursor-pointer disabled:opacity-50 ${
+                isValid
+                  ? 'bg-[#0f8a5f] shadow-[0_6px_20px_rgba(15,138,95,0.22)] hover:bg-[#0c724e] hover:shadow-[0_10px_28px_rgba(15,138,95,0.32)]'
+                  : 'bg-[#0f8a5f]/80 hover:bg-[#0f8a5f]'
+              }`}
             >
               <Rocket className="h-4 w-4" />
               <span>{saving ? 'Launching Sequence...' : 'Launch Outbound Campaign'}</span>
@@ -1112,4 +1234,3 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
     </div>
   )
 }
-

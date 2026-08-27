@@ -191,11 +191,11 @@ export default function LandingPage() {
       <section className="relative pt-16 pb-10 px-4 md:px-8 max-w-6xl mx-auto text-center z-10">
         <div className="hero-gradient-glow" />
 
-        {/* Live Batch Capacity Indicator Badge (Point 5) */}
+        {/* Platform Status Badge */}
         <div className="inline-flex items-center mb-4">
           <div className="batch-pill">
             <span className="batch-pill-dot" />
-            <span>Batch 4 Onboarding Open: 42 of 50 agency seats filled this month</span>
+            <span>High Deliverability Outbound Infrastructure • Active Platform</span>
           </div>
         </div>
 
@@ -741,8 +741,8 @@ export default function LandingPage() {
         <div className="max-w-xl mx-auto uneevo-card p-6 md:p-8 relative overflow-hidden border-2 border-[#121316]">
           <div className="flex items-center justify-between mb-5 pb-5 border-b border-[#121316]/10">
             <div>
-              <span className="px-2.5 py-0.5 bg-[#ee382b]/10 text-[#ee382b] text-xs font-bold rounded-full">
-                BATCH 4 ACCESS
+              <span className="px-2.5 py-0.5 bg-[#0f8a5f]/10 text-[#0f8a5f] text-xs font-bold rounded-full">
+                FULL ACCESS PLAN
               </span>
               <h3 className="font-extrabold text-[#121316] text-xl md:text-2xl mt-1.5">Agency & Growth Plan</h3>
             </div>
