@@ -14,7 +14,7 @@ export default function DashboardLayout({
 
   if (state !== 'ready') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef]">
         <div className="text-sm text-[#62605c]">
           {state === 'loading' ? 'Loading workspace...' : 'Redirecting...'}
         </div>
@@ -23,7 +23,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-white px-3 py-3 sm:px-4 sm:py-4 xl:px-6 xl:py-6">
+    <div className="min-h-screen bg-[#f5f4ef] px-3 py-3 sm:px-4 sm:py-4 xl:px-6 xl:py-6">
       <CommandPalette />
       <FloatingSearchButton />
       <div className="mx-auto flex max-w-[1600px] min-w-0 flex-col gap-3 sm:gap-4 xl:flex-row xl:gap-6">

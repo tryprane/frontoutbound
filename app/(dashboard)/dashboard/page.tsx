@@ -1,25 +1,31 @@
 'use client'
 
 import Link from 'next/link'
-import { Megaphone, AtSign, FileText, Send, Flame } from 'lucide-react'
+import { Megaphone, AtSign, FileText, Send, Flame, ShieldCheck } from 'lucide-react'
 import { OnboardingStepper } from '@/components/dashboard/OnboardingStepper'
 import { OutboundVelocityChart } from '@/components/dashboard/OutboundVelocityChart'
 import { RecentActivityFeed } from '@/components/dashboard/RecentActivityFeed'
 import { DashboardActionCards } from '@/components/dashboard/DashboardActionCards'
+import { MailboxWarmupFleet } from '@/components/dashboard/MailboxWarmupFleet'
 import { useApiResource } from '@/lib/hooks'
 import type { DashboardStats } from '@/lib/types'
 
 const EMPTY_STATS: DashboardStats = {
   campaigns: 0,
   mailAccounts: 0,
+  activeMailAccounts: 0,
+  warmingAccounts: 0,
+  warmedAccounts: 0,
   csvFiles: 0,
   sentToday: 0,
+  warmupSentToday: 0,
+  totalSentToday: 0,
   activeCampaigns: 0,
-  warmingAccounts: 0,
   dailyData: [],
   totalSentWeek: 0,
   totalWarmupWeek: 0,
   activities: [],
+  mailboxWarmupList: [],
   showOnboarding: false,
 }
 
@@ -45,6 +51,11 @@ export default function DashboardPage() {
 
   const stats = data ?? EMPTY_STATS
   const showOnboarding = stats.showOnboarding
+  const activeAccounts = stats.activeMailAccounts ?? stats.mailAccounts
+  const warmedAccounts = stats.warmedAccounts ?? 0
+  const warmingAccounts = stats.warmingAccounts ?? 0
+  const warmupSentToday = stats.warmupSentToday ?? 0
+  const totalSentToday = stats.totalSentToday ?? (stats.sentToday + warmupSentToday)
 
   return (
     <div className="animate-fade-in space-y-8 pb-10">
@@ -95,7 +106,7 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        {/* 2. Mail Accounts */}
+        {/* 2. Mail Accounts (Active & Warmed Breakdown) */}
         <Link href="/mail-accounts" className="group">
           <div className="uneevo-card relative overflow-hidden p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#121316]/15 hover:shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
             <div className="absolute top-0 right-0 h-28 w-28 bg-[#fde9b0]/25 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-110" />
@@ -104,14 +115,24 @@ export default function DashboardPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-[#fde9b0] text-[#5c4211] shadow-xs transition-transform duration-300 group-hover:scale-105">
                 <AtSign className="h-4.5 w-4.5" />
               </div>
-              {stats.warmingAccounts > 0 ? (
+              {warmedAccounts > 0 && warmingAccounts > 0 ? (
+                <span className="flex items-center gap-1 text-[11px] font-bold text-[#0f8a5f] bg-[#0f8a5f]/10 px-2.5 py-1 rounded-full border border-[#0f8a5f]/20">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {warmedAccounts} warmed • {warmingAccounts} warming
+                </span>
+              ) : warmedAccounts > 0 ? (
+                <span className="flex items-center gap-1 text-xs font-bold text-[#0f8a5f] bg-[#0f8a5f]/10 px-2.5 py-1 rounded-full border border-[#0f8a5f]/20">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {warmedAccounts} warmed
+                </span>
+              ) : warmingAccounts > 0 ? (
                 <span className="flex items-center gap-1 text-xs font-bold text-[#8a5c0a] bg-[#fde9b0] px-2.5 py-1 rounded-full animate-pulse border border-[#b7791f]/20">
                   <Flame className="h-3.5 w-3.5" />
-                  {stats.warmingAccounts} warming
+                  {warmingAccounts} warming
                 </span>
               ) : (
                 <span className="text-xs font-semibold text-[#62605c] bg-[#121316]/06 px-2.5 py-1 rounded-full">
-                  0 warming
+                  {activeAccounts} active
                 </span>
               )}
             </div>
@@ -121,7 +142,7 @@ export default function DashboardPage() {
                 {stats.mailAccounts}
               </div>
               <div className="mt-2 text-xs font-semibold uppercase tracking-wider text-[#62605c]">
-                Mail Accounts
+                Mail Accounts ({activeAccounts} active)
               </div>
             </div>
           </div>
@@ -152,7 +173,7 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        {/* 4. Sent Today */}
+        {/* 4. Sent Today (Campaigns + Warmup Dispatches) */}
         <Link href="/sent" className="group">
           <div className="uneevo-card relative overflow-hidden p-5 sm:p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#121316]/15 hover:shadow-[0_16px_40px_rgba(0,0,0,0.06)]">
             <div className="absolute top-0 right-0 h-28 w-28 bg-[#0f8a5f]/05 rounded-bl-full pointer-events-none transition-transform duration-500 group-hover:scale-110" />
@@ -161,17 +182,17 @@ export default function DashboardPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-[#0f8a5f]/10 text-[#0f8a5f] shadow-xs transition-transform duration-300 group-hover:scale-105">
                 <Send className="h-4.5 w-4.5" />
               </div>
-              <span className="text-xs font-semibold text-[#0f8a5f] bg-[#0f8a5f]/08 px-2.5 py-1 rounded-full border border-[#0f8a5f]/15">
-                Across all senders
+              <span className="text-[11px] font-semibold text-[#0f8a5f] bg-[#0f8a5f]/08 px-2.5 py-1 rounded-full border border-[#0f8a5f]/15">
+                {stats.sentToday} outbound • {warmupSentToday} warmup
               </span>
             </div>
 
             <div className="relative z-10">
               <div className="font-mono text-3xl sm:text-4xl font-extrabold leading-none tracking-tight text-[#121316] tabular-nums">
-                {stats.sentToday}
+                {totalSentToday}
               </div>
               <div className="mt-2 text-xs font-semibold uppercase tracking-wider text-[#62605c]">
-                Sent Today
+                Dispatched Today
               </div>
             </div>
           </div>
@@ -190,6 +211,16 @@ export default function DashboardPage() {
 
       {/* ── Quick Actions with Drag & Drop ─────────────────────── */}
       <DashboardActionCards />
+
+      {/* ── Active & Warmed Mailbox Fleet Section ──────────────── */}
+      <MailboxWarmupFleet
+        mailboxes={stats.mailboxWarmupList ?? []}
+        totalAccounts={stats.mailAccounts}
+        activeAccounts={activeAccounts}
+        warmingAccounts={warmingAccounts}
+        warmedAccounts={warmedAccounts}
+        warmupSentToday={warmupSentToday}
+      />
 
       {/* ── Analytics & Live Activity Grid ─────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
