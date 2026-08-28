@@ -1,13 +1,14 @@
 'use client'
 
 import { Suspense } from 'react'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import {
   AccountsView,
   AddGmailView,
   AddOutlookView,
   AddSmtpImapView,
   AddZohoView,
-  MailAccountsHero,
 } from '@/components/mail-accounts/MailAccountsSections'
 import { useMailAccountsDashboard } from '@/components/mail-accounts/useMailAccountsDashboard'
 
@@ -15,7 +16,7 @@ function MailAccountsPageContent() {
   const dashboard = useMailAccountsDashboard()
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in space-y-4">
       {dashboard.toast ? (
         <div
           style={{
@@ -36,12 +37,19 @@ function MailAccountsPageContent() {
         </div>
       ) : null}
 
-      <MailAccountsHero
-        activeTab={dashboard.activeTab}
-        setActiveTab={dashboard.setActiveTab}
-        accountCount={dashboard.accounts.length}
-        warmedCount={dashboard.warmedAccounts.length}
-      />
+      {/* When on add sub-view, show floating back navigation */}
+      {dashboard.activeTab !== 'accounts' && (
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => dashboard.setActiveTab('accounts')}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2 text-xs font-semibold text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95 cursor-pointer"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back to All Accounts</span>
+          </button>
+        </div>
+      )}
 
       {dashboard.activeTab === 'accounts' ? (
         <AccountsView
@@ -99,6 +107,8 @@ function MailAccountsPageContent() {
           handleRunMailboxSyncNow={dashboard.handleRunMailboxSyncNow}
           handleToggleMailActive={dashboard.handleToggleMailActive}
           handleDeleteMail={dashboard.handleDeleteMail}
+          activeTab={dashboard.activeTab}
+          setActiveTab={dashboard.setActiveTab}
         />
       ) : null}
 
@@ -143,7 +153,7 @@ function MailAccountsPageContent() {
 
 export default function MailAccountsPage() {
   return (
-    <Suspense fallback={<div className="animate-fade-in">Loading...</div>}>
+    <Suspense fallback={<div className="animate-fade-in py-12 text-center text-xs text-[#8a8780]">Loading...</div>}>
       <MailAccountsPageContent />
     </Suspense>
   )
