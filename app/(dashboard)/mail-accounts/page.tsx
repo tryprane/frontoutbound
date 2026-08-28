@@ -1,7 +1,6 @@
 'use client'
 
-import { Suspense } from 'react'
-import Link from 'next/link'
+import { Suspense, useEffect } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import {
   AccountsView,
@@ -14,6 +13,17 @@ import { useMailAccountsDashboard } from '@/components/mail-accounts/useMailAcco
 
 function MailAccountsPageContent() {
   const dashboard = useMailAccountsDashboard()
+
+  // Handle ESC key to dismiss add form and return to accounts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && dashboard.activeTab !== 'accounts') {
+        dashboard.setActiveTab('accounts')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [dashboard.activeTab, dashboard.setActiveTab])
 
   return (
     <div className="animate-fade-in space-y-4">
@@ -116,8 +126,10 @@ function MailAccountsPageContent() {
         <AddZohoView
           onAdded={() => {
             void dashboard.loadAll()
-            dashboard.showToast('success', 'Zoho setup step saved')
+            dashboard.setActiveTab('accounts')
+            dashboard.showToast('success', 'Zoho mail account connected successfully')
           }}
+          onClose={() => dashboard.setActiveTab('accounts')}
         />
       ) : null}
 
@@ -125,8 +137,10 @@ function MailAccountsPageContent() {
         <AddGmailView
           onAdded={() => {
             void dashboard.loadAll()
+            dashboard.setActiveTab('accounts')
             dashboard.showToast('success', 'Gmail app-password setup saved')
           }}
+          onClose={() => dashboard.setActiveTab('accounts')}
         />
       ) : null}
 
@@ -134,8 +148,10 @@ function MailAccountsPageContent() {
         <AddOutlookView
           onAdded={() => {
             void dashboard.loadAll()
+            dashboard.setActiveTab('accounts')
             dashboard.showToast('success', 'Outlook mailbox setup saved')
           }}
+          onClose={() => dashboard.setActiveTab('accounts')}
         />
       ) : null}
 
@@ -143,8 +159,10 @@ function MailAccountsPageContent() {
         <AddSmtpImapView
           onAdded={() => {
             void dashboard.loadAll()
+            dashboard.setActiveTab('accounts')
             dashboard.showToast('success', 'SMTP/IMAP mailbox setup saved')
           }}
+          onClose={() => dashboard.setActiveTab('accounts')}
         />
       ) : null}
     </div>
