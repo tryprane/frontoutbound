@@ -1,22 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Activity,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   CircleAlert,
   CircleCheck,
+  CheckCircle2,
+  AlertCircle,
   Flame,
   Inbox,
   KeyRound,
+  Loader2,
   Mail,
+  MoreVertical,
   Plus,
   Power,
   RefreshCw,
+  Search,
   Send,
   Settings2,
   ShieldAlert,
+  Sparkles,
   Trash2,
+  X,
 } from 'lucide-react'
 import { GmailImapSmtpForm } from '@/components/mail-accounts/GmailImapSmtpForm'
 import { ImapSmtpAccountForm } from '@/components/mail-accounts/ImapSmtpAccountForm'
@@ -46,81 +57,53 @@ import type {
   WarmupRecipient,
 } from '@/components/mail-accounts/types'
 
+// ── Health Circular Gauge Component ──────────────────────────────────────────
+function HealthGauge({ score }: { score: number }) {
+  const safeScore = Math.max(0, Math.min(100, score || 0))
+  const strokeColor = safeScore >= 70 ? '#0f8a5f' : safeScore >= 40 ? '#d97706' : '#ee382b'
+
+  return (
+    <div className="flex items-center gap-1.5 justify-end">
+      <div className="relative w-8 h-8 flex items-center justify-center">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+          <circle
+            cx="18"
+            cy="18"
+            r="15"
+            fill="none"
+            stroke="#121316"
+            strokeOpacity="0.08"
+            strokeWidth="3"
+          />
+          <circle
+            cx="18"
+            cy="18"
+            r="15"
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth="3"
+            strokeDasharray={`${(safeScore * 94.2) / 100}, 100`}
+            strokeLinecap="round"
+            className="transition-all duration-500"
+          />
+        </svg>
+        <span className="absolute text-[10px] font-bold font-mono text-[#121316]">
+          {safeScore}
+        </span>
+      </div>
+      <span className="text-[11px] font-mono text-[#8a8780]">/100</span>
+    </div>
+  )
+}
+
+// ── Top Bar placeholder ──────────────────────────────────────────────────────
 export function MailAccountsHero(props: {
   activeTab: ActiveTab
   setActiveTab: (tab: ActiveTab) => void
   accountCount: number
   warmedCount: number
 }) {
-  const tabs: { key: ActiveTab; label: string }[] = [
-    { key: 'accounts', label: 'All Accounts' },
-    { key: 'add-zoho', label: 'Connect Zoho' },
-    { key: 'add-gmail', label: 'Connect Gmail' },
-    { key: 'add-outlook', label: 'Connect Outlook' },
-    { key: 'add-smtp-imap', label: 'Custom SMTP/IMAP' },
-  ]
-
-  return (
-    <div className="space-y-6 mb-6">
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Mail className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
-              SENDER INFRASTRUCTURE
-            </span>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Mail Accounts & Sender Pools
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Connection health, warmup rotation status, and deliverability limits.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5 bg-[#121316]/06 border border-[#121316]/08 px-4 py-2 rounded-full">
-            <span className="font-mono text-base font-bold tabular-nums text-[#121316]">
-              {props.accountCount}
-            </span>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
-              Connected
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5 bg-[#0f8a5f]/10 border border-[#0f8a5f]/20 px-4 py-2 rounded-full">
-            <span className="font-mono text-base font-bold tabular-nums text-[#0f8a5f]">
-              {props.warmedCount}
-            </span>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f8a5f]">
-              Warmed
-            </span>
-          </div>
-        </div>
-      </header>
-
-      <nav className="flex items-center gap-2 overflow-x-auto pb-1" aria-label="Mail account views">
-        {tabs.map((tab) => {
-          const isActive = props.activeTab === tab.key
-          return (
-            <button
-              key={tab.key}
-              onClick={() => props.setActiveTab(tab.key)}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all ${
-                isActive
-                  ? 'bg-[#121316] text-white shadow-xs'
-                  : 'bg-white border border-[#121316]/12 text-[#121316] hover:bg-[#faf8f4]'
-              }`}
-            >
-              {tab.key === 'accounts' ? <Mail className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-              <span>{tab.label}</span>
-            </button>
-          )
-        })}
-      </nav>
-    </div>
-  )
+  return null
 }
 
 export function DomainPanels(props: {
@@ -226,6 +209,7 @@ export function DomainPanels(props: {
   )
 }
 
+// ── Main Accounts View Matching Modern Layout & Table Design ────────────────
 export function AccountsView(props: {
   loading: boolean
   accounts: MailAccount[]
@@ -285,617 +269,841 @@ export function AccountsView(props: {
   handleRunMailboxSyncNow: (id: string) => void
   handleToggleMailActive: (id: string, current: boolean, warmupStatus: MailAccount['warmupStatus']) => void
   handleDeleteMail: (id: string, email: string) => void
+  activeTab?: ActiveTab
+  setActiveTab?: (tab: ActiveTab) => void
 }) {
   const [expandedAccountId, setExpandedAccountId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showTrulyInboxModal, setShowTrulyInboxModal] = useState(false)
+
+  // Escape key listener for TrulyInbox modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showTrulyInboxModal) {
+        setShowTrulyInboxModal(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showTrulyInboxModal])
+
+  const filteredAccounts = useMemo(() => {
+    if (!searchQuery.trim()) return props.accounts
+    const q = searchQuery.toLowerCase()
+    return props.accounts.filter(
+      (a) =>
+        a.email.toLowerCase().includes(q) ||
+        (a.displayName || '').toLowerCase().includes(q) ||
+        a.type.toLowerCase().includes(q)
+    )
+  }, [props.accounts, searchQuery])
+
+  const totalConnected = props.accounts.filter((a) => a.connectionReady !== false).length
+  const totalWarmed = props.accounts.filter((a) => a.warmupStatus === 'WARMED').length
+  const trulyInboxConnectedCount = props.accounts.filter((a) => a.trulyInboxConnected).length
+
+  const currentPage = props.accountsPagination?.page || 1
+  const totalPages = props.accountsPagination?.pages || 1
+  const currentLimit = props.accountsPagination?.limit || 10
+  const totalCount = props.accountsPagination?.total || props.accounts.length
 
   return (
-    <div style={{ display: 'grid', gap: '18px' }}>
-      <div style={panelStyle}>
-        <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '14px' }}>Email accounts</div>
-        {props.loading ? (
-          <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Loading...</div>
-        ) : props.accounts.length === 0 ? (
-          <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No email account connected.</div>
-        ) : (
-          <div style={{ display: 'grid', gap: '12px' }}>
-            {props.accountsPagination.total > 0 ? (
-              <PaginationControls
-                page={props.accountsPagination.page}
-                pages={props.accountsPagination.pages}
-                total={props.accountsPagination.total}
-                limit={props.accountsPagination.limit}
-                onPageChange={props.setAccountsPage}
-                onLimitChange={props.setAccountsLimit}
-                label="mailboxes"
-              />
-            ) : null}
-            {props.accounts.map((account) => {
+    <div className="space-y-4">
+      {/* Top Floating Status & Action Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 backdrop-blur-md rounded-full border border-[#121316]/08 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-[#0f8a5f]" />
+            <span className="text-xs font-semibold text-[#121316]">
+              {totalConnected} Connected
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 backdrop-blur-md rounded-full border border-[#ee382b]/15 shadow-sm">
+            <Flame className="h-3.5 w-3.5 text-[#ee382b]" />
+            <span className="text-xs font-semibold text-[#121316]">
+              {totalWarmed} Warmed
+            </span>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative w-full sm:w-64 shrink-0">
+          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8780]" />
+          <input
+            type="text"
+            placeholder="Search accounts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3.5 py-1.5 bg-white/90 backdrop-blur-md border border-[#121316]/10 rounded-full text-xs text-[#121316] placeholder-[#8a8780] focus:outline-none focus:ring-1 focus:ring-[#ee382b] focus:border-[#ee382b] transition-all shadow-sm"
+          />
+        </div>
+      </div>
+
+      {/* Connect Action Bar & Provider Filters */}
+      <section className="flex flex-wrap items-center gap-2 w-full">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide flex-1">
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('accounts')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 cursor-pointer shadow-sm ${
+              !props.activeTab || props.activeTab === 'accounts'
+                ? 'bg-[#121316] text-white shadow-xs'
+                : 'bg-white/90 border border-[#121316]/10 text-[#121316] hover:bg-white hover:shadow-md'
+            }`}
+          >
+            <span>All Accounts</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('add-zoho')}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 border border-[#121316]/10 text-[#121316] rounded-full hover:bg-white hover:shadow-md transition-all shrink-0 cursor-pointer text-xs font-medium shadow-sm"
+          >
+            <Plus className="h-3.5 w-3.5 text-[#d97706]" />
+            <span>Zoho</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('add-gmail')}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 border border-[#121316]/10 text-[#121316] rounded-full hover:bg-white hover:shadow-md transition-all shrink-0 cursor-pointer text-xs font-medium shadow-sm"
+          >
+            <Plus className="h-3.5 w-3.5 text-[#ee382b]" />
+            <span>Gmail</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('add-outlook')}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 border border-[#121316]/10 text-[#121316] rounded-full hover:bg-white hover:shadow-md transition-all shrink-0 cursor-pointer text-xs font-medium shadow-sm"
+          >
+            <Plus className="h-3.5 w-3.5 text-[#004ac6]" />
+            <span>Outlook</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('add-smtp-imap')}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 border border-[#121316]/10 text-[#121316] rounded-full hover:bg-white hover:shadow-md transition-all shrink-0 cursor-pointer text-xs font-medium shadow-sm"
+          >
+            <Plus className="h-3.5 w-3.5 text-[#475569]" />
+            <span>Custom SMTP</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowTrulyInboxModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#0f8a5f]/10 to-white border border-[#0f8a5f]/25 text-[#0f8a5f] rounded-full hover:shadow-md transition-all shrink-0 cursor-pointer text-xs font-semibold shadow-sm ml-auto"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#0f8a5f]" />
+            <span>TrulyInbox AI {trulyInboxConnectedCount > 0 ? `(${trulyInboxConnectedCount})` : ''}</span>
+          </button>
+        </div>
+      </section>
+
+      {/* Main Data List Container */}
+      <section className="uneevo-card rounded-[20px] shadow-sm border border-[#121316]/12 bg-white flex flex-col overflow-hidden">
+        {/* Table Header */}
+        <div className="px-4 py-3 flex items-center bg-[#faf8f4] border-b border-[#121316]/12 text-[11px] text-[#62605c] uppercase tracking-wider font-bold">
+          <div className="w-8 shrink-0"></div>
+          <div className="flex-1 min-w-[200px]">Account</div>
+          <div className="w-28 shrink-0">Status</div>
+          <div className="w-24 shrink-0 text-right pr-4">Sent</div>
+          <div className="w-24 shrink-0 text-right pr-4">Warmup</div>
+          <div className="w-32 shrink-0 text-right pr-2">Health</div>
+          <div className="w-8 shrink-0"></div>
+        </div>
+
+        {/* Account Rows List */}
+        <div className="flex flex-col w-full divide-y divide-[#121316]/08">
+          {props.loading ? (
+            <div className="px-4 py-12 text-center text-xs text-[#8a8780]">
+              Loading mail accounts...
+            </div>
+          ) : filteredAccounts.length === 0 ? (
+            <div className="px-4 py-12 text-center text-xs text-[#8a8780] italic">
+              {searchQuery ? 'No accounts match your search filter.' : 'No email accounts connected.'}
+            </div>
+          ) : (
+            filteredAccounts.map((account) => {
               const isExpanded = expandedAccountId === account.id
               const isDetailLoading = props.accountDetailsLoading[account.id] === true
-              const provider = account.type === 'gmail'
-                ? { label: 'Gmail', color: '#d94b3d' }
-                : account.type === 'zoho'
-                  ? { label: 'Zoho Mail', color: '#d97706' }
+              const provider =
+                account.type === 'gmail'
+                  ? { label: 'Gmail', color: '#ee382b', bg: 'bg-[#ee382b]/10 text-[#ee382b] border-[#ee382b]/20' }
+                  : account.type === 'zoho'
+                  ? { label: 'Zoho Mail', color: '#d97706', bg: 'bg-[#d97706]/10 text-[#d97706] border-[#d97706]/20' }
                   : account.type === 'outlook'
-                    ? { label: 'Microsoft Outlook', color: '#1674d1' }
-                    : { label: 'SMTP / IMAP', color: '#475569' }
+                  ? { label: 'Outlook', color: '#004ac6', bg: 'bg-[#004ac6]/10 text-[#004ac6] border-[#004ac6]/20' }
+                  : { label: 'Custom SMTP', color: '#475569', bg: 'bg-[#475569]/10 text-[#475569] border-[#475569]/20' }
+
               const connectionReady = account.connectionReady !== false
               const hasMicrosoftWarning = account.type === 'outlook' && Boolean(account.microsoftAuthError)
-              const needsAttention = !connectionReady || account.mailboxSyncStatus === 'error' || hasMicrosoftWarning
+              const initialLetter = (account.displayName || account.email || 'M').charAt(0).toUpperCase()
+
               return (
-              <article key={account.id} className={`mail-account-card${needsAttention ? ' needs-attention' : ''}`}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isExpanded) {
-                      setExpandedAccountId(null)
-                      return
-                    }
-                    setExpandedAccountId(account.id)
-                    if (!account.detailsLoaded) {
-                      props.loadMailAccountDetail(account.id)
-                    }
-                  }}
-                  className="mail-account-summary"
-                  aria-expanded={isExpanded}
-                >
-                  <div className="mail-account-identity">
-                    <div className="mail-provider-mark" style={{ background: provider.color }}>
-                      <Mail size={18} aria-hidden="true" />
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div className="mail-account-email">{account.email}</div>
-                      <div className="mail-account-provider">{provider.label} · {account.displayName || account.email}</div>
-                    </div>
-                  </div>
-
-                  <div className="mail-status-row">
-                    <span className={`mail-status-pill ${connectionReady ? hasMicrosoftWarning ? 'warn' : 'good' : 'bad'}`}>
-                      {connectionReady ? <CircleCheck size={13} aria-hidden="true" /> : <CircleAlert size={13} aria-hidden="true" />}
-                      {connectionReady ? hasMicrosoftWarning ? 'Microsoft warning' : 'Connected' : 'Reconnect'}
-                    </span>
-                    <span className={`mail-status-pill ${account.mailboxSyncStatus === 'error' ? 'bad' : account.mailboxSyncStatus === 'syncing' ? 'warn' : 'good'}`}>
-                      <RefreshCw size={13} aria-hidden="true" />
-                      {account.mailboxSyncStatus === 'syncing' ? 'Syncing' : account.mailboxSyncStatus === 'error' ? 'Sync error' : 'Synced'}
-                    </span>
-                    <span className={`mail-status-pill ${account.isActive ? 'good' : ''}`}>
-                      <Power size={13} aria-hidden="true" />
-                      {account.isActive ? 'Sending enabled' : 'Sending off'}
-                    </span>
-                  </div>
-
-                  <div className="mail-metric-row">
-                    <div className="mail-metric"><strong>{account.sentToday}/{account.dailyLimit}</strong><span>Sent today</span></div>
-                    <div className="mail-metric"><strong>{account.warmupSentToday}/{account.warmupDailyLimit}</strong><span>Warmup</span></div>
-                    <div className="mail-metric"><strong>{account.mailboxHealthScore}/100</strong><span>Health</span></div>
-                  </div>
-
-                  <span className={`mail-summary-chevron${isExpanded ? ' open' : ''}`} aria-hidden="true">
-                    <ChevronDown size={18} />
-                  </span>
-                </button>
-                {isExpanded ? (
-                <div className="mail-account-expanded grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,1fr)]">
-                  {!account.detailsLoaded ? (
-                    <div style={{ gridColumn: '1 / -1', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      {isDetailLoading ? 'Loading mailbox controls and health details...' : 'Loading mailbox controls...'}
-                    </div>
-                  ) : (
-                    <>
-                  <div className="mail-control-section">
-                    <div className="mail-section-title"><Activity size={15} aria-hidden="true" /> Performance and health</div>
-                    <AccountHeader
-                      title={account.email}
-                      providerLabel={account.type}
-                      statusLabel={`${account.warmupStatus} • Stage ${account.warmupStage + 1}`}
-                      secondaryStatus={account.type === 'zoho' && account.connectionReady === false ? 'Setup incomplete' : account.isActive ? 'Campaign active' : 'Campaign inactive'}
-                    />
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: '10px', marginTop: '14px' }}>
-                      <MetricPair label="Warmup 7d" value={`${account.warmupStats7d?.successRate ?? 0}% (${account.warmupStats7d?.sent ?? 0}/${account.warmupStats7d?.total ?? 0})`} />
-                      <MetricPair label="Campaign sending" value={`${account.sentToday}/${account.dailyLimit}`} />
-                      <MetricPair label="Warmup sending" value={`${account.warmupSentToday}/${account.warmupDailyLimit} with target ${account.recommendedDailyLimit ?? account.warmupDailyLimit}`} />
-                      <MetricPair label="Warmup replies" value={`${account.warmupRepliesToday}/${account.warmupReplyDailyLimit}`} />
-                      <MetricPair label="Mailbox sync" value={<span><StatusBadge status={account.mailboxSyncStatus} /></span>} />
-                      <MetricPair label="Mailbox health" value={`${account.mailboxHealthScore}/100 (${account.mailboxHealthStatus})`} tone={account.mailboxHealthScore > 65 ? 'var(--success)' : account.mailboxHealthScore > 0 ? 'var(--warning)' : 'var(--text-primary)'} />
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '12px', lineHeight: 1.7 }}>
-                      Last mail: {account.lastMailSentAt ? new Date(account.lastMailSentAt).toLocaleString() : 'Never'}<br />
-                      Last campaign send: {account.lastCampaignSentAt ? new Date(account.lastCampaignSentAt).toLocaleString() : 'Never'}<br />
-                      Last warmup send: {account.lastWarmupSentAt ? new Date(account.lastWarmupSentAt).toLocaleString() : 'Never'}<br />
-                      Last warmup reply: {account.lastWarmupReplyAt ? new Date(account.lastWarmupReplyAt).toLocaleString() : 'Never'}<br />
-                      Warmup window: {account.warmupBusinessHoursStart || 'Workspace default'} - {account.warmupBusinessHoursEnd || 'Workspace default'} ({account.warmupTimezone || 'Workspace default'})<br />
-                      Last sync: {account.mailboxLastSyncedAt ? new Date(account.mailboxLastSyncedAt).toLocaleString() : 'Never'}<br />
-                      Started: {account.warmupStartedAt ? new Date(account.warmupStartedAt).toLocaleString() : 'Not started'} | Completed: {account.warmupCompletedAt ? new Date(account.warmupCompletedAt).toLocaleString() : 'Not completed'}
-                    </div>
-                    {account.type === 'zoho' ? (
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                        Zoho setup: {account.zohoSetupStatus === 'complete' ? 'SMTP + OAuth connected' : account.zohoSetupStatus === 'pending_oauth' ? 'SMTP connected, OAuth pending' : account.zohoSetupStatus === 'pending_smtp' ? 'OAuth connected, SMTP pending' : 'SMTP + OAuth pending'}
-                        {' | '}Active inbox mode: {account.mailboxConnectionMethod === 'api' ? 'Zoho API' : 'Zoho IMAP'}
-                        {account.mailboxConnectionMethod === 'imap' ? ` | IMAP ${account.zohoImapEnabled === false ? 'OFF' : 'ON'}` : ''}
-                        {account.trackingDomain ? ` | Tracker ${account.trackingDomain}` : ''}
-                      </div>
-                    ) : null}
-                    {account.type === 'gmail' ? (
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                        Gmail connection: {account.mailboxConnectionMethod === 'imap' ? 'IMAP + SMTP app password' : 'Google OAuth'}
-                        {account.trackingDomain ? ` | Tracker ${account.trackingDomain}` : ' | Tracker global'}
-                      </div>
-                    ) : null}
-                    {account.type === 'outlook' ? (
-                      <div style={{ fontSize: '12px', color: account.connectionReady === false ? 'var(--warning)' : 'var(--text-secondary)', marginTop: '8px' }}>
-                        Microsoft connection: {account.connectionReady === false ? 'Reconnect required' : 'Microsoft Graph OAuth'}
-                        {account.microsoftTokenExpiry ? ` | Token refresh by ${new Date(account.microsoftTokenExpiry).toLocaleString()}` : ''}
-                      </div>
-                    ) : account.type === 'smtp_imap' ? (
-                      <div style={{ fontSize: '12px', color: account.connectionReady === false ? 'var(--warning)' : 'var(--text-secondary)', marginTop: '8px' }}>
-                        Mailbox connection: {account.connectionReady === false ? 'SMTP/IMAP incomplete' : 'Custom SMTP + IMAP'}
-                        {account.trackingDomain ? ` | Tracker ${account.trackingDomain}` : ' | Tracker global'}
-                      </div>
-                    ) : null}
-                    {account.type === 'outlook' && account.microsoftAuthError ? (
-                      <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.22)', background: 'rgba(245,158,11,0.08)', color: 'var(--warning)', fontSize: '12px' }}>
-                        Microsoft Graph: {account.microsoftAuthError}
-                      </div>
-                    ) : account.type === 'outlook' && account.connectionReady === false ? (
-                      <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.22)', background: 'rgba(245,158,11,0.08)', color: 'var(--warning)', fontSize: '12px' }}>
-                        Reconnect this mailbox with Microsoft OAuth before sending, syncing, warmup, or proxy use.
-                      </div>
-                    ) : null}
-                    {account.type === 'zoho' && account.connectionReady === false ? (
-                      <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(245,158,11,0.22)', background: 'rgba(245,158,11,0.08)', color: 'var(--warning)', fontSize: '12px' }}>
-                        This mailbox is kept in one matched record, but campaign activation should wait until SMTP and OAuth are both attached to the same Zoho email.
-                      </div>
-                    ) : null}
-                    {account.mailboxSyncError ? (
-                      <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(239,68,68,0.18)', background: 'rgba(239,68,68,0.08)', color: 'var(--error)', fontSize: '12px' }}>
-                        Sync error: {account.mailboxSyncError}
-                      </div>
-                    ) : null}
-                    {account.warmupHealthSnapshots?.[0]?.notes ? (
-                      <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {account.warmupHealthSnapshots[0]?.notes}
-                      </div>
-                    ) : null}
-
-                    {account.proxyDetails ? (
-                      <div
-                        style={{
-                          marginTop: '16px',
-                          padding: '16px',
-                          borderRadius: '14px',
-                          background: 'linear-gradient(135deg, rgba(99,102,241,0.06), rgba(99,102,241,0.01))',
-                          border: '1px solid rgba(99, 102, 241, 0.15)',
-                          boxShadow: '0 4px 20px rgba(99, 102, 241, 0.03)',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>
-                          <span style={{ fontSize: '16px' }}>🔒</span> Mail Proxy Connection Details
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', fontSize: '12px' }}>
-                          <div style={{ background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>SMTP (Outgoing)</div>
-                            <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{account.proxyDetails.smtpHost}:{account.proxyDetails.smtpPort}</div>
-                            {account.proxyDetails.smtpSecurity ? (
-                              <div style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
-                                Security: {account.proxyDetails.smtpSecurity}
-                              </div>
-                            ) : null}
-                          </div>
-                          <div style={{ background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>IMAP (Incoming)</div>
-                            <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                              {account.proxyDetails.imapHost && account.proxyDetails.imapPort
-                                ? `${account.proxyDetails.imapHost}:${account.proxyDetails.imapPort}`
-                                : 'Unavailable'}
-                            </div>
-                            <div style={{ marginTop: '4px', color: 'var(--text-secondary)' }}>
-                              {account.proxyDetails.imapMode || 'unknown'}
-                              {account.proxyDetails.imapSecurity ? ` | ${account.proxyDetails.imapSecurity}` : ''}
-                            </div>
-                          </div>
-                          <div style={{ gridColumn: '1 / -1', background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                            <div style={{ color: 'var(--text-muted)', fontWeight: 600, fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>Proxy Credentials</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                                <span style={{ color: 'var(--text-secondary)' }}>Username:</span>
-                                <strong style={{ color: 'var(--text-primary)', wordBreak: 'break-all' }}>{account.proxyDetails.proxyUsername}</strong>
-                              </div>
-                              {account.proxyDetails.proxyPassword && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginTop: '2px', borderTop: '1px dashed var(--border)', paddingTop: '4px' }}>
-                                  <span style={{ color: 'var(--text-secondary)' }}>Password:</span>
-                                  <strong style={{ color: '#059669', wordBreak: 'break-all', fontFamily: 'monospace' }}>{account.proxyDetails.proxyPassword}</strong>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '10px', lineHeight: 1.5 }}>
-                          💡 Connect your mail client/proxy client using these parameters. Authentication is permitted for any matched upstream provider configuration even if mailbox campaign/warmup states are inactive.
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {account.trulyInboxVisibleToOrg ? (
+                <article key={account.id} className="flex flex-col w-full">
+                  {/* Compact Main Row */}
+                  <div
+                    onClick={() => {
+                      if (isExpanded) {
+                        setExpandedAccountId(null)
+                        return
+                      }
+                      setExpandedAccountId(account.id)
+                      if (!account.detailsLoaded) {
+                        props.loadMailAccountDetail(account.id)
+                      }
+                    }}
+                    className={`px-4 py-3 flex items-center hover:bg-[#faf8f4]/60 transition-colors group cursor-pointer text-xs ${
+                      isExpanded ? 'bg-[#faf8f4]/80' : ''
+                    }`}
+                  >
+                    {/* Avatar Icon */}
                     <div
-                      style={{
-                        marginTop: '16px',
-                        padding: '16px',
-                        borderRadius: '14px',
-                        background: 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(16,185,129,0.03))',
-                        border: '1px solid rgba(34, 197, 94, 0.18)',
-                      }}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold text-xs mr-3 border ${provider.bg}`}
                     >
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                        TrulyInbox API
+                      {initialLetter}
+                    </div>
+
+                    {/* Account Title & Subtitle */}
+                    <div className="flex flex-col min-w-[200px] flex-1 pr-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-[#121316] truncate text-xs sm:text-sm">
+                          {account.email}
+                        </span>
+                        {account.trulyInboxConnected && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#0f8a5f]/10 text-[#0f8a5f] border border-[#0f8a5f]/20">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            TrulyInbox
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                        One TrulyInbox API key can be reused across multiple mailboxes. When connected, this mailbox is created in TrulyInbox using
-                        `mail.prane.one`, SMTP `2525`, IMAP `1143`, no security layer, then TrulyInbox warmup is set to `13-15`
-                        with `25%` reply rate. After success, this platform reduces internal warmup to `5-6`.
+                      <span className="text-[11px] text-[#62605c] truncate mt-0.5">
+                        {provider.label} · {account.displayName || account.email}
+                      </span>
+                    </div>
+
+                    {/* Status Badges */}
+                    <div className="flex flex-col gap-1 w-28 shrink-0">
+                      <div className={`flex items-center gap-1.5 ${connectionReady ? 'text-[#0f8a5f]' : 'text-[#c2414c]'}`}>
+                        {connectionReady ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <CircleAlert className="h-3.5 w-3.5" />
+                        )}
+                        <span className="text-[11px] font-semibold">
+                          {connectionReady ? (hasMicrosoftWarning ? 'Warning' : 'Connected') : 'Reconnect'}
+                        </span>
                       </div>
-                      <div style={{ marginTop: '10px', fontSize: '12px', color: account.trulyInboxConnected ? 'var(--success)' : account.trulyInboxStatus === 'error' ? 'var(--error)' : 'var(--text-secondary)' }}>
-                        Status: {account.trulyInboxConnected ? `Connected${account.trulyInboxEmailAccountId ? ` (#${account.trulyInboxEmailAccountId})` : ''}` : account.trulyInboxStatus || 'not connected'}
+                      <div className="flex items-center gap-1.5 text-[#62605c]">
+                        <RefreshCw className={`h-3 w-3 ${account.mailboxSyncStatus === 'syncing' ? 'animate-spin text-[#ee382b]' : ''}`} />
+                        <span className="text-[11px]">
+                          {account.mailboxSyncStatus === 'syncing' ? 'Syncing' : account.mailboxSyncStatus === 'error' ? 'Sync error' : 'Synced'}
+                        </span>
                       </div>
-                      {account.trulyInboxHasApiKey ? (
-                        <div style={{ marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                          API key saved. Enter a new key only if you want to replace it.
+                    </div>
+
+                    {/* Sent Count */}
+                    <div className="flex items-center justify-end w-24 shrink-0 pr-4 font-mono">
+                      <span className="font-bold text-[#121316]">{account.sentToday}</span>
+                      <span className="text-[#8a8780] text-[11px] ml-1">/{account.dailyLimit}</span>
+                    </div>
+
+                    {/* Warmup Count */}
+                    <div className="flex items-center justify-end w-24 shrink-0 pr-4 font-mono">
+                      <span className="font-bold text-[#121316]">{account.warmupSentToday}</span>
+                      <span className="text-[#8a8780] text-[11px] ml-1">/{account.warmupDailyLimit}</span>
+                    </div>
+
+                    {/* Health Circular Gauge */}
+                    <div className="flex flex-col items-end justify-center w-32 shrink-0 pr-2">
+                      <HealthGauge score={account.mailboxHealthScore} />
+                    </div>
+
+                    {/* More Action Toggle Button */}
+                    <button
+                      type="button"
+                      aria-label="More actions"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[#8a8780] hover:text-[#121316] hover:bg-[#121316]/05 transition-all shrink-0 ml-2 cursor-pointer"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Expanded Mailbox Controls Drawer */}
+                  {isExpanded && (
+                    <div className="px-5 py-5 border-t border-[#121316]/08 bg-[#faf8f4]/40 animate-fade-in space-y-6">
+                      {!account.detailsLoaded ? (
+                        <div className="py-4 text-center text-xs text-[#8a8780]">
+                          {isDetailLoading ? 'Loading mailbox controls and health diagnostics...' : 'Loading controls...'}
                         </div>
-                      ) : null}
-                      {account.trulyInboxConnectedAt ? (
-                        <div style={{ marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                          Connected at {new Date(account.trulyInboxConnectedAt).toLocaleString()}
-                        </div>
-                      ) : null}
-                      {account.trulyInboxLastError ? (
-                        <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--error)' }}>
-                          Last error: {account.trulyInboxLastError}
-                        </div>
-                      ) : null}
-                      {!account.proxyDetails ? (
-                        <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--warning)' }}>
-                          Proxy credentials are not visible in this workspace yet, but you can still enter the API key here.
-                          The backend will prepare the mailbox proxy automatically during connection.
-                        </div>
-                      ) : null}
-                      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_88px_160px]" style={{ marginTop: '12px', minWidth: 0 }}>
-                        <input
-                          className="input-base"
-                          type={props.showTrulyInboxApiKeys[account.id] ? 'text' : 'password'}
-                          placeholder={account.trulyInboxHasApiKey ? 'Saved key hidden' : 'TrulyInbox API key'}
-                          value={props.pendingTrulyInboxApiKeys[account.id] ?? ''}
-                          onChange={(e) =>
-                            props.setPendingTrulyInboxApiKeys((prev) => ({ ...prev, [account.id]: e.target.value }))
-                          }
-                          disabled={account.type === 'outlook' && account.connectionReady === false}
-                        />
-                        <button
-                          className="btn-ghost"
-                          type="button"
-                          onClick={() =>
-                            props.setShowTrulyInboxApiKeys((prev) => ({ ...prev, [account.id]: !prev[account.id] }))
-                          }
-                        >
-                          {props.showTrulyInboxApiKeys[account.id] ? 'Hide' : 'Show'}
-                        </button>
-                        <button
-                          className="btn-primary"
-                          disabled={!!props.trulyInboxConnecting[account.id] || (account.type === 'outlook' && account.connectionReady === false)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            justifyContent: 'center',
-                            opacity: props.trulyInboxConnecting[account.id] ? 0.8 : 1,
-                            cursor: props.trulyInboxConnecting[account.id] ? 'not-allowed' : 'pointer',
-                          }}
-                          onClick={() => props.handleConnectTrulyInbox(account.id)}
-                        >
-                          {props.trulyInboxConnecting[account.id] ? (
-                            <>
-                              <span style={{
-                                width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.4)',
-                                borderTopColor: '#fff', borderRadius: '50%',
-                                display: 'inline-block', animation: 'spin 0.8s linear infinite'
-                              }} />
-                              Connecting…
-                            </>
-                          ) : account.trulyInboxConnected ? (
-                            '✓ Connected — Reconnect'
-                          ) : (
-                            'Connect API'
-                          )}
-                        </button>
-                      </div>
-                      {/* Start Warmup button — appears right after TrulyInbox connection */}
-                      {account.trulyInboxConnected && (
-                        <div style={{ marginTop: '10px' }}>
-                          {(account.trulyInboxStatus === 'active' || account.trulyInboxStatus === 'warming') ? (
-                            <button
-                              className="btn-primary"
-                              disabled
-                              style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                opacity: 0.65, cursor: 'not-allowed',
-                                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                              }}
-                            >
-                              <span style={{ fontSize: '14px' }}>✓</span> Warmup Active
-                            </button>
-                          ) : (
-                            <button
-                              className="btn-primary"
-                              disabled={!!props.trulyInboxStarting[account.id] || (account.type === 'outlook' && account.connectionReady === false)}
-                              style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                opacity: props.trulyInboxStarting[account.id] ? 0.8 : 1,
-                                cursor: props.trulyInboxStarting[account.id] ? 'not-allowed' : 'pointer',
-                                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                              }}
-                              onClick={() => props.handleStartTrulyInboxWarmup(account.id)}
-                            >
-                              {props.trulyInboxStarting[account.id] ? (
-                                <>
-                                  <span style={{
-                                    width: '12px', height: '12px',
-                                    border: '2px solid rgba(255,255,255,0.4)',
-                                    borderTopColor: '#fff', borderRadius: '50%',
-                                    display: 'inline-block', animation: 'spin 0.8s linear infinite',
-                                  }} />
-                                  Starting…
-                                </>
-                              ) : (
-                                <><span style={{ fontSize: '14px' }}>▶</span> Start Warmup</>
+                      ) : (
+                        <>
+                          {/* TrulyInbox Deliverability Booster Section */}
+                          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-white to-[#faf8f4] border border-[#0f8a5f]/20 shadow-2xs space-y-4">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0f8a5f] to-[#121316] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                                  <Sparkles className="h-4 w-4 text-emerald-300" />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-[#121316] uppercase tracking-wider">
+                                      TrulyInbox Deliverability Engine
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0f8a5f]/10 text-[#0f8a5f] border border-[#0f8a5f]/20">
+                                      AI Warmup & Spam Rescue
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-[#62605c] mt-0.5">
+                                    Autonomous inbox rotation, spam folder rescue, and email reputation warming.
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold font-mono border ${
+                                    account.trulyInboxConnected
+                                      ? 'bg-[#0f8a5f]/10 border-[#0f8a5f]/25 text-[#0f8a5f]'
+                                      : 'bg-[#121316]/05 border-[#121316]/10 text-[#8a8780]'
+                                  }`}
+                                >
+                                  {account.trulyInboxConnected ? (
+                                    <>
+                                      <CheckCircle2 className="h-3.5 w-3.5" />
+                                      <span>Connected {account.trulyInboxEmailAccountId ? `(#${account.trulyInboxEmailAccountId})` : ''}</span>
+                                    </>
+                                  ) : (
+                                    <span>Not Connected</span>
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* API Key Input & Connection Actions */}
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                              <div className="relative flex-1">
+                                <input
+                                  className="w-full pl-3.5 pr-16 py-2 rounded-xl border border-[#121316]/12 bg-white text-xs font-mono text-[#121316] placeholder-[#8a8780] focus:outline-none focus:ring-2 focus:ring-[#0f8a5f]/30 focus:border-[#0f8a5f] transition-all shadow-2xs"
+                                  type={props.showTrulyInboxApiKeys[account.id] ? 'text' : 'password'}
+                                  placeholder={account.trulyInboxHasApiKey ? '•••••••••••••••• (Key Saved)' : 'Enter TrulyInbox API Key (e.g. ti_...)'}
+                                  value={props.pendingTrulyInboxApiKeys[account.id] ?? ''}
+                                  onChange={(e) =>
+                                    props.setPendingTrulyInboxApiKeys((prev) => ({ ...prev, [account.id]: e.target.value }))
+                                  }
+                                />
+                                <button
+                                  type="button"
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[10px] font-bold text-[#62605c] hover:text-[#121316] rounded transition-colors cursor-pointer"
+                                  onClick={() =>
+                                    props.setShowTrulyInboxApiKeys((prev) => ({ ...prev, [account.id]: !prev[account.id] }))
+                                  }
+                                >
+                                  {props.showTrulyInboxApiKeys[account.id] ? 'HIDE' : 'SHOW'}
+                                </button>
+                              </div>
+
+                              <button
+                                type="button"
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#121316] text-white text-xs font-semibold hover:bg-black disabled:opacity-50 transition-all shadow-2xs cursor-pointer shrink-0"
+                                disabled={!!props.trulyInboxConnecting[account.id]}
+                                onClick={() => props.handleConnectTrulyInbox(account.id)}
+                              >
+                                {props.trulyInboxConnecting[account.id] ? (
+                                  <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    <span>Connecting...</span>
+                                  </>
+                                ) : (
+                                  <span>{account.trulyInboxConnected ? 'Update API Key' : 'Connect API Key'}</span>
+                                )}
+                              </button>
+
+                              {account.trulyInboxConnected && (
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#0f8a5f] text-white text-xs font-bold hover:bg-[#0c7450] disabled:opacity-50 transition-all shadow-2xs cursor-pointer shrink-0"
+                                  disabled={!!props.trulyInboxStarting[account.id]}
+                                  onClick={() => props.handleStartTrulyInboxWarmup(account.id)}
+                                >
+                                  {props.trulyInboxStarting[account.id] ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      <span>Starting...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Flame className="h-3.5 w-3.5" />
+                                      <span>Start Truly Warmup</span>
+                                    </>
+                                  )}
+                                </button>
                               )}
-                            </button>
-                          )}
+                            </div>
+
+                            {/* Status & Sync Details if Connected */}
+                            {account.trulyInboxConnected && (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1 text-[11px]">
+                                <div className="p-2.5 rounded-lg bg-white border border-[#121316]/06">
+                                  <span className="text-[#8a8780] block text-[10px] uppercase font-bold">Engine Status</span>
+                                  <span className="font-semibold text-[#121316] capitalize">
+                                    {account.trulyInboxStatus || 'Active & Syncing'}
+                                  </span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-white border border-[#121316]/06">
+                                  <span className="text-[#8a8780] block text-[10px] uppercase font-bold">Last Synced</span>
+                                  <span className="font-semibold text-[#121316]">
+                                    {account.trulyInboxLastSyncedAt ? new Date(account.trulyInboxLastSyncedAt).toLocaleTimeString() : 'Recent'}
+                                  </span>
+                                </div>
+                                <div className="p-2.5 rounded-lg bg-white border border-[#121316]/06 col-span-2 sm:col-span-1">
+                                  <span className="text-[#8a8780] block text-[10px] uppercase font-bold">Deliverability Mode</span>
+                                  <span className="font-semibold text-[#0f8a5f]">AI Placement Optimizer</span>
+                                </div>
+                              </div>
+                            )}
+
+                            {account.trulyInboxLastError && (
+                              <div className="p-3 rounded-xl bg-[#c2414c]/08 border border-[#c2414c]/20 text-xs text-[#c2414c] flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 shrink-0" />
+                                <span>{account.trulyInboxLastError}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,1fr)]">
+                            {/* Performance & Health Column */}
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#121316]">
+                                <Activity className="h-4 w-4 text-[#ee382b]" />
+                                <span>Performance & Health Diagnostics</span>
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div className="p-3.5 rounded-xl bg-white border border-[#121316]/08 shadow-2xs">
+                                  <span className="text-[10px] uppercase font-bold text-[#8a8780] block mb-1">Warmup 7d</span>
+                                  <span className="font-mono text-xs font-bold text-[#121316]">
+                                    {account.warmupStats7d?.successRate ?? 0}% ({account.warmupStats7d?.sent ?? 0}/{account.warmupStats7d?.total ?? 0})
+                                  </span>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white border border-[#121316]/08 shadow-2xs">
+                                  <span className="text-[10px] uppercase font-bold text-[#8a8780] block mb-1">Campaign Sending</span>
+                                  <span className="font-mono text-xs font-bold text-[#121316]">
+                                    {account.sentToday}/{account.dailyLimit}
+                                  </span>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white border border-[#121316]/08 shadow-2xs">
+                                  <span className="text-[10px] uppercase font-bold text-[#8a8780] block mb-1">Warmup Sending</span>
+                                  <span className="font-mono text-xs font-bold text-[#121316]">
+                                    {account.warmupSentToday}/{account.warmupDailyLimit}
+                                  </span>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white border border-[#121316]/08 shadow-2xs">
+                                  <span className="text-[10px] uppercase font-bold text-[#8a8780] block mb-1">Warmup Replies</span>
+                                  <span className="font-mono text-xs font-bold text-[#121316]">
+                                    {account.warmupRepliesToday}/{account.warmupReplyDailyLimit}
+                                  </span>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white border border-[#121316]/08 shadow-2xs">
+                                  <span className="text-[10px] uppercase font-bold text-[#8a8780] block mb-1">Mailbox Sync</span>
+                                  <span className="text-xs font-semibold text-[#121316] capitalize">
+                                    {account.mailboxSyncStatus}
+                                  </span>
+                                </div>
+                                <div className="p-3.5 rounded-xl bg-white border border-[#121316]/08 shadow-2xs">
+                                  <span className="text-[10px] uppercase font-bold text-[#8a8780] block mb-1">Health Score</span>
+                                  <span className={`font-mono text-xs font-bold ${account.mailboxHealthScore > 65 ? 'text-[#0f8a5f]' : 'text-[#d97706]'}`}>
+                                    {account.mailboxHealthScore}/100 ({account.mailboxHealthStatus})
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Action Buttons Grid */}
+                              <div className="flex flex-wrap gap-2 pt-2">
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#121316]/10 bg-white text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] shadow-2xs cursor-pointer"
+                                  onClick={() => props.handleWarmupAutoToggle(account.id, account.warmupAutoEnabled)}
+                                >
+                                  <Flame className="h-3.5 w-3.5 text-[#ee382b]" />
+                                  <span>Warmup {account.warmupAutoEnabled ? 'ON' : 'OFF'}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#121316]/10 bg-white text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] shadow-2xs cursor-pointer"
+                                  onClick={() => props.handleOpenMailboxFolder(account.id, 'INBOX')}
+                                  disabled={!account.mailboxSyncAvailable}
+                                >
+                                  <Inbox className="h-3.5 w-3.5" />
+                                  <span>Inbox</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#121316]/10 bg-white text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] shadow-2xs cursor-pointer"
+                                  onClick={() => props.handleOpenMailboxFolder(account.id, 'SPAM')}
+                                  disabled={!account.mailboxSyncAvailable}
+                                >
+                                  <ShieldAlert className="h-3.5 w-3.5" />
+                                  <span>Spam</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#121316]/10 bg-white text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] shadow-2xs cursor-pointer"
+                                  onClick={() => props.handleOpenMailboxFolder(account.id, 'SENT')}
+                                  disabled={!account.mailboxSyncAvailable}
+                                >
+                                  <Send className="h-3.5 w-3.5" />
+                                  <span>Sent</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#121316]/10 bg-white text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] shadow-2xs cursor-pointer"
+                                  onClick={() => props.handleRunMailboxSyncNow(account.id)}
+                                  disabled={!account.mailboxSyncAvailable}
+                                >
+                                  <RefreshCw className="h-3.5 w-3.5" />
+                                  <span>Sync Mailbox</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-2xs cursor-pointer ${
+                                    account.isActive
+                                      ? 'bg-[#121316] text-white hover:bg-black'
+                                      : 'border border-[#121316]/10 bg-white text-[#121316] hover:bg-[#faf8f4]'
+                                  }`}
+                                  onClick={() => props.handleToggleMailActive(account.id, account.isActive, account.warmupStatus)}
+                                >
+                                  <Power className="h-3.5 w-3.5" />
+                                  <span>{account.isActive ? 'Disable' : 'Enable'}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#c2414c]/20 bg-white text-xs font-semibold text-[#c2414c] hover:bg-[#c2414c]/08 shadow-2xs cursor-pointer ml-auto"
+                                  onClick={() => props.handleDeleteMail(account.id, account.email)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <span>Remove</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Limits & Configuration Column */}
+                            <div className="space-y-4">
+                              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#121316]">
+                                <Settings2 className="h-4 w-4 text-[#ee382b]" />
+                                <span>Limits & Operations</span>
+                              </div>
+
+                              <div className="space-y-2.5">
+                                {/* Daily Send Limit */}
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    className="w-20 px-3 py-1.5 rounded-lg border border-[#121316]/10 text-xs font-mono"
+                                    type="number"
+                                    min={1}
+                                    max={500}
+                                    value={props.pendingDailyLimits[account.id] ?? String(account.dailyLimit)}
+                                    onChange={(e) => props.setPendingDailyLimits((prev) => ({ ...prev, [account.id]: e.target.value }))}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="flex-1 px-3 py-1.5 rounded-lg border border-[#121316]/10 bg-white text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] cursor-pointer"
+                                    onClick={() => props.handleUpdateMailDailyLimit(account.id)}
+                                  >
+                                    Save Daily Send Limit
+                                  </button>
+                                </div>
+
+                                {/* Warmup Limit */}
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    className="w-20 px-3 py-1.5 rounded-lg border border-[#121316]/10 text-xs font-mono"
+                                    type="number"
+                                    min={1}
+                                    max={500}
+                                    value={props.pendingWarmupLimits[account.id] ?? String(account.warmupDailyLimit)}
+                                    onChange={(e) => props.setPendingWarmupLimits((prev) => ({ ...prev, [account.id]: e.target.value }))}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="flex-1 px-3 py-1.5 rounded-lg border border-[#121316]/10 bg-white text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] cursor-pointer"
+                                    onClick={() => props.handleUpdateMailWarmupLimit(account.id)}
+                                  >
+                                    Save Warmup Limit
+                                  </button>
+                                </div>
+
+                                {/* Warmup Reply Limit */}
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    className="w-20 px-3 py-1.5 rounded-lg border border-[#121316]/10 text-xs font-mono"
+                                    type="number"
+                                    min={1}
+                                    max={500}
+                                    value={props.pendingWarmupReplyLimits[account.id] ?? String(account.warmupReplyDailyLimit)}
+                                    onChange={(e) =>
+                                      props.setPendingWarmupReplyLimits((prev) => ({ ...prev, [account.id]: e.target.value }))
+                                    }
+                                  />
+                                  <button
+                                    type="button"
+                                    className="flex-1 px-3 py-1.5 rounded-lg border border-[#121316]/10 bg-white text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] cursor-pointer"
+                                    onClick={() => props.handleUpdateMailWarmupReplyLimit(account.id)}
+                                  >
+                                    Save Reply Limit
+                                  </button>
+                                </div>
+
+                                {/* Warmup Status Select */}
+                                <select
+                                  className="w-full px-3 py-1.5 rounded-lg border border-[#121316]/10 bg-white text-xs font-medium text-[#121316]"
+                                  value={account.warmupStatus}
+                                  onChange={(e) => props.handleWarmupStatusChange(account.id, e.target.value as MailAccount['warmupStatus'])}
+                                >
+                                  <option value="COLD">Status: COLD</option>
+                                  <option value="WARMING">Status: WARMING</option>
+                                  <option value="PAUSED">Status: PAUSED</option>
+                                  <option value="WARMED">Status: WARMED</option>
+                                </select>
+
+                                {/* Warmup Partner Select */}
+                                <select
+                                  className="w-full px-3 py-1.5 rounded-lg border border-[#121316]/10 bg-white text-xs font-medium text-[#121316]"
+                                  value={account.warmupProviderPreference}
+                                  onChange={(e) => props.handleWarmupProviderPreferenceChange(account.id, e.target.value as MailAccount['warmupProviderPreference'])}
+                                >
+                                  <option value="random">Warmup partner: Random</option>
+                                  <option value="gmail">Warmup partner: Gmail</option>
+                                  <option value="zoho">Warmup partner: Zoho</option>
+                                  <option value="outlook">Warmup partner: Outlook</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Synced Mailbox Messages Preview if folder open */}
+                      {props.activeMailboxAccountId === account.id && (
+                        <div className="mt-6 pt-5 border-t border-[#121316]/08 space-y-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold uppercase tracking-wider text-[#121316]">
+                              {props.activeMailboxFolder} Folder
+                            </span>
+                            <span className="text-[#62605c]">
+                              {props.mailboxLoading ? 'Loading messages...' : `${props.mailboxMessages.length} messages`}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            {props.mailboxMessages.length === 0 && !props.mailboxLoading ? (
+                              <div className="text-xs text-[#8a8780] italic py-2">
+                                No synced messages in this folder.
+                              </div>
+                            ) : (
+                              props.mailboxMessages.map((message) => (
+                                <div key={message.id} className="p-3 rounded-xl bg-white border border-[#121316]/08 text-xs flex items-center justify-between gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-semibold text-[#121316] truncate">
+                                      {message.subject || '(no subject)'}
+                                    </div>
+                                    <div className="text-[11px] text-[#62605c] mt-0.5 truncate">
+                                      From {message.fromEmail} • {message.receivedAt ? new Date(message.receivedAt).toLocaleDateString() : ''}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    {!message.isRead && (
+                                      <button
+                                        type="button"
+                                        className="px-2.5 py-1 rounded-md border border-[#121316]/10 text-[11px] font-semibold text-[#121316] hover:bg-[#faf8f4]"
+                                        onClick={() => props.handleMailboxAction(account.id, message.id, 'mark-read')}
+                                      >
+                                        Mark read
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
-                    ) : null}
-
-                    <ProgressBar
-                      value={account.warmupSentToday}
-                      max={Math.max(account.recommendedDailyLimit ?? account.warmupDailyLimit, account.warmupDailyLimit)}
-                      color={account.warmupStatus === 'WARMED' ? 'var(--success)' : 'var(--accent)'}
-                    />
-                  </div>
-                  <div className="mail-control-section" style={{ display: 'grid', gap: '10px', alignContent: 'start' }}>
-                    <div className="mail-section-title"><Settings2 size={15} aria-hidden="true" /> Limits and operations</div>
-                    <div className="grid gap-2 sm:grid-cols-[92px_minmax(0,1fr)]">
-                      <input
-                        className="input-base"
-                        type="number"
-                        min={1}
-                        max={500}
-                        value={props.pendingDailyLimits[account.id] ?? String(account.dailyLimit)}
-                        onChange={(e) => props.setPendingDailyLimits((prev) => ({ ...prev, [account.id]: e.target.value }))}
-                      />
-                      <button className="btn-ghost" onClick={() => props.handleUpdateMailDailyLimit(account.id)}>Save send</button>
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-[92px_minmax(0,1fr)]">
-                      <input
-                        className="input-base"
-                        type="number"
-                        min={1}
-                        max={500}
-                        value={props.pendingWarmupLimits[account.id] ?? String(account.warmupDailyLimit)}
-                        onChange={(e) => props.setPendingWarmupLimits((prev) => ({ ...prev, [account.id]: e.target.value }))}
-                      />
-                      <button className="btn-ghost" onClick={() => props.handleUpdateMailWarmupLimit(account.id)}>Save warmup</button>
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-[92px_minmax(0,1fr)]">
-                      <input
-                        className="input-base"
-                        type="number"
-                        min={1}
-                        max={500}
-                        value={props.pendingWarmupReplyLimits[account.id] ?? String(account.warmupReplyDailyLimit)}
-                        onChange={(e) =>
-                          props.setPendingWarmupReplyLimits((prev) => ({ ...prev, [account.id]: e.target.value }))
-                        }
-                      />
-                      <button className="btn-ghost" onClick={() => props.handleUpdateMailWarmupReplyLimit(account.id)}>Save replies</button>
-                    </div>
-                    {account.type === 'zoho' ? (
-                      <div className="grid gap-2 sm:grid-cols-[92px_minmax(0,1fr)]">
-                        <input
-                          className="input-base"
-                          type="text"
-                          placeholder="track.example.com"
-                          value={props.pendingTrackingDomains[account.id] ?? ''}
-                          onChange={(e) => props.setPendingTrackingDomains((prev) => ({ ...prev, [account.id]: e.target.value }))}
-                        />
-                        <button className="btn-ghost" onClick={() => props.handleUpdateTrackingDomain(account.id)}>Save track</button>
-                      </div>
-                    ) : null}
-                    <div className="grid gap-2 sm:grid-cols-[minmax(0,1.2fr)_92px_92px_minmax(0,1fr)]">
-                      <input
-                        className="input-base"
-                        type="text"
-                        placeholder="Timezone override"
-                        value={props.pendingWarmupTimezones[account.id] ?? ''}
-                        onChange={(e) =>
-                          props.setPendingWarmupTimezones((prev) => ({ ...prev, [account.id]: e.target.value }))
-                        }
-                      />
-                      <input
-                        className="input-base"
-                        type="text"
-                        placeholder="08:00"
-                        value={props.pendingWarmupBusinessHoursStart[account.id] ?? ''}
-                        onChange={(e) =>
-                          props.setPendingWarmupBusinessHoursStart((prev) => ({
-                            ...prev,
-                            [account.id]: e.target.value,
-                          }))
-                        }
-                      />
-                      <input
-                        className="input-base"
-                        type="text"
-                        placeholder="18:00"
-                        value={props.pendingWarmupBusinessHoursEnd[account.id] ?? ''}
-                        onChange={(e) =>
-                          props.setPendingWarmupBusinessHoursEnd((prev) => ({
-                            ...prev,
-                            [account.id]: e.target.value,
-                          }))
-                        }
-                      />
-                      <button className="btn-ghost" onClick={() => props.handleUpdateMailWarmupSchedule(account.id)}>Save window</button>
-                    </div>
-                    <select className="input-base" disabled={account.type === 'outlook' && account.connectionReady === false} value={account.warmupStatus} onChange={(e) => props.handleWarmupStatusChange(account.id, e.target.value as MailAccount['warmupStatus'])}>
-                      <option value="COLD">COLD</option>
-                      <option value="WARMING">WARMING</option>
-                      <option value="PAUSED">PAUSED</option>
-                      <option value="WARMED">WARMED</option>
-                    </select>
-                    <select
-                      className="input-base"
-                      value={account.warmupProviderPreference}
-                      onChange={(e) => props.handleWarmupProviderPreferenceChange(account.id, e.target.value as MailAccount['warmupProviderPreference'])}
-                      disabled={account.type === 'outlook' && account.connectionReady === false}
-                    >
-                      <option value="random">Warmup partner: Random</option>
-                      <option value="gmail">Warmup partner: Gmail</option>
-                      <option value="zoho">Warmup partner: Zoho</option>
-                      <option value="outlook">Warmup partner: Outlook</option>
-                    </select>
-                    <div className="mail-action-grid">
-                      <button className="mail-action" disabled={account.type === 'outlook' && account.connectionReady === false} onClick={() => props.handleWarmupAutoToggle(account.id, account.warmupAutoEnabled)}>
-                        <Flame size={15} aria-hidden="true" />
-                        Warmup {account.warmupAutoEnabled ? 'ON' : 'OFF'}
-                      </button>
-                      {account.type === 'gmail' ? (
-                        account.mailboxConnectionMethod !== 'imap' ? (
-                        <button className="mail-action" onClick={props.handleReconnectGmail}><KeyRound size={15} aria-hidden="true" />Reconnect Gmail</button>
-                        ) : null
-                      ) : account.type === 'zoho' ? (
-                        <>
-                          {!account.zohoApiConnected ? (
-                            <button className="mail-action" onClick={props.handleReconnectZohoApi}><KeyRound size={15} aria-hidden="true" />Connect Zoho API</button>
-                          ) : account.mailboxConnectionMethod === 'api' ? (
-                            <button className="mail-action" onClick={props.handleReconnectZohoApi}><KeyRound size={15} aria-hidden="true" />Reconnect Zoho</button>
-                          ) : (
-                            <button className="mail-action" onClick={() => props.handleUseZohoApi(account.id)}><RefreshCw size={15} aria-hidden="true" />Use Zoho API</button>
-                          )}
-                          {account.mailboxConnectionMethod === 'imap' ? (
-                            <button className="mail-action" onClick={() => props.handleZohoImapToggle(account.id, account.zohoImapEnabled !== false)}>
-                              <Power size={15} aria-hidden="true" />
-                              IMAP {account.zohoImapEnabled === false ? 'OFF' : 'ON'}
-                            </button>
-                          ) : null}
-                        </>
-                      ) : account.type === 'outlook' ? (
-                        <button className="mail-action" onClick={() => { window.location.href = '/api/mail-accounts/outlook' }}>
-                          <KeyRound size={15} aria-hidden="true" />
-                          {account.connectionReady === false ? 'Connect Microsoft OAuth' : 'Reconnect Microsoft OAuth'}
-                        </button>
-                      ) : null}
-                      <button className="mail-action" onClick={() => props.handleOpenMailboxFolder(account.id, 'INBOX')} disabled={!account.mailboxSyncAvailable}><Inbox size={15} aria-hidden="true" />Inbox</button>
-                      <button className="mail-action" onClick={() => props.handleOpenMailboxFolder(account.id, 'SPAM')} disabled={!account.mailboxSyncAvailable}><ShieldAlert size={15} aria-hidden="true" />Spam</button>
-                      <button className="mail-action" onClick={() => props.handleOpenMailboxFolder(account.id, 'SENT')} disabled={!account.mailboxSyncAvailable}><Send size={15} aria-hidden="true" />Sent</button>
-                      <button
-                        className="mail-action"
-                        onClick={() => props.handleRunWarmupNow(account.id)}
-                        disabled={!['WARMING', 'WARMED'].includes(account.warmupStatus) || !account.warmupAutoEnabled || (account.type === 'outlook' && account.connectionReady === false)}
-                      >
-                        <Flame size={15} aria-hidden="true" />
-                        Run warmup
-                      </button>
-                      <button className="mail-action" onClick={() => props.handleRunMailboxSyncNow(account.id)} disabled={!account.mailboxSyncAvailable}><RefreshCw size={15} aria-hidden="true" />Sync mailbox</button>
-                      <button className={`mail-action${account.isActive ? '' : ' primary'}`} disabled={account.type === 'outlook' && account.connectionReady === false} onClick={() => props.handleToggleMailActive(account.id, account.isActive, account.warmupStatus)}>
-                        <Power size={15} aria-hidden="true" />
-                        {account.isActive ? 'Disable' : 'Enable'}
-                      </button>
-                      <button className="mail-action danger" onClick={() => props.handleDeleteMail(account.id, account.email)}><Trash2 size={15} aria-hidden="true" />Remove</button>
-                    </div>
-                  </div>
-                    </>
                   )}
-                </div>
-                ) : null}
-                {props.activeMailboxAccountId === account.id ? (
-                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {props.activeMailboxFolder === 'SPAM' ? 'Spam folder' : props.activeMailboxFolder === 'SENT' ? 'Sent folder' : 'Inbox'}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {props.mailboxLoading ? 'Loading messages...' : `${props.mailboxMessages.length} recent messages`}
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gap: '10px' }}>
-                      {props.mailboxMessages.length === 0 && !props.mailboxLoading ? (
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No synced messages in this folder yet.</div>
-                      ) : null}
-                      {props.mailboxMessages.map((message) => (
-                        <div key={message.id} style={{ ...surfaceCardStyle, padding: '12px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
-                            <div>
-                              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                {message.subject || '(no subject)'}
-                              </div>
-                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                                From {message.fromEmail || 'Unknown'} | To {message.toEmail || 'Unknown'}
-                              </div>
-                              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                                {message.receivedAt || message.sentAt ? new Date(message.receivedAt || message.sentAt || '').toLocaleString() : 'No timestamp'}
-                              </div>
-                              {message.snippet ? (
-                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>{message.snippet}</div>
-                              ) : null}
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignContent: 'start', justifyContent: 'flex-end' }}>
-                              {!message.isRead ? (
-                                <button className="btn-ghost" onClick={() => props.handleMailboxAction(account.id, message.id, 'mark-read')}>Mark read</button>
-                              ) : null}
-                              {message.isSpam ? (
-                                <button className="btn-ghost" onClick={() => props.handleMailboxAction(account.id, message.id, 'rescue-to-inbox')}>Move to inbox</button>
-                              ) : null}
-                              {message.direction === 'inbound' ? (
-                                <button className="btn-ghost" onClick={() => props.handleMailboxAction(account.id, message.id, 'reply')}>Reply</button>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {props.mailboxPagination.total > 0 ? (
-                      <div style={{ marginTop: '12px' }}>
-                        <PaginationControls
-                          page={props.mailboxPagination.page}
-                          pages={props.mailboxPagination.pages}
-                          total={props.mailboxPagination.total}
-                          limit={props.mailboxPagination.limit}
-                          onPageChange={props.handleMailboxPageChange}
-                          onLimitChange={props.handleMailboxLimitChange}
-                          label="messages"
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-              </article>
+                </article>
               )
-            })}
-          </div>
-        )}
-        {props.accountsPagination.total > 0 ? (
-          <div style={{ marginTop: '14px' }}>
-            <PaginationControls
-              page={props.accountsPagination.page}
-              pages={props.accountsPagination.pages}
-              total={props.accountsPagination.total}
-              limit={props.accountsPagination.limit}
-              onPageChange={props.setAccountsPage}
-              onLimitChange={props.setAccountsLimit}
-              label="mailboxes"
-            />
-          </div>
-        ) : null}
-      </div>
+            })
+          )}
+        </div>
 
+        {/* Pagination Footer */}
+        <div className="px-4 py-2.5 flex flex-wrap items-center justify-between border-t border-[#121316]/12 bg-white text-xs gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[#62605c]">Rows:</span>
+            <select
+              value={currentLimit}
+              onChange={(e) => props.setAccountsLimit(Number(e.target.value))}
+              className="bg-transparent text-[#121316] font-semibold border-none focus:ring-0 cursor-pointer p-0 text-xs"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span className="text-[#8a8780] ml-4 border-l border-[#121316]/15 pl-4">
+              {totalCount > 0 ? `${(currentPage - 1) * currentLimit + 1}–${Math.min(currentPage * currentLimit, totalCount)} of ${totalCount}` : '0 of 0'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={currentPage <= 1}
+              onClick={() => props.setAccountsPage(1)}
+              className="w-7 h-7 flex items-center justify-center rounded text-[#62605c] hover:bg-[#faf8f4] disabled:opacity-40 cursor-pointer"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              disabled={currentPage <= 1}
+              onClick={() => props.setAccountsPage(currentPage - 1)}
+              className="w-7 h-7 flex items-center justify-center rounded text-[#62605c] hover:bg-[#faf8f4] disabled:opacity-40 cursor-pointer"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-1 mx-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                .map((p, idx, arr) => {
+                  const showGap = idx > 0 && p - arr[idx - 1] > 1
+                  return (
+                    <span key={p} className="flex items-center gap-1">
+                      {showGap && <span className="text-[#8a8780] px-0.5">...</span>}
+                      <button
+                        type="button"
+                        onClick={() => props.setAccountsPage(p)}
+                        className={`w-7 h-7 rounded text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                          p === currentPage
+                            ? 'bg-[#121316] text-white shadow-2xs'
+                            : 'text-[#121316] hover:bg-[#faf8f4]'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </span>
+                  )
+                })}
+            </div>
+
+            <button
+              type="button"
+              disabled={currentPage >= totalPages}
+              onClick={() => props.setAccountsPage(currentPage + 1)}
+              className="w-7 h-7 flex items-center justify-center rounded text-[#62605c] hover:bg-[#faf8f4] disabled:opacity-40 cursor-pointer"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              disabled={currentPage >= totalPages}
+              onClick={() => props.setAccountsPage(totalPages)}
+              className="w-7 h-7 flex items-center justify-center rounded text-[#62605c] hover:bg-[#faf8f4] disabled:opacity-40 cursor-pointer"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* TrulyInbox Deliverability Partner Overview Modal */}
+      {showTrulyInboxModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#121316]/40 backdrop-blur-xs animate-fade-in">
+          <div
+            className="w-full max-w-2xl bg-white rounded-[24px] border border-[#121316]/12 shadow-2xl p-6 sm:p-8 space-y-6 animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0f8a5f] to-[#121316] text-white flex items-center justify-center font-bold shadow-sm">
+                  <Sparkles className="h-6 w-6 text-emerald-300" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold tracking-widest text-[#0f8a5f] uppercase block">
+                    DELIVERABILITY ACCELERATOR
+                  </span>
+                  <h3 className="text-xl font-bold text-[#121316]">
+                    TrulyInbox AI Warmup & Deliverability
+                  </h3>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowTrulyInboxModal(false)}
+                className="p-2 rounded-full text-[#8a8780] hover:text-[#121316] hover:bg-[#121316]/05 transition-colors cursor-pointer"
+                title="Close (Esc)"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/06 space-y-1">
+                <span className="text-xs font-bold text-[#121316] block">AI Warmup Pool</span>
+                <p className="text-[11px] text-[#62605c] leading-relaxed">
+                  Simulates human conversations across real business domains.
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/06 space-y-1">
+                <span className="text-xs font-bold text-[#121316] block">Spam Folder Rescue</span>
+                <p className="text-[11px] text-[#62605c] leading-relaxed">
+                  Automatically rescues warm messages and marks them important.
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/06 space-y-1">
+                <span className="text-xs font-bold text-[#121316] block">Domain Reputation</span>
+                <p className="text-[11px] text-[#62605c] leading-relaxed">
+                  Maintains a 95%+ sender reputation for maximum deliverability.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#0f8a5f]/06 border border-[#0f8a5f]/20 space-y-2">
+              <span className="text-xs font-bold text-[#121316] block">How to enable on your accounts:</span>
+              <ol className="list-decimal list-inside text-xs text-[#62605c] space-y-1">
+                <li>Expand any mailbox row in the table below.</li>
+                <li>Paste your TrulyInbox API Key into the deliverability section.</li>
+                <li>Click <strong>Connect API Key</strong> and then <strong>Start Truly Warmup</strong>.</li>
+              </ol>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <a
+                href="https://trulyinbox.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-[#0f8a5f] hover:underline inline-flex items-center gap-1"
+              >
+                <span>Get TrulyInbox API Key</span>
+                <span>↗</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setShowTrulyInboxModal(false)}
+                className="px-6 py-2.5 rounded-full bg-[#121316] text-white text-xs font-bold hover:bg-black transition-all cursor-pointer shadow-sm"
+              >
+                Got it, Thanks
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1050,279 +1258,205 @@ export function WarmupView(props: {
   )
 }
 
-function ZohoDualSetupPanel({ onBothConnected }: { onBothConnected: () => void }) {
-  const [smtpDone, setSmtpDone] = useState(false)
-  const [oauthDone, setOauthDone] = useState(false)
-  const bothDone = smtpDone && oauthDone
-
-  const stepPanelStyle = (done: boolean): React.CSSProperties => ({
-    ...panelStyle,
-    border: done
-      ? '1.5px solid rgba(34,211,165,0.35)'
-      : '1px solid rgba(255,255,255,0.08)',
-    position: 'relative',
-    transition: 'border-color 0.25s',
-  })
-
-  const badgeStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '14px',
-    right: '14px',
-    padding: '3px 10px',
-    borderRadius: '999px',
-    fontSize: '11px',
-    fontWeight: 700,
-    letterSpacing: '0.04em',
-  }
+// ── Add Zoho View (Clean, Modern, No Broken Nested Modals) ───────────────────
+export function AddZohoView({
+  onAdded,
+  onClose,
+}: {
+  onAdded: () => void
+  onClose?: () => void
+}) {
+  const [tab, setTab] = useState<'smtp' | 'oauth'>('smtp')
 
   return (
-    <div style={{ display: 'grid', gap: '18px' }}>
-      {/* Step 1 — SMTP */}
-      <div style={stepPanelStyle(smtpDone)}>
-        {smtpDone ? (
-          <div style={{ ...badgeStyle, background: 'rgba(34,211,165,0.14)', color: 'var(--success)' }}>
-            ✓ Connected
-          </div>
-        ) : (
-          <div style={{ ...badgeStyle, background: 'rgba(255,255,255,0.06)', color: 'var(--text-muted)' }}>
-            Step 1
-          </div>
-        )}
-        <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>SMTP — outbound sending</div>
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
-          Required for campaigns. Connects the Zoho mailbox as a sending account.
+    <div className="uneevo-card p-6 sm:p-8 rounded-[24px] border border-[#121316]/12 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6 max-w-3xl mx-auto animate-fade-in">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <span className="text-[11px] font-bold tracking-widest text-[#d97706] uppercase block mb-1">
+            ZOHO MAIL INTEGRATION
+          </span>
+          <h2 className="zoho-puvi-headline text-2xl font-bold tracking-tight text-[#121316]">
+            Connect Zoho Mail Account
+          </h2>
+          <p className="text-xs sm:text-sm text-[#62605c] mt-1">
+            Connect your Zoho mailbox using an App Password for fast, reliable campaign sending, or via OAuth.
+          </p>
         </div>
-        {smtpDone ? (
-          <div style={{ fontSize: '13px', color: 'var(--success)' }}>SMTP credentials saved successfully.</div>
-        ) : (
-          <ZohoAccountForm
-            onAccountAdded={() => setSmtpDone(true)}
-          />
-        )}
-      </div>
 
-      {/* Step 2 — OAuth */}
-      <div style={stepPanelStyle(oauthDone)}>
-        {oauthDone ? (
-          <div style={{ ...badgeStyle, background: 'rgba(34,211,165,0.14)', color: 'var(--success)' }}>
-            ✓ Connected
-          </div>
-        ) : (
-          <div style={{ ...badgeStyle, background: 'rgba(255,255,255,0.06)', color: 'var(--text-muted)' }}>
-            Step 2
-          </div>
-        )}
-        <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>Zoho OAuth — inbox sync & tools</div>
-        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.6 }}>
-          Unlocks inbox sync, spam rescue, and reply actions. Use the same email address as SMTP above — the app upgrades that same mailbox record automatically.
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '20px',
-            padding: '16px',
-            border: '2px dashed rgba(255,255,255,0.1)',
-            borderRadius: '12px',
-            background: 'rgba(255,255,255,0.02)',
-          }}
-        >
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              background: 'rgba(37,99,235,0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#93c5fd',
-              fontWeight: 800,
-              fontSize: '20px',
-              flexShrink: 0,
-            }}
-          >
-            Z
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>Connect Zoho OAuth</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              You will be redirected to Zoho to authorize access. When done, come back and this panel will update.
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-            <button
-              className="btn-primary"
-              onClick={() => { window.location.href = '/api/mail-accounts/zoho/connect' }}
-            >
-              Connect via OAuth
-            </button>
-            {!oauthDone && (
-              <button
-                className="btn-ghost"
-                style={{ fontSize: '11px' }}
-                onClick={() => setOauthDone(true)}
-              >
-                I already connected OAuth ✓
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Save button — only when both done */}
-      {bothDone ? (
-        <div
-          style={{
-            ...panelStyle,
-            background: 'rgba(34,211,165,0.06)',
-            border: '1.5px solid rgba(34,211,165,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '16px',
-            flexWrap: 'wrap',
-          }}
-        >
-          <div>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--success)' }}>✓ Both connections ready</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              SMTP and OAuth are both attached. Click Save to finish and load the account into the dashboard.
-            </div>
-          </div>
+        {onClose && (
           <button
-            className="btn-primary"
-            style={{ background: 'rgba(34,211,165,0.9)', color: '#000', minWidth: '160px' }}
-            onClick={onBothConnected}
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full text-[#8a8780] hover:text-[#121316] hover:bg-[#121316]/05 transition-colors cursor-pointer shrink-0"
+            title="Close (Esc)"
           >
-            Save &amp; Connect Zoho Account
+            <X className="h-5 w-5" />
           </button>
-        </div>
+        )}
+      </div>
+
+      {/* Mode Switcher */}
+      <div className="flex items-center gap-2 border-b border-[#121316]/10 pb-3">
+        <button
+          type="button"
+          onClick={() => setTab('smtp')}
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+            tab === 'smtp'
+              ? 'bg-[#121316] text-white shadow-2xs'
+              : 'bg-[#faf8f4] text-[#62605c] hover:text-[#121316]'
+          }`}
+        >
+          Zoho App Password / SMTP (Recommended)
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('oauth')}
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+            tab === 'oauth'
+              ? 'bg-[#121316] text-white shadow-2xs'
+              : 'bg-[#faf8f4] text-[#62605c] hover:text-[#121316]'
+          }`}
+        >
+          Zoho OAuth (1-Click)
+        </button>
+      </div>
+
+      {tab === 'smtp' ? (
+        <ZohoAccountForm onAccountAdded={onAdded} />
       ) : (
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '6px 0' }}>
-          Complete both steps above to enable the Save button.
+        <div className="space-y-4 pt-2">
+          <div className="p-5 rounded-2xl border border-[#d97706]/20 bg-[#d97706]/06 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-[#d97706] text-white font-bold text-lg flex items-center justify-center shrink-0">
+                Z
+              </div>
+              <div>
+                <div className="font-bold text-sm text-[#121316]">Authorize via Zoho OAuth</div>
+                <div className="text-xs text-[#62605c] mt-0.5">
+                  Redirects to Zoho to authorize account permissions.
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#121316] text-xs font-bold text-white shadow-sm hover:bg-black transition-all cursor-pointer"
+              onClick={() => {
+                window.location.href = '/api/mail-accounts/zoho/connect'
+              }}
+            >
+              <span>Connect via OAuth</span>
+            </button>
+          </div>
         </div>
       )}
     </div>
   )
 }
 
-export function AddZohoView({ onAdded }: { onAdded: () => void }) {
-  const [open, setOpen] = useState(false)
-
+// ── Add Gmail View (Clean Uneevo Card) ───────────────────────────────────────
+export function AddGmailView({ onAdded, onClose }: { onAdded?: () => void; onClose?: () => void }) {
   return (
-    <>
-      <div style={{ display: 'grid', gap: '18px' }}>
-        <div style={{ ...panelStyle, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-          Zoho mailboxes are tracked as one shared account record.
-          Use the button below to open the setup modal, connect both SMTP and OAuth for the same email address, and save.
-          The dashboard will only treat the mailbox as fully ready after both SMTP and OAuth are linked.
+    <div className="uneevo-card p-6 sm:p-8 rounded-[24px] border border-[#121316]/12 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6 max-w-3xl mx-auto animate-fade-in">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <span className="text-[11px] font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
+            GMAIL INTEGRATION
+          </span>
+          <h2 className="zoho-puvi-headline text-2xl font-bold tracking-tight text-[#121316]">
+            Connect Gmail with App Password
+          </h2>
+          <p className="text-xs sm:text-sm text-[#62605c] mt-1">
+            Connect using IMAP + SMTP with a Google App Password for uninterrupted sending without periodic OAuth expirations.
+          </p>
         </div>
-        <div style={panelStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Connect new Zoho mail account</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: 1.7 }}>
-                First attach SMTP for sending or OAuth for inbox tools.
-                Then complete the missing side using the same email address so the database keeps one matched mailbox record.
-              </div>
-            </div>
-            <button className="btn-primary" onClick={() => setOpen(true)}>
-              Connect new Zoho account
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {open ? (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 120,
-            background: 'rgba(4,6,12,0.72)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-          }}
-        >
-          <div
-            style={{
-              width: 'min(980px, 100%)',
-              maxHeight: 'calc(100vh - 48px)',
-              overflowY: 'auto',
-              borderRadius: '24px',
-              border: '1px solid rgba(255,255,255,0.08)',
-              background: 'linear-gradient(180deg, rgba(16,16,24,0.98), rgba(10,10,16,0.98))',
-              boxShadow: '0 26px 80px rgba(0,0,0,0.4)',
-              padding: '22px',
-            }}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full text-[#8a8780] hover:text-[#121316] hover:bg-[#121316]/05 transition-colors cursor-pointer shrink-0"
+            title="Close (Esc)"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', marginBottom: '18px' }}>
-              <div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>New Zoho mailbox setup</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: 1.7, maxWidth: '760px' }}>
-                  Connect <strong>both SMTP and OAuth</strong> for the same Zoho email address below.
-                  Each step can be done in any order. The <strong>Save button</strong> appears only after both are connected.
-                </div>
-              </div>
-              <button className="btn-ghost" onClick={() => setOpen(false)}>Close</button>
-            </div>
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
 
-            <ZohoDualSetupPanel
-              onBothConnected={() => {
-                onAdded()
-                setOpen(false)
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
-    </>
+      <GmailImapSmtpForm onAccountAdded={onAdded} />
+    </div>
   )
 }
 
-export function AddGmailView({ onAdded }: { onAdded?: () => void }) {
+// ── Add Outlook View (Clean Uneevo Card) ─────────────────────────────────────
+export function AddOutlookView({ onAdded, onClose }: { onAdded?: () => void; onClose?: () => void }) {
   return (
-    <div style={{ display: 'grid', gap: '18px' }}>
-      <div style={panelStyle}>
-        <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '10px' }}>
-          Connect Gmail with IMAP + SMTP app password
+    <div className="uneevo-card p-6 sm:p-8 rounded-[24px] border border-[#121316]/12 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6 max-w-3xl mx-auto animate-fade-in">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <span className="text-[11px] font-bold tracking-widest text-[#004ac6] uppercase block mb-1">
+            MICROSOFT OUTLOOK INTEGRATION
+          </span>
+          <h2 className="zoho-puvi-headline text-2xl font-bold tracking-tight text-[#121316]">
+            Connect Microsoft Mailbox
+          </h2>
+          <p className="text-xs sm:text-sm text-[#62605c] mt-1">
+            Microsoft OAuth securely links your Outlook or Microsoft 365 mailbox for automated dispatch and inbox synchronisation.
+          </p>
         </div>
-        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '16px' }}>
-          Use this when you want to avoid repeated OAuth reconnects. If this Gmail already exists in the dashboard through OAuth, saving this form upgrades that same mailbox record to the IMAP + SMTP path.
-        </div>
-        <GmailImapSmtpForm onAccountAdded={onAdded} />
+
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full text-[#8a8780] hover:text-[#121316] hover:bg-[#121316]/05 transition-colors cursor-pointer shrink-0"
+            title="Close (Esc)"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      <div className="pt-2">
+        <MicrosoftOAuthButton />
       </div>
     </div>
   )
 }
 
-export function AddOutlookView({ onAdded }: { onAdded?: () => void }) {
+// ── Add Custom SMTP / IMAP View (Clean Uneevo Card) ───────────────────────────
+export function AddSmtpImapView({ onAdded, onClose }: { onAdded?: () => void; onClose?: () => void }) {
   return (
-    <div style={panelStyle}>
-      <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '10px' }}>
-        Connect a Microsoft mailbox
-      </div>
-      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '16px' }}>
-        Microsoft OAuth replaces mailbox passwords and app passwords. Existing Outlook accounts are upgraded in place when the same email address reconnects.
-      </div>
-      <MicrosoftOAuthButton />
-    </div>
-  )
-}
+    <div className="uneevo-card p-6 sm:p-8 rounded-[24px] border border-[#121316]/12 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6 max-w-3xl mx-auto animate-fade-in">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <span className="text-[11px] font-bold tracking-widest text-[#475569] uppercase block mb-1">
+            CUSTOM PROTOCOL INTEGRATION
+          </span>
+          <h2 className="zoho-puvi-headline text-2xl font-bold tracking-tight text-[#121316]">
+            Connect Custom SMTP + IMAP Mailbox
+          </h2>
+          <p className="text-xs sm:text-sm text-[#62605c] mt-1">
+            Connect any mail server by entering its host, port, and security credentials.
+          </p>
+        </div>
 
-export function AddSmtpImapView({ onAdded }: { onAdded?: () => void }) {
-  return (
-    <div style={panelStyle}>
-      <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '10px' }}>
-        Connect any SMTP + IMAP mailbox
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-full text-[#8a8780] hover:text-[#121316] hover:bg-[#121316]/05 transition-colors cursor-pointer shrink-0"
+            title="Close (Esc)"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
+
       <ImapSmtpAccountForm
         providerLabel="SMTP/IMAP"
         endpoint="/api/mail-accounts/smtp-imap"
-        description="Add any mailbox by entering its SMTP and IMAP settings manually. No ESP list is required; the connection test verifies both sending and inbox access before saving."
+        description="Add any mailbox by entering its SMTP and IMAP settings manually. The connection test verifies both sending and inbox access before saving."
         passwordLabel="Mailbox password or app password"
         defaults={{ smtpHost: '', smtpPort: '587', smtpSecure: false, imapHost: '', imapPort: '993', imapSecure: true }}
         showUsernames
@@ -1332,4 +1466,3 @@ export function AddSmtpImapView({ onAdded }: { onAdded?: () => void }) {
     </div>
   )
 }
-

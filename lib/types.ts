@@ -36,10 +36,14 @@ export interface CurrentUser {
 export interface DashboardStats {
   campaigns: number
   mailAccounts: number
+  activeMailAccounts?: number
+  warmingAccounts: number
+  warmedAccounts?: number
   csvFiles: number
   sentToday: number
+  warmupSentToday?: number
+  totalSentToday?: number
   activeCampaigns: number
-  warmingAccounts: number
   dailyData: Array<{
     dayLabel: string
     dateString: string
@@ -50,11 +54,28 @@ export interface DashboardStats {
   totalWarmupWeek: number
   activities: Array<{
     id: string
-    type: 'sent' | 'campaign' | 'csv'
+    type: 'sent' | 'warmup' | 'campaign' | 'csv'
     title: string
     detail: string
     timeAgo: string
     status?: string
+  }>
+  mailboxWarmupList?: Array<{
+    id: string
+    email: string
+    displayName: string | null
+    type: string
+    isActive: boolean
+    warmupStatus: 'COLD' | 'WARMING' | 'WARMED' | 'PAUSED' | string
+    warmupStage: number
+    warmupDailyLimit: number
+    warmupSentToday: number
+    warmupRepliesToday: number
+    sentToday: number
+    dailyLimit: number
+    mailboxHealthScore: number
+    mailboxHealthStatus: string
+    lastWarmupSentAt: string | null
   }>
   showOnboarding: boolean
 }

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { TemplateVariableOption } from '@/lib/csv-parser/column-detector'
 import { Sparkles, Eye, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
 
-type TemplateMode = 'email' | 'whatsapp' | 'gdrive'
+type TemplateMode = 'email' | 'gdrive'
 
 interface PreviewResult {
   subject?: string
@@ -100,7 +100,7 @@ export function TemplateEditor({
       <div className="space-y-4">
         <div>
           <div className="text-xs font-bold uppercase tracking-wider text-[#ee382b] mb-1">
-            {mode === 'email' ? 'EMAIL TEMPLATE COMPOSER' : mode === 'gdrive' ? 'SHARE NOTE COMPOSER' : 'WHATSAPP TEMPLATE'}
+            {mode === 'email' ? 'EMAIL TEMPLATE COMPOSER' : 'SHARE NOTE COMPOSER'}
           </div>
           <p className="text-xs text-[#62605c]">
             {mode === 'gdrive'

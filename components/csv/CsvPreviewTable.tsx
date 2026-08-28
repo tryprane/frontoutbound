@@ -16,90 +16,82 @@ export function CsvPreviewTable({
   const displayRows = rows.slice(0, maxRows)
 
   return (
-    <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid var(--border)' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+    <div className="overflow-x-auto rounded-[18px] border border-[#121316]/12 bg-white shadow-2xs">
+      <table className="w-full border-collapse text-xs text-left">
         <thead>
-          <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-            <th style={{ padding: '10px 14px', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 500, width: '40px' }}>
+          <tr className="bg-[#faf8f4] border-b border-[#121316]/15 text-[#121316]">
+            <th className="px-4 py-3 text-center font-mono font-bold text-[11px] text-[#8a8780] w-12 border-r border-[#121316]/10">
               #
             </th>
-            {headers.map((header) => {
+            {headers.map((header, idx) => {
               const highlight = highlightColumns[header]
+              const isLast = idx === headers.length - 1
+
               return (
                 <th
                   key={header}
+                  className={`px-4 py-3 text-[11px] font-bold uppercase tracking-wider whitespace-nowrap ${
+                    !isLast ? 'border-r border-[#121316]/10' : ''
+                  }`}
                   style={{
-                    padding: '10px 14px',
-                    textAlign: 'left',
-                    color: highlight?.color || 'var(--text-secondary)',
-                    fontWeight: 600,
-                    whiteSpace: 'nowrap',
-                    borderLeft: highlight ? `2px solid ${highlight.color}` : undefined,
+                    color: highlight?.color || '#121316',
                   }}
                 >
-                  {header}
-                  {highlight ? (
-                    <span
-                      style={{
-                        marginLeft: '6px',
-                        fontSize: '10px',
-                        padding: '1px 6px',
-                        borderRadius: '10px',
-                        background: `${highlight.color}20`,
-                        color: highlight.color,
-                      }}
-                    >
-                      {highlight.label}
-                    </span>
-                  ) : null}
+                  <div className="flex items-center gap-1.5">
+                    <span>{header}</span>
+                    {highlight ? (
+                      <span
+                        className="text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold"
+                        style={{
+                          background: `${highlight.color}15`,
+                          color: highlight.color,
+                          border: `1px solid ${highlight.color}30`,
+                        }}
+                      >
+                        {highlight.label}
+                      </span>
+                    ) : null}
+                  </div>
                 </th>
               )
             })}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-[#121316]/10 font-sans">
           {displayRows.map((row, index) => (
             <tr
               key={index}
-              style={{
-                borderBottom: index < displayRows.length - 1 ? '1px solid var(--border)' : 'none',
-                background: index % 2 === 0 ? 'transparent' : 'var(--bg-secondary)',
-              }}
+              className="border-b border-[#121316]/10 last:border-b-0 odd:bg-white even:bg-[#faf8f4]/40 hover:bg-[#ee382b]/05 transition-colors"
             >
-              <td style={{ padding: '10px 14px', color: 'var(--text-muted)' }}>{index + 1}</td>
-              {headers.map((header) => (
-                <td
-                  key={header}
-                  style={{
-                    padding: '10px 14px',
-                    color: 'var(--text-primary)',
-                    maxWidth: '200px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {row[header] || (
-                    <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>-</span>
-                  )}
-                </td>
-              ))}
+              <td className="px-4 py-3 text-center font-mono font-bold text-[#8a8780] bg-[#faf8f4]/60 border-r border-[#121316]/10 whitespace-nowrap">
+                {index + 1}
+              </td>
+              {headers.map((header, idx) => {
+                const isLast = idx === headers.length - 1
+                const val = row[header]
+
+                return (
+                  <td
+                    key={header}
+                    className={`px-4 py-3 text-xs text-[#121316] max-w-xs break-words align-top ${
+                      !isLast ? 'border-r border-[#121316]/10' : ''
+                    }`}
+                  >
+                    {val !== undefined && val !== null && String(val).trim() !== '' ? (
+                      <span className="font-medium text-[#121316]">{val}</span>
+                    ) : (
+                      <span className="text-[#8a8780] font-normal italic">-</span>
+                    )}
+                  </td>
+                )
+              })}
             </tr>
           ))}
         </tbody>
       </table>
 
       {rows.length > maxRows ? (
-        <div
-          style={{
-            padding: '10px 14px',
-            textAlign: 'center',
-            color: 'var(--text-muted)',
-            fontSize: '12px',
-            background: 'var(--bg-secondary)',
-            borderTop: '1px solid var(--border)',
-          }}
-        >
+        <div className="p-3 text-center text-xs font-medium text-[#62605c] bg-[#faf8f4] border-t border-[#121316]/10">
           Showing {maxRows} of {rows.length} rows
         </div>
       ) : null}

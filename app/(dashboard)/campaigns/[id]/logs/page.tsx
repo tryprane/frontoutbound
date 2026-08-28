@@ -109,50 +109,32 @@ export default function CampaignLogsPage({ params }: { params: { id: string } })
   const isWhatsApp = campaign.channel === 'WHATSAPP'
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
-      {/* Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <FileText className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Link
-                href="/campaigns"
-                className="text-xs font-bold text-[#62605c] hover:text-[#121316] uppercase tracking-wider flex items-center gap-1 transition-colors"
-              >
-                <ArrowLeft className="h-3 w-3" />
-                CAMPAIGNS
-              </Link>
-              <span className="text-[#8a8780]">/</span>
-              <Link
-                href={`/campaigns/${campaignId}`}
-                className="text-xs font-bold text-[#62605c] hover:text-[#121316] uppercase tracking-wider transition-colors truncate max-w-[200px]"
-              >
-                {campaign.name}
-              </Link>
-              <span className="text-[#8a8780]">/</span>
-              <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase">
-                AUDIT LOGS
-              </span>
-            </div>
-
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              {isWhatsApp ? 'WhatsApp Delivery Logs' : 'Email Delivery Logs'}
-            </h1>
-          </div>
+      {/* Top Floating Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <Link
+            href={`/campaigns/${campaignId}`}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2 text-xs font-semibold text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back to Campaign</span>
+          </Link>
+          <span className="text-xs font-bold text-[#121316] truncate max-w-xs sm:max-w-md">
+            {campaign.name} • Audit Logs
+          </span>
         </div>
 
-        <button
-          type="button"
-          onClick={handleExport}
-          className="inline-flex items-center gap-2 rounded-full bg-[#121316] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-black transition-all"
-        >
-          <Download className="h-4 w-4" />
-          <span>Export CSV</span>
-        </button>
-      </header>
+        <div className="flex items-center gap-2.5 ml-auto">
+          <button
+            type="button"
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 rounded-full bg-[#121316] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-black transition-all cursor-pointer"
+          >
+            <Download className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
+        </div>
+      </div>
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

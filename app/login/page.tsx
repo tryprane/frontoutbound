@@ -1,44 +1,70 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
-import { useState, useTransition } from 'react'
-import { ArrowRight, LockKeyhole, Mail, ShieldCheck } from 'lucide-react'
+import { useState, useTransition, useEffect, Suspense, FormEvent } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import {
+  ArrowRight,
+  Building2,
+  Check,
+  KeyRound,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
 
-export default function LoginPage() {
-  // const [googleLoading, setGoogleLoading] = useState(false) // deprecated — Google sign-in temporarily disabled
-  const [error, setError] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
-  const [credentials, setCredentials] = useState({
+type AuthMode = 'signin' | 'invite'
+
+function LoginFormContent() {
+  const searchParams = useSearchParams()
+  const initialCode = searchParams.get('code') || searchParams.get('invite') || ''
+  const initialTab = searchParams.get('tab') === 'invite' || !!initialCode ? 'invite' : 'signin'
+
+  const [mode, setMode] = useState<AuthMode>(initialTab)
+
+  // Sign in state
+  const [signInCredentials, setSignInCredentials] = useState({
     email: '',
     password: '',
   })
-  const [isPending, startTransition] = useTransition()
+  const [signInErrors, setSignInErrors] = useState<{ email?: string; password?: string }>({})
+  const [signInError, setSignInError] = useState('')
+  const [isSigningIn, startSignInTransition] = useTransition()
 
-  const validate = (): boolean => {
-    const errors: { email?: string; password?: string } = {}
+  // Invite code state
+  const [inviteCode, setInviteCode] = useState(initialCode)
+  const [verifiedCode, setVerifiedCode] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [isRedeeming, setIsRedeeming] = useState(false)
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviteError, setInviteError] = useState('')
+  const [registration, setRegistration] = useState({
+    organizationName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
+  const [registrationErrors, setRegistrationErrors] = useState<{
+    organizationName?: string
+    email?: string
+    password?: string
+    confirmPassword?: string
+  }>({})
 
-    if (!credentials.email.trim()) {
-      errors.email = 'Email is required.'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email.trim())) {
-      errors.email = 'Please enter a valid email address.'
+  useEffect(() => {
+    if (initialCode) {
+      setInviteCode(initialCode)
+      setMode('invite')
     }
-
-    if (!credentials.password) {
-      errors.password = 'Password is required.'
-    } else if (credentials.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters.'
-    }
-
-    setFieldErrors(errors)
-    return Object.keys(errors).length === 0
-  }
+  }, [initialCode])
 
   const getCallbackUrl = () => {
     if (typeof window === 'undefined') return '/dashboard'
-    const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl')
+    const callbackUrl = searchParams.get('callbackUrl')
 
     if (callbackUrl?.startsWith('/') && !callbackUrl.startsWith('/login')) {
       return `${window.location.origin}${callbackUrl}`
@@ -58,29 +84,42 @@ export default function LoginPage() {
     return `${window.location.origin}/dashboard`
   }
 
-  // const handleGoogleSignIn = async () => {
-  //   setError('')
-  //   setGoogleLoading(true)
-  //   await signIn('google', { callbackUrl: getCallbackUrl() })
-  // }
-  // NOTE: Google sign-in is deprecated for now — will be re-enabled in a future release.
+  // Handle Credentials Sign In
+  const validateSignIn = (): boolean => {
+    const errors: { email?: string; password?: string } = {}
+
+    if (!signInCredentials.email.trim()) {
+      errors.email = 'Email is required.'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signInCredentials.email.trim())) {
+      errors.email = 'Please enter a valid email address.'
+    }
+
+    if (!signInCredentials.password) {
+      errors.password = 'Password is required.'
+    } else if (signInCredentials.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters.'
+    }
+
+    setSignInErrors(errors)
+    return Object.keys(errors).length === 0
+  }
 
   const handleCredentialsSignIn = () => {
-    setError('')
-    setFieldErrors({})
+    setSignInError('')
+    setSignInErrors({})
 
-    if (!validate()) return
+    if (!validateSignIn()) return
 
-    startTransition(async () => {
+    startSignInTransition(async () => {
       const result = await signIn('credentials', {
-        email: credentials.email.trim(),
-        password: credentials.password,
+        email: signInCredentials.email.trim(),
+        password: signInCredentials.password,
         redirect: false,
         callbackUrl: getCallbackUrl(),
       })
 
       if (result?.error) {
-        setError('Those credentials did not match any active user account.')
+        setSignInError('Those credentials did not match any active user account.')
         return
       }
 
@@ -88,10 +127,133 @@ export default function LoginPage() {
     })
   }
 
+  // Handle Invite Code Verification
+  const handleVerifyCode = async (event?: FormEvent) => {
+    if (event) event.preventDefault()
+    setInviteError('')
+    setInviteMessage('')
+
+    const codeToVerify = inviteCode.trim()
+    if (!codeToVerify) {
+      setInviteError('Please enter an invite code.')
+      return
+    }
+
+    setIsVerifying(true)
+    try {
+      const response = await fetch('/api/signup/access-code/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: codeToVerify }),
+      })
+      const body = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        setInviteError(body.error || 'Unable to verify the invite code. Please check and try again.')
+        return
+      }
+
+      setVerifiedCode(codeToVerify)
+      setInviteMessage('Invite code verified! Complete your workspace setup below.')
+    } catch {
+      setInviteError('Network error while verifying invite code. Please try again.')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  // Handle Workspace Creation & Redemption
+  const validateRegistration = (): boolean => {
+    const errors: {
+      organizationName?: string
+      email?: string
+      password?: string
+      confirmPassword?: string
+    } = {}
+
+    if (!registration.organizationName.trim()) {
+      errors.organizationName = 'Organization name is required.'
+    }
+
+    if (!registration.email.trim()) {
+      errors.email = 'Work email is required.'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registration.email.trim())) {
+      errors.email = 'Please enter a valid email address.'
+    }
+
+    if (!registration.password) {
+      errors.password = 'Password is required.'
+    } else if (registration.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters.'
+    }
+
+    if (!registration.confirmPassword) {
+      errors.confirmPassword = 'Confirm your password.'
+    } else if (registration.password !== registration.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match.'
+    }
+
+    setRegistrationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleCreateAccount = async (event: FormEvent) => {
+    event.preventDefault()
+    setInviteError('')
+    setInviteMessage('')
+
+    if (!validateRegistration()) return
+
+    setIsRedeeming(true)
+    try {
+      const response = await fetch('/api/signup/access-code/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: verifiedCode,
+          organizationName: registration.organizationName.trim(),
+          email: registration.email.trim(),
+          password: registration.password,
+          confirmPassword: registration.confirmPassword,
+        }),
+      })
+      const body = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        setInviteError(body.error || 'Unable to create the workspace. Please try again.')
+        setIsRedeeming(false)
+        return
+      }
+
+      // Automatically sign in with created credentials
+      const result = await signIn('credentials', {
+        email: registration.email.trim(),
+        password: registration.password,
+        redirect: false,
+        callbackUrl: getCallbackUrl(),
+      })
+
+      if (result?.error) {
+        setInviteMessage('Your workspace was created! Please sign in with your email and password.')
+        setMode('signin')
+        setSignInCredentials({
+          email: registration.email.trim(),
+          password: registration.password,
+        })
+        setIsRedeeming(false)
+        return
+      }
+
+      window.location.href = result?.url || getCallbackUrl()
+    } catch {
+      setInviteError('Failed to create account. Please check your connection and try again.')
+      setIsRedeeming(false)
+    }
+  }
 
   return (
     <div
-      className="relative h-screen overflow-hidden flex flex-col"
+      className="relative min-h-screen overflow-y-auto flex flex-col"
       style={{
         background:
           'radial-gradient(circle at top left, rgba(215,179,120,0.18), transparent 24%), radial-gradient(circle at 85% 12%, rgba(33,44,63,0.08), transparent 20%), linear-gradient(180deg, #f8f4ed 0%, #f5f1e8 100%)',
@@ -100,15 +262,15 @@ export default function LoginPage() {
       {/* Nav bar — matches landing page */}
       <nav className="relative z-10 grid grid-cols-3 items-center px-6 py-5 w-full">
         {/* Left — back link */}
-        <a
+        <Link
           href="/"
           className="text-xs font-semibold text-[#52504b] hover:text-[#121316] transition-colors justify-self-start"
         >
           ← Back to home
-        </a>
+        </Link>
 
         {/* Center — brand logo */}
-        <a href="/" className="flex items-center gap-2.5 justify-self-center">
+        <Link href="/" className="flex items-center gap-2.5 justify-self-center">
           <div className="w-8 h-8 rounded-lg bg-[#121316] flex items-center justify-center flex-shrink-0">
             <span className="text-white font-extrabold text-xs tracking-tight">OS</span>
           </div>
@@ -118,30 +280,33 @@ export default function LoginPage() {
           >
             Outreach OS
           </span>
-        </a>
+        </Link>
 
         {/* Right — empty spacer */}
         <div />
       </nav>
 
       {/* Main content */}
-      <div className="relative z-10 flex-1 overflow-y-auto flex items-center justify-center px-4 py-6">
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-
           {/* Left — brand copy (desktop only) */}
           <div className="hidden lg:flex lg:flex-col lg:gap-7">
             <div className="space-y-3">
               <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase">
-                WELCOME BACK
+                {mode === 'signin' ? 'WELCOME BACK' : 'INVITE-ONLY ACCESS'}
               </span>
               <h1
                 className="text-4xl text-[#121316] leading-tight"
                 style={{ fontFamily: "'Zoho Puvi','ZohoPuvi',-apple-system,sans-serif", fontWeight: 700 }}
               >
-                Your cold email command center awaits.
+                {mode === 'signin'
+                  ? 'Your cold email command center awaits.'
+                  : 'Activate your exclusive workspace with your invite code.'}
               </h1>
               <p className="text-[#52504b] text-sm leading-relaxed max-w-sm">
-                One login. Full access to mailbox health, lead queues, warmup sequences, and your unified reply inbox.
+                {mode === 'signin'
+                  ? 'One login. Full access to mailbox health, lead queues, warmup sequences, and your unified reply inbox.'
+                  : 'Join leading outbound sales teams with dedicated IP pools, inbox warmup, and automated deliverability diagnostics.'}
               </p>
             </div>
 
@@ -152,10 +317,10 @@ export default function LoginPage() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {[
-                  { label: 'Smartlead', price: '$94/mo' },
-                  { label: 'Warmup', price: '$50/mo' },
-                  { label: 'Domain Health', price: '$49/mo' },
-                  { label: 'CSV Scrubber', price: '$35/mo' },
+                  { label: 'Smartlead', price: '₹94/mo' },
+                  { label: 'Warmup', price: '₹50/mo' },
+                  { label: 'Domain Health', price: '₹49/mo' },
+                  { label: 'CSV Scrubber', price: '₹35/mo' },
                 ].map((chip) => (
                   <span
                     key={chip.label}
@@ -172,137 +337,433 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Right — sign-in card */}
+          {/* Right — card container */}
           <div
-            className="w-full rounded-2xl border border-[#121316]/10 bg-white/80 shadow-[0_20px_60px_rgba(18,19,22,0.08)] p-8 space-y-6 backdrop-blur-sm"
+            className="w-full rounded-2xl border border-[#121316]/10 bg-white/85 shadow-[0_20px_60px_rgba(18,19,22,0.08)] p-6 sm:p-8 space-y-5 backdrop-blur-sm"
             style={{ maxWidth: '440px', margin: '0 auto' }}
           >
-            {/* Card header */}
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-[#121316] text-white flex items-center justify-center shadow-md">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h2
-                  className="text-2xl text-[#121316] leading-tight"
-                  style={{ fontFamily: "'Zoho Puvi','ZohoPuvi',-apple-system,sans-serif", fontWeight: 700 }}
+            {/* Tab switch buttons */}
+            <div className="grid grid-cols-2 p-1 bg-[#ede9e1]/70 rounded-xl border border-[#121316]/08">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin')
+                  setSignInError('')
+                  setInviteError('')
+                }}
+                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                  mode === 'signin'
+                    ? 'bg-white text-[#121316] shadow-sm'
+                    : 'text-[#62605c] hover:text-[#121316]'
+                }`}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('invite')
+                  setSignInError('')
+                  setInviteError('')
+                }}
+                className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  mode === 'invite'
+                    ? 'bg-white text-[#121316] shadow-sm'
+                    : 'text-[#62605c] hover:text-[#121316]'
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Invite code</span>
+              </button>
+            </div>
+
+            {/* Mode 1: Sign in */}
+            {mode === 'signin' ? (
+              <div className="space-y-5">
+                {/* Card header */}
+                <div className="space-y-3">
+                  <div className="w-11 h-11 rounded-xl bg-[#121316] text-white flex items-center justify-center shadow-md">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2
+                      className="text-2xl text-[#121316] leading-tight"
+                      style={{ fontFamily: "'Zoho Puvi','ZohoPuvi',-apple-system,sans-serif", fontWeight: 700 }}
+                    >
+                      Sign in to Outreach OS
+                    </h2>
+                    <p className="text-sm text-[#52504b] mt-1 leading-relaxed">
+                      Enter your workspace credentials to continue.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Form fields */}
+                <div className="space-y-3.5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@company.com"
+                        className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                          signInErrors.email
+                            ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
+                            : 'border-[#121316]/10'
+                        }`}
+                        value={signInCredentials.email}
+                        onChange={(event) => {
+                          setSignInCredentials((current) => ({ ...current, email: event.target.value }))
+                          if (signInErrors.email) setSignInErrors((e) => ({ ...e, email: undefined }))
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') handleCredentialsSignIn()
+                        }}
+                      />
+                    </div>
+                    {signInErrors.email && (
+                      <p className="text-xs text-[#ee382b] font-medium mt-1">{signInErrors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="password" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                          signInErrors.password
+                            ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
+                            : 'border-[#121316]/10'
+                        }`}
+                        value={signInCredentials.password}
+                        onChange={(event) => {
+                          setSignInCredentials((current) => ({ ...current, password: event.target.value }))
+                          if (signInErrors.password) setSignInErrors((e) => ({ ...e, password: undefined }))
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') handleCredentialsSignIn()
+                        }}
+                      />
+                    </div>
+                    {signInErrors.password && (
+                      <p className="text-xs text-[#ee382b] font-medium mt-1">{signInErrors.password}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Error */}
+                {signInError ? (
+                  <div className="rounded-xl border border-[#ee382b]/20 bg-[#ee382b]/5 px-4 py-3 text-sm text-[#ee382b] font-medium">
+                    {signInError}
+                  </div>
+                ) : null}
+
+                {/* Primary CTA */}
+                <button
+                  type="button"
+                  onClick={handleCredentialsSignIn}
+                  disabled={isSigningIn}
+                  className="w-full h-11 rounded-xl bg-[#121316] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2a2d33] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                 >
-                  Sign in to Outreach OS
-                </h2>
-                <p className="text-sm text-[#52504b] mt-1 leading-relaxed">
-                  Enter your workspace credentials to continue.
-                </p>
-              </div>
-            </div>
+                  {isSigningIn ? 'Signing in…' : 'Continue to workspace'}
+                  {!isSigningIn && <ArrowRight className="w-4 h-4" />}
+                </button>
 
-            {/* Form fields */}
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
-                  Email
-                </Label>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@company.com"
-                    className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
-                      fieldErrors.email
-                        ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
-                        : 'border-[#121316]/10'
-                    }`}
-                    value={credentials.email}
-                    onChange={(event) => {
-                      setCredentials((current) => ({ ...current, email: event.target.value }))
-                      if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: undefined }))
-                    }}
-                  />
+                {/* Invite code prompt */}
+                <div className="pt-2 border-t border-[#121316]/08 flex flex-col items-center gap-1.5 text-center">
+                  <p className="text-xs text-[#62605c]">
+                    Have an invite or access code?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('invite')
+                        setSignInError('')
+                      }}
+                      className="font-bold text-[#121316] hover:text-[#ee382b] underline underline-offset-2 transition-colors"
+                    >
+                      Redeem invite code →
+                    </button>
+                  </p>
+                  <p className="text-[11px] text-[#a09e97] leading-relaxed">
+                    Client and internal users can sign in once an account has been created in Prane.
+                  </p>
                 </div>
-                {fieldErrors.email && (
-                  <p className="text-xs text-[#ee382b] font-medium mt-1">{fieldErrors.email}</p>
-                )}
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
-                  Password
-                </Label>
-                <div className="relative">
-                  <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
-                      fieldErrors.password
-                        ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
-                        : 'border-[#121316]/10'
-                    }`}
-                    value={credentials.password}
-                    onChange={(event) => {
-                      setCredentials((current) => ({ ...current, password: event.target.value }))
-                      if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: undefined }))
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        handleCredentialsSignIn()
-                      }
-                    }}
-                  />
+            ) : (
+              /* Mode 2: Invite code redemption */
+              <div className="space-y-5">
+                {/* Card header */}
+                <div className="space-y-3">
+                  <div className="w-11 h-11 rounded-xl bg-[#ee382b] text-white flex items-center justify-center shadow-md">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2
+                      className="text-2xl text-[#121316] leading-tight"
+                      style={{ fontFamily: "'Zoho Puvi','ZohoPuvi',-apple-system,sans-serif", fontWeight: 700 }}
+                    >
+                      {verifiedCode ? 'Create Your Workspace' : 'Redeem Invite Code'}
+                    </h2>
+                    <p className="text-sm text-[#52504b] mt-1 leading-relaxed">
+                      {verifiedCode
+                        ? 'Set up your organization and admin credentials.'
+                        : 'Enter your exclusive invite code to activate access.'}
+                    </p>
+                  </div>
                 </div>
-                {fieldErrors.password && (
-                  <p className="text-xs text-[#ee382b] font-medium mt-1">{fieldErrors.password}</p>
+
+                {/* Step 1: Enter & verify code */}
+                {!verifiedCode ? (
+                  <form onSubmit={handleVerifyCode} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="inviteCode" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
+                        Invite Code
+                      </Label>
+                      <div className="relative">
+                        <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
+                        <Input
+                          id="inviteCode"
+                          type="text"
+                          placeholder="e.g. PRANE-XXXX-XXXX"
+                          className="h-11 rounded-xl border border-[#121316]/10 bg-[#faf8f4] pl-10 text-sm font-mono uppercase tracking-wider placeholder:normal-case placeholder:font-sans placeholder:tracking-normal placeholder:text-[#a09e97]"
+                          value={inviteCode}
+                          onChange={(event) => {
+                            setInviteCode(event.target.value)
+                            if (inviteError) setInviteError('')
+                          }}
+                          autoComplete="off"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    {inviteError ? (
+                      <div className="rounded-xl border border-[#ee382b]/20 bg-[#ee382b]/5 px-4 py-3 text-sm text-[#ee382b] font-medium">
+                        {inviteError}
+                      </div>
+                    ) : null}
+
+                    <button
+                      type="submit"
+                      disabled={isVerifying || !inviteCode.trim()}
+                      className="w-full h-11 rounded-xl bg-[#121316] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2a2d33] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                    >
+                      {isVerifying ? 'Verifying code…' : 'Continue with code'}
+                      {!isVerifying && <ArrowRight className="w-4 h-4" />}
+                    </button>
+                  </form>
+                ) : (
+                  /* Step 2: Code verified -> Fill registration details */
+                  <form onSubmit={handleCreateAccount} className="space-y-3.5">
+                    {/* Verified code pill */}
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-[#0f8a5f]/08 border border-[#0f8a5f]/20">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#0f8a5f]" />
+                        <span className="text-xs font-semibold text-[#0f8a5f]">
+                          Code applied:{' '}
+                          <span className="font-mono font-bold tracking-wide">{verifiedCode}</span>
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerifiedCode('')
+                          setInviteMessage('')
+                        }}
+                        className="text-xs text-[#52504b] hover:text-[#121316] underline font-medium"
+                      >
+                        Change
+                      </button>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="orgName" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
+                        Organization Name
+                      </Label>
+                      <div className="relative">
+                        <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
+                        <Input
+                          id="orgName"
+                          placeholder="Acme Growth Inc."
+                          className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                            registrationErrors.organizationName
+                              ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
+                              : 'border-[#121316]/10'
+                          }`}
+                          value={registration.organizationName}
+                          onChange={(e) => {
+                            setRegistration((r) => ({ ...r, organizationName: e.target.value }))
+                            if (registrationErrors.organizationName) {
+                              setRegistrationErrors((err) => ({ ...err, organizationName: undefined }))
+                            }
+                          }}
+                          required
+                        />
+                      </div>
+                      {registrationErrors.organizationName && (
+                        <p className="text-xs text-[#ee382b] font-medium">{registrationErrors.organizationName}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="workEmail" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
+                        Work Email
+                      </Label>
+                      <div className="relative">
+                        <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
+                        <Input
+                          id="workEmail"
+                          type="email"
+                          placeholder="founder@company.com"
+                          className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                            registrationErrors.email
+                              ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
+                              : 'border-[#121316]/10'
+                          }`}
+                          value={registration.email}
+                          onChange={(e) => {
+                            setRegistration((r) => ({ ...r, email: e.target.value }))
+                            if (registrationErrors.email) {
+                              setRegistrationErrors((err) => ({ ...err, email: undefined }))
+                            }
+                          }}
+                          required
+                        />
+                      </div>
+                      {registrationErrors.email && (
+                        <p className="text-xs text-[#ee382b] font-medium">{registrationErrors.email}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="regPassword" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
+                        Password
+                      </Label>
+                      <div className="relative">
+                        <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
+                        <Input
+                          id="regPassword"
+                          type="password"
+                          placeholder="At least 8 characters"
+                          className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                            registrationErrors.password
+                              ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
+                              : 'border-[#121316]/10'
+                          }`}
+                          value={registration.password}
+                          onChange={(e) => {
+                            setRegistration((r) => ({ ...r, password: e.target.value }))
+                            if (registrationErrors.password) {
+                              setRegistrationErrors((err) => ({ ...err, password: undefined }))
+                            }
+                          }}
+                          required
+                        />
+                      </div>
+                      {registrationErrors.password && (
+                        <p className="text-xs text-[#ee382b] font-medium">{registrationErrors.password}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="confirmPassword" className="text-xs font-bold text-[#121316] uppercase tracking-wider">
+                        Confirm Password
+                      </Label>
+                      <div className="relative">
+                        <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          placeholder="Re-enter password"
+                          className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                            registrationErrors.confirmPassword
+                              ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
+                              : 'border-[#121316]/10'
+                          }`}
+                          value={registration.confirmPassword}
+                          onChange={(e) => {
+                            setRegistration((r) => ({ ...r, confirmPassword: e.target.value }))
+                            if (registrationErrors.confirmPassword) {
+                              setRegistrationErrors((err) => ({ ...err, confirmPassword: undefined }))
+                            }
+                          }}
+                          required
+                        />
+                      </div>
+                      {registrationErrors.confirmPassword && (
+                        <p className="text-xs text-[#ee382b] font-medium">{registrationErrors.confirmPassword}</p>
+                      )}
+                    </div>
+
+                    {inviteError ? (
+                      <div className="rounded-xl border border-[#ee382b]/20 bg-[#ee382b]/5 px-4 py-3 text-sm text-[#ee382b] font-medium">
+                        {inviteError}
+                      </div>
+                    ) : null}
+
+                    {inviteMessage ? (
+                      <div className="rounded-xl border border-[#0f8a5f]/20 bg-[#0f8a5f]/5 px-4 py-3 text-sm text-[#0f8a5f] font-medium flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 flex-shrink-0" />
+                        <span>{inviteMessage}</span>
+                      </div>
+                    ) : null}
+
+                    <button
+                      type="submit"
+                      disabled={isRedeeming}
+                      className="w-full h-11 rounded-xl bg-[#121316] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2a2d33] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                    >
+                      {isRedeeming ? 'Creating workspace…' : 'Create organization and account'}
+                      {!isRedeeming && <ArrowRight className="w-4 h-4" />}
+                    </button>
+                  </form>
                 )}
+
+                {/* Footer switch back */}
+                <div className="pt-2 border-t border-[#121316]/08 text-center">
+                  <p className="text-xs text-[#62605c]">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('signin')
+                        setInviteError('')
+                      }}
+                      className="font-bold text-[#121316] hover:text-[#ee382b] underline underline-offset-2 transition-colors"
+                    >
+                      Sign in to workspace →
+                    </button>
+                  </p>
+                </div>
               </div>
-            </div>
-
-            {/* Error */}
-            {error ? (
-              <div className="rounded-xl border border-[#ee382b]/20 bg-[#ee382b]/5 px-4 py-3 text-sm text-[#ee382b] font-medium">
-                {error}
-              </div>
-            ) : null}
-
-            {/* Primary CTA */}
-            <button
-              onClick={handleCredentialsSignIn}
-              disabled={isPending}
-              className="w-full h-11 rounded-xl bg-[#121316] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-[#2a2d33] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isPending ? 'Signing in…' : 'Continue to workspace'}
-              {!isPending && <ArrowRight className="w-4 h-4" />}
-            </button>
-
-            {/* Divider — hidden while Google sign-in is deprecated */}
-            {/* <div className="flex items-center gap-3">
-              <Separator className="flex-1 bg-[#121316]/08" />
-              <span className="text-xs uppercase tracking-widest text-[#a09e97] font-semibold">or</span>
-              <Separator className="flex-1 bg-[#121316]/08" />
-            </div> */}
-
-            {/* Google sign-in — deprecated for now, will be re-enabled in a future release */}
-            {/* <button
-              onClick={handleGoogleSignIn}
-              disabled={googleLoading}
-              className="w-full h-11 rounded-xl border border-[#121316]/10 bg-[#faf8f4] text-sm font-semibold text-[#121316] flex items-center justify-center gap-2.5 hover:bg-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              {googleLoading ? 'Redirecting…' : 'Continue with Google'}
-            </button> */}
-
-            {/* Footer note */}
-            <p className="text-xs text-[#a09e97] text-center leading-relaxed">
-              Client and internal users can sign in once an account has been created in Prane.
-            </p>
+            )}
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center bg-[#f8f4ed]">
+          <div className="text-sm font-semibold text-[#62605c]">Loading Outreach OS…</div>
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   )
 }

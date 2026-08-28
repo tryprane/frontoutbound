@@ -13,8 +13,8 @@ import {
   RotateCcw,
   Save,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,6 +36,7 @@ interface WarmupSettingsResponse {
   recipientDailyInboundCap: number
   healthActionsEnabled: boolean
 }
+
 const TIMEZONE_OPTIONS = [
   { value: 'Asia/Kolkata', label: 'India', offset: 'UTC+05:30' },
   { value: 'Asia/Dubai', label: 'Dubai', offset: 'UTC+04:00' },
@@ -102,11 +103,11 @@ function SelectField({
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className="input-base h-11 appearance-none pr-10 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full h-11 px-3.5 pr-10 rounded-xl border border-[#121316]/12 bg-[#faf8f4] text-xs sm:text-sm font-medium text-[#121316] appearance-none focus:outline-none focus:ring-2 focus:ring-[#ee382b]/20 focus:border-[#ee382b] focus:bg-white transition-all disabled:cursor-not-allowed disabled:opacity-60"
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-muted)]" />
+      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a8780]" />
     </div>
   )
 }
@@ -125,16 +126,16 @@ function Stepper({
   label: string
 }) {
   return (
-    <div className="grid h-10 grid-cols-[40px_minmax(54px,1fr)_40px] overflow-hidden rounded-lg border border-black/10 bg-white">
+    <div className="grid h-9 grid-cols-[36px_minmax(48px,1fr)_36px] overflow-hidden rounded-xl border border-[#121316]/12 bg-[#faf8f4] shadow-2xs">
       <button
         type="button"
         aria-label={`Decrease ${label}`}
         title={`Decrease ${label}`}
-        className="flex items-center justify-center border-r border-black/8 text-[var(--text-secondary)] transition hover:bg-black/[0.03] disabled:opacity-35"
+        className="flex items-center justify-center border-r border-[#121316]/08 text-[#62605c] hover:text-[#121316] transition hover:bg-[#121316]/05 disabled:opacity-35 cursor-pointer"
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
       >
-        <Minus className="h-4 w-4" />
+        <Minus className="h-3.5 w-3.5" />
       </button>
       <Input
         aria-label={label}
@@ -143,21 +144,32 @@ function Stepper({
         max={max}
         value={value}
         onChange={(event) => onChange(Math.max(min, Math.min(max, Number(event.target.value || min))))}
-        className="h-10 rounded-none border-0 bg-transparent px-1 text-center shadow-none focus-visible:ring-0"
+        className="h-9 rounded-none border-0 bg-transparent px-1 text-center font-mono text-xs font-bold text-[#121316] shadow-none focus-visible:ring-0"
       />
       <button
         type="button"
         aria-label={`Increase ${label}`}
         title={`Increase ${label}`}
-        className="flex items-center justify-center border-l border-black/8 text-[var(--text-secondary)] transition hover:bg-black/[0.03] disabled:opacity-35"
+        className="flex items-center justify-center border-l border-[#121316]/08 text-[#62605c] hover:text-[#121316] transition hover:bg-[#121316]/05 disabled:opacity-35 cursor-pointer"
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-3.5 w-3.5" />
       </button>
     </div>
   )
 }
+
+// Color palettes for different warmup ramp stages (from energetic coral-amber to vibrant deliverability gradient)
+const STAGE_GRADIENTS = [
+  'bg-gradient-to-r from-[#d97706] to-[#f59e0b]', // Stage 1 (Gentle start)
+  'bg-gradient-to-r from-[#d97706] to-[#ea580c]', // Stage 2
+  'bg-gradient-to-r from-[#ea580c] to-[#ee382b]', // Stage 3
+  'bg-gradient-to-r from-[#ee382b] to-[#dc2626]', // Stage 4
+  'bg-gradient-to-r from-[#ee382b] via-[#ea580c] to-[#0f8a5f]', // Stage 5
+  'bg-gradient-to-r from-[#ee382b] to-[#0f8a5f]', // Stage 6
+  'bg-gradient-to-r from-[#0f8a5f] to-[#10b981]', // Stage 7 (Peak deliverability)
+]
 
 export function WarmupWorkspace() {
   const [settings, setSettings] = useState<WarmupSettingsResponse>(
@@ -264,47 +276,37 @@ export function WarmupWorkspace() {
   }
 
   const updateStartTime = (businessHoursStart: string) => {
-    const nextEnd = settings.businessHoursEnd > businessHoursStart
-      ? settings.businessHoursEnd
-      : TIME_OPTIONS.find((option) => option.value > businessHoursStart)?.value || '23:30'
+    const nextEnd =
+      settings.businessHoursEnd > businessHoursStart
+        ? settings.businessHoursEnd
+        : TIME_OPTIONS.find((option) => option.value > businessHoursStart)?.value || '23:30'
     setSettings((current) => ({ ...current, businessHoursStart, businessHoursEnd: nextEnd }))
   }
 
   return (
-    <div className="animate-fade-in space-y-6 pb-10">
-      {/* Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Flame className="h-6 w-6 text-[#ee382b]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase">
-                DELIVERABILITY INCUBATOR
-              </span>
-              <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                  settings.globalEnabled
-                    ? 'bg-[#0f8a5f]/10 text-[#0f8a5f] border border-[#0f8a5f]/20'
-                    : 'bg-[#b7791f]/10 text-[#b7791f] border border-[#b7791f]/20'
-                }`}
-              >
-                {settings.globalEnabled ? 'Active Running' : 'Engine Paused'}
-              </span>
-            </div>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Email Warmup Pulse
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Automated inbox rotation, progressive ramp schedules, and conversation engagement.
-            </p>
-          </div>
+    <div className="animate-fade-in space-y-4 pb-10">
+      {/* Top Floating Status & Action Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <span
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-sm backdrop-blur-md ${
+              settings.globalEnabled
+                ? 'bg-white/90 text-[#0f8a5f] border border-[#0f8a5f]/25'
+                : 'bg-white/90 text-[#d97706] border border-[#d97706]/25'
+            }`}
+          >
+            <span
+              className={`flex h-2 w-2 rounded-full ${
+                settings.globalEnabled ? 'bg-[#0f8a5f] animate-pulse' : 'bg-[#d97706]'
+              }`}
+            />
+            <span>{settings.globalEnabled ? 'Warmup Active' : 'Engine Paused'}</span>
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-3 rounded-full border border-[#121316]/12 bg-white px-4 py-2 shadow-xs">
-            <span className="text-xs font-bold text-[#121316]">Warmup Engine</span>
+        <div className="flex flex-wrap items-center gap-2.5 ml-auto">
+          <div className="flex items-center gap-2.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-3.5 py-1.5 shadow-sm">
+            <span className="text-xs font-semibold text-[#121316]">Warmup Engine</span>
             <Switch
               checked={settings.globalEnabled}
               disabled={isLoading || isSaving}
@@ -320,21 +322,23 @@ export function WarmupWorkspace() {
               }}
             />
           </div>
+
           <Button
             type="button"
             variant="outline"
             size="icon"
-            className="rounded-full border border-[#121316]/12 bg-white text-[#121316] hover:bg-[#faf8f4]"
+            className="h-8 w-8 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md text-[#121316] hover:bg-white shadow-sm cursor-pointer"
             title="Reset to defaults"
             aria-label="Reset to defaults"
             disabled={isLoading || isSaving}
             onClick={() => setSettings(withSettingsFallbacks(DEFAULT_WARMUP_SETTINGS))}
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-3.5 w-3.5" />
           </Button>
+
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_6px_20px_rgba(238,56,43,0.22)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_10px_28px_rgba(238,56,43,0.32)] disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_16px_rgba(238,56,43,0.28)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_8px_24px_rgba(238,56,43,0.38)] active:scale-95 disabled:opacity-50 cursor-pointer"
             disabled={isLoading || isSaving || !isDirty || !windowIsValid}
             onClick={() => void persistSettings(settings)}
           >
@@ -342,7 +346,7 @@ export function WarmupWorkspace() {
             <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
           </button>
         </div>
-      </header>
+      </div>
 
       {message ? (
         <div
@@ -359,41 +363,48 @@ export function WarmupWorkspace() {
       ) : null}
 
       {/* 4 Counter Stat Cards */}
-      <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           ['Total Mailboxes', totalMailboxes, '#121316'],
-          ['In Warmup Ramp', overview?.warming ?? 0, '#b7791f'],
+          ['In Warmup Ramp', overview?.warming ?? 0, '#d97706'],
           ['Ready / Warmed', overview?.warmed ?? 0, '#0f8a5f'],
           ['Paused Accounts', overview?.paused ?? 0, '#62605c'],
         ].map(([label, value, color]) => (
           <div
             key={label as string}
-            className="uneevo-card p-5 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]"
+            className="uneevo-card p-4 sm:p-5 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs"
           >
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">{label as string}</div>
-            <div className="mt-1 font-mono text-3xl font-bold tabular-nums" style={{ color: color as string }}>
+            <div className="font-mono text-xl sm:text-2xl font-bold tabular-nums" style={{ color: color as string }}>
               {isLoading ? '—' : value}
             </div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780] mt-1">{label as string}</div>
           </div>
         ))}
       </section>
 
-      <main className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
-        <div className="space-y-5">
-          <section className="overflow-hidden rounded-lg border border-black/10 bg-white">
-            <div className="flex items-center gap-3 border-b border-black/8 px-5 py-4">
-              <Clock3 className="h-5 w-5 text-[var(--text-secondary)]" />
+      {/* Main Form Grid */}
+      <main className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
+        {/* Left Column: Schedule & Ramp Plan */}
+        <div className="space-y-4">
+          {/* Warmup Schedule Card */}
+          <section className="uneevo-card rounded-[22px] border border-[#121316]/12 bg-white shadow-2xs overflow-hidden">
+            <div className="flex items-center gap-3 border-b border-[#121316]/08 px-5 py-4 bg-[#faf8f4]">
+              <div className="w-8 h-8 rounded-lg bg-white border border-[#121316]/10 flex items-center justify-center text-[#ee382b] shadow-2xs">
+                <Clock3 className="h-4 w-4" />
+              </div>
               <div>
-                <h2 className="text-base font-semibold text-[var(--text-primary)]">Warmup schedule</h2>
-                <p className="text-sm text-[var(--text-secondary)]">
+                <h2 className="text-sm sm:text-base font-bold text-[#121316]">Warmup Schedule</h2>
+                <p className="text-xs text-[#62605c]">
                   {settings.businessHoursStart}–{settings.businessHoursEnd} in {settings.timezone}
                 </p>
               </div>
             </div>
 
-            <div className="grid gap-5 p-5 md:grid-cols-2">
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="warmup-timezone">Timezone</Label>
+            <div className="grid gap-4 p-5 md:grid-cols-2">
+              <div className="space-y-1.5 md:col-span-2">
+                <Label htmlFor="warmup-timezone" className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
+                  Timezone
+                </Label>
                 <SelectField
                   id="warmup-timezone"
                   value={settings.timezone}
@@ -408,8 +419,10 @@ export function WarmupWorkspace() {
                 </SelectField>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="warmup-window-start">Start time</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="warmup-window-start" className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
+                  Start Time
+                </Label>
                 <SelectField
                   id="warmup-window-start"
                   value={settings.businessHoursStart}
@@ -422,8 +435,10 @@ export function WarmupWorkspace() {
                 </SelectField>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="warmup-window-end">End time</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="warmup-window-end" className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
+                  End Time
+                </Label>
                 <SelectField
                   id="warmup-window-end"
                   value={settings.businessHoursEnd}
@@ -438,9 +453,11 @@ export function WarmupWorkspace() {
                 </SelectField>
               </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <Label>Active days</Label>
-                <div className="grid grid-cols-2 rounded-lg bg-black/[0.04] p-1" role="group" aria-label="Active days">
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
+                  Active Days
+                </Label>
+                <div className="grid grid-cols-2 rounded-xl bg-[#faf8f4] border border-[#121316]/08 p-1 gap-1" role="group" aria-label="Active days">
                   {[
                     { label: 'Monday–Friday', value: true, icon: CalendarDays },
                     { label: 'Every day', value: false, icon: Flame },
@@ -452,15 +469,15 @@ export function WarmupWorkspace() {
                         key={option.label}
                         type="button"
                         aria-pressed={selected}
-                        className={`flex min-h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition ${
+                        className={`flex min-h-9 items-center justify-center gap-2 rounded-lg px-3 text-xs font-semibold transition cursor-pointer ${
                           selected
-                            ? 'bg-white text-[var(--text-primary)] shadow-sm'
-                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                            ? 'bg-white text-[#121316] shadow-2xs border border-[#121316]/08'
+                            : 'text-[#62605c] hover:text-[#121316]'
                         }`}
                         onClick={() => setSettings((current) => ({ ...current, weekdaysOnly: option.value }))}
                       >
-                        <Icon className="h-4 w-4" />
-                        {option.label}
+                        <Icon className={`h-3.5 w-3.5 ${selected ? 'text-[#ee382b]' : 'text-[#8a8780]'}`} />
+                        <span>{option.label}</span>
                       </button>
                     )
                   })}
@@ -469,31 +486,43 @@ export function WarmupWorkspace() {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-black/10 bg-white">
-            <div className="flex items-center justify-between gap-4 border-b border-black/8 px-5 py-4">
+          {/* Daily Ramp Plan Card */}
+          <section className="uneevo-card rounded-[22px] border border-[#121316]/12 bg-white shadow-2xs overflow-hidden">
+            <div className="flex items-center justify-between gap-4 border-b border-[#121316]/08 px-5 py-4 bg-[#faf8f4]">
               <div className="flex items-center gap-3">
-                <Gauge className="h-5 w-5 text-[var(--text-secondary)]" />
+                <div className="w-8 h-8 rounded-lg bg-white border border-[#121316]/10 flex items-center justify-center text-[#ee382b] shadow-2xs">
+                  <Gauge className="h-4 w-4" />
+                </div>
                 <div>
-                  <h2 className="text-base font-semibold text-[var(--text-primary)]">Daily ramp plan</h2>
-                  <p className="text-sm text-[var(--text-secondary)]">Emails per mailbox at each maturity stage</p>
+                  <h2 className="text-sm sm:text-base font-bold text-[#121316]">Daily Ramp Plan</h2>
+                  <p className="text-xs text-[#62605c]">Emails per mailbox at each maturity stage</p>
                 </div>
               </div>
-              <span className="text-sm font-medium text-[var(--text-secondary)]">
+              <span className="text-xs font-bold text-[#ee382b] bg-[#ee382b]/10 border border-[#ee382b]/20 px-2.5 py-1 rounded-full font-mono">
                 Peak {Math.max(...settings.stageCounts)}/day
               </span>
             </div>
 
-            <div className="divide-y divide-black/8">
+            <div className="divide-y divide-[#121316]/08">
               {settings.stageCounts.map((count, index) => {
                 const progress = Math.max(8, Math.round((count / Math.max(...settings.stageCounts, 1)) * 100))
+                const gradientClass = STAGE_GRADIENTS[index] || STAGE_GRADIENTS[STAGE_GRADIENTS.length - 1]
+
                 return (
-                  <div key={`stage-${index}`} className="grid items-center gap-3 px-5 py-3 sm:grid-cols-[96px_minmax(120px,1fr)_160px]">
+                  <div
+                    key={`stage-${index}`}
+                    className="grid items-center gap-3 px-5 py-3 sm:grid-cols-[96px_minmax(120px,1fr)_140px] hover:bg-[#faf8f4]/50 transition-colors"
+                  >
                     <div>
-                      <div className="text-sm font-medium text-[var(--text-primary)]">Stage {index + 1}</div>
-                      <div className="text-xs text-[var(--text-muted)]">Day {index + 1}+</div>
+                      <div className="text-xs font-bold text-[#121316]">Stage {index + 1}</div>
+                      <div className="text-[10px] text-[#8a8780] font-mono">Day {index + 1}+</div>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-black/[0.05]">
-                      <div className="h-full rounded-full bg-[#3b4652] transition-all" style={{ width: `${progress}%` }} />
+                    {/* Vibrant Stage Slider / Bar */}
+                    <div className="h-2 overflow-hidden rounded-full bg-[#121316]/06 p-0.5">
+                      <div
+                        className={`h-full rounded-full ${gradientClass} transition-all duration-300 shadow-xs`}
+                        style={{ width: `${progress}%` }}
+                      />
                     </div>
                     <Stepper
                       value={count}
@@ -509,20 +538,26 @@ export function WarmupWorkspace() {
           </section>
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-black/10 bg-white xl:sticky xl:top-5">
-          <div className="flex items-center gap-3 border-b border-black/8 px-5 py-4">
-            <ShieldCheck className="h-5 w-5 text-[var(--text-secondary)]" />
+        {/* Right Column: Conversation & Safety */}
+        <section className="uneevo-card rounded-[22px] border border-[#121316]/12 bg-white shadow-2xs overflow-hidden xl:sticky xl:top-4">
+          <div className="flex items-center gap-3 border-b border-[#121316]/08 px-5 py-4 bg-[#faf8f4]">
+            <div className="w-8 h-8 rounded-lg bg-white border border-[#121316]/10 flex items-center justify-center text-[#0f8a5f] shadow-2xs">
+              <ShieldCheck className="h-4 w-4" />
+            </div>
             <div>
-              <h2 className="text-base font-semibold text-[var(--text-primary)]">Conversation & safety</h2>
-              <p className="text-sm text-[var(--text-secondary)]">Engagement targets and mailbox protection</p>
+              <h2 className="text-sm sm:text-base font-bold text-[#121316]">Conversation & Safety</h2>
+              <p className="text-xs text-[#62605c]">Engagement targets and mailbox protection</p>
             </div>
           </div>
 
-          <div className="space-y-6 p-5">
-            <div className="space-y-3">
+          <div className="space-y-5 p-5">
+            {/* Reply Target */}
+            <div className="space-y-2">
               <div className="flex items-center justify-between gap-4">
-                <Label htmlFor="warmup-reply-rate-target">Reply target</Label>
-                <span className="text-sm font-semibold text-[var(--text-primary)]">
+                <Label htmlFor="warmup-reply-rate-target" className="text-xs font-semibold text-[#121316]">
+                  Reply Target
+                </Label>
+                <span className="font-mono text-xs font-bold text-[#0f8a5f] bg-[#0f8a5f]/10 border border-[#0f8a5f]/20 px-2 py-0.5 rounded-full">
                   {Math.round(settings.replyRateTarget * 100)}%
                 </span>
               </div>
@@ -536,15 +571,21 @@ export function WarmupWorkspace() {
                 onChange={(event) =>
                   setSettings((current) => ({ ...current, replyRateTarget: Number(event.target.value) / 100 }))
                 }
-                className="h-2 w-full cursor-pointer accent-[#303a45]"
+                className="h-2 w-full cursor-pointer accent-[#ee382b] bg-[#121316]/08 rounded-full"
               />
-              <div className="flex justify-between text-xs text-[var(--text-muted)]"><span>0%</span><span>100%</span></div>
+              <div className="flex justify-between text-[10px] text-[#8a8780] font-mono">
+                <span>0%</span>
+                <span>100%</span>
+              </div>
             </div>
 
-            <div className="space-y-3 border-t border-black/8 pt-5">
+            {/* Continue Existing Threads */}
+            <div className="space-y-2 border-t border-[#121316]/08 pt-4">
               <div className="flex items-center justify-between gap-4">
-                <Label htmlFor="warmup-thread-rate">Continue existing threads</Label>
-                <span className="text-sm font-semibold text-[var(--text-primary)]">
+                <Label htmlFor="warmup-thread-rate" className="text-xs font-semibold text-[#121316]">
+                  Continue Existing Threads
+                </Label>
+                <span className="font-mono text-xs font-bold text-[#ee382b] bg-[#ee382b]/10 border border-[#ee382b]/20 px-2 py-0.5 rounded-full">
                   {Math.round(settings.threadContinuationRate * 100)}%
                 </span>
               </div>
@@ -561,14 +602,20 @@ export function WarmupWorkspace() {
                     threadContinuationRate: Number(event.target.value) / 100,
                   }))
                 }
-                className="h-2 w-full cursor-pointer accent-[#303a45]"
+                className="h-2 w-full cursor-pointer accent-[#ee382b] bg-[#121316]/08 rounded-full"
               />
-              <div className="flex justify-between text-xs text-[var(--text-muted)]"><span>New threads</span><span>Existing threads</span></div>
+              <div className="flex justify-between text-[10px] text-[#8a8780]">
+                <span>New threads</span>
+                <span>Existing threads</span>
+              </div>
             </div>
 
-            <div className="grid gap-4 border-t border-black/8 pt-5 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Maximum thread depth</Label>
+            {/* Thread Depth & Inbound Cap */}
+            <div className="grid gap-3 border-t border-[#121316]/08 pt-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
+                  Max Thread Depth
+                </Label>
                 <Stepper
                   value={settings.maxThreadDepth}
                   min={1}
@@ -577,8 +624,10 @@ export function WarmupWorkspace() {
                   onChange={(maxThreadDepth) => setSettings((current) => ({ ...current, maxThreadDepth }))}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Mailbox receiving cap</Label>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
+                  Mailbox Receiving Cap
+                </Label>
                 <Stepper
                   value={settings.recipientDailyInboundCap}
                   min={1}
@@ -591,10 +640,11 @@ export function WarmupWorkspace() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-4 border-t border-black/8 pt-5">
+            {/* Automated Health Actions Toggle */}
+            <div className="flex items-center justify-between gap-4 border-t border-[#121316]/08 pt-4">
               <div>
-                <div className="text-sm font-medium text-[var(--text-primary)]">Automated health actions</div>
-                <div className="mt-0.5 text-xs text-[var(--text-muted)]">Pause risky warmup activity automatically</div>
+                <div className="text-xs font-bold text-[#121316]">Automated Health Actions</div>
+                <div className="text-[11px] text-[#62605c]">Pause risky warmup activity automatically</div>
               </div>
               <Switch
                 checked={settings.healthActionsEnabled}
@@ -604,21 +654,27 @@ export function WarmupWorkspace() {
               />
             </div>
 
-            <div className="border-t border-black/8 pt-5">
-              <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="font-medium text-[var(--text-primary)]">Mailbox readiness</span>
-                <span className="text-[var(--text-secondary)]">{warmedPercent}% warmed</span>
+            {/* Mailbox Readiness Progress */}
+            <div className="border-t border-[#121316]/08 pt-4 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-[#121316]">Mailbox Readiness</span>
+                <span className="font-mono font-bold text-[#0f8a5f]">{warmedPercent}% warmed</span>
               </div>
-              <Progress value={warmedPercent} className="bg-black/[0.06]" />
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <div className="h-2 w-full bg-[#121316]/08 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#ee382b] to-[#0f8a5f] transition-all duration-500"
+                  style={{ width: `${warmedPercent}%` }}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center pt-1">
                 {[
-                  ['Auto', overview?.autoEnabled ?? 0],
-                  ['Cold', overview?.cold ?? 0],
-                  ['Active', overview?.activeMailboxes ?? 0],
+                  ['AUTO', overview?.autoEnabled ?? 0],
+                  ['COLD', overview?.cold ?? 0],
+                  ['ACTIVE', overview?.activeMailboxes ?? 0],
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-md bg-black/[0.03] px-2 py-2">
-                    <div className="text-base font-semibold text-[var(--text-primary)]">{isLoading ? '—' : value}</div>
-                    <div className="text-[11px] uppercase text-[var(--text-muted)]">{label}</div>
+                  <div key={label} className="rounded-xl bg-[#faf8f4] border border-[#121316]/06 p-2.5">
+                    <div className="text-base font-bold font-mono text-[#121316]">{isLoading ? '—' : value}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780] mt-0.5">{label}</div>
                   </div>
                 ))}
               </div>

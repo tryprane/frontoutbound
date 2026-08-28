@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -11,8 +11,30 @@ import {
   Pause,
   Play,
   Trash2,
+  RefreshCw,
+  TrendingUp,
+  BarChart3,
+  Sliders,
+  Users,
+  Clock,
+  Sparkles,
+  CheckCircle2,
+  Mail,
+  HardDrive,
+  MessageCircle,
+  ShieldCheck,
+  Flame,
+  AlertTriangle,
+  Send,
+  Calendar,
+  Layers,
+  AtSign,
 } from 'lucide-react'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { CampaignPerformanceFunnel } from '@/components/campaigns/CampaignPerformanceFunnel'
+import { CampaignVelocityChart } from '@/components/campaigns/CampaignVelocityChart'
+import { CampaignSequenceTree } from '@/components/campaigns/CampaignSequenceTree'
+import { CampaignSenderFleet } from '@/components/campaigns/CampaignSenderFleet'
 
 type CampaignChannel = 'EMAIL' | 'WHATSAPP' | 'GDRIVE'
 
@@ -32,7 +54,7 @@ interface CampaignDetail {
   guardrailReason: string | null
   createdAt: string
   gradualSendingEnabled: boolean
-  senderAccountPreference: 'random' | 'gmail' | 'zoho'
+  senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook'
   sequenceEnabled?: boolean
   sequenceSteps?: SequenceStepDraft[]
   subjectTemplate: string | null
@@ -49,7 +71,7 @@ interface CampaignDetail {
       email: string
       type: string
       isActive: boolean
-      warmupStatus: 'COLD' | 'WARMING' | 'WARMED' | 'PAUSED'
+      warmupStatus: 'COLD' | 'WARMING' | 'WARMED' | 'PAUSED' | string
       mailboxHealthStatus: string
       mailboxHealthScore: number
       mailboxSyncStatus: string
@@ -63,7 +85,7 @@ interface CampaignDetail {
       displayName: string
       phoneNumber: string | null
       isActive: boolean
-      connectionStatus: 'DISCONNECTED' | 'QR_PENDING' | 'CONNECTED' | 'ERROR'
+      connectionStatus: string
       sentToday: number
       lastMessageSentAt: string | null
     }
@@ -155,15 +177,17 @@ function formatDateTime(iso: string) {
   })
 }
 
-function isNoTracking(log: CampaignDetail['recentSent'][number]) {
-  return log.trackingStatus === 'no_tracking' || log.openStatus === 'No tracking'
-}
-
 export default function CampaignDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+
+  // Active workspace tab
+  const [activeTab, setActiveTab] = useState<'overview' | 'sequence' | 'fleet' | 'schedule' | 'logs'>('overview')
+
+  // Sequence editor draft states
   const [sequenceSaving, setSequenceSaving] = useState(false)
   const [sequenceError, setSequenceError] = useState<string | null>(null)
   const [sequenceSuccess, setSequenceSuccess] = useState<string | null>(null)
@@ -182,37 +206,44 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
   const syncSequenceDraftFromCampaign = (data: CampaignDetail) => {
     if (data.channel !== 'EMAIL' || sequenceDirty) return
 
-    const currentSteps = Array.isArray(data.sequenceSteps) && data.sequenceSteps.length > 0
-      ? data.sequenceSteps.map((step: SequenceStepDraft, index: number) => ({
-          stepNumber: index + 1,
-          subjectTemplate: index === 0 ? step.subjectTemplate || '' : '',
-          bodyTemplate: step.bodyTemplate || '',
-          delayDays: step.delayDays || 0,
-        }))
-      : [
-          {
-            stepNumber: 1,
-            subjectTemplate: data.subjectTemplate || '',
-            bodyTemplate: data.bodyTemplate || '',
-            delayDays: 0,
-          },
-          {
-            stepNumber: 2,
-            subjectTemplate: '',
-            bodyTemplate: 'Wanted to follow up once in case this is still relevant.',
-            delayDays: 2,
-          },
-        ]
+    const currentSteps =
+      Array.isArray(data.sequenceSteps) && data.sequenceSteps.length > 0
+        ? data.sequenceSteps.map((step: SequenceStepDraft, index: number) => ({
+            stepNumber: index + 1,
+            subjectTemplate: index === 0 ? step.subjectTemplate || '' : '',
+            bodyTemplate: step.bodyTemplate || '',
+            delayDays: step.delayDays || 0,
+          }))
+        : [
+            {
+              stepNumber: 1,
+              subjectTemplate: data.subjectTemplate || '',
+              bodyTemplate: data.bodyTemplate || '',
+              delayDays: 0,
+            },
+            {
+              stepNumber: 2,
+              subjectTemplate: '',
+              bodyTemplate: 'Wanted to follow up once in case this is still relevant.',
+              delayDays: 2,
+            },
+          ]
 
     setSequenceEnabledDraft(Boolean(data.sequenceEnabled))
     setSequenceStepsDraft(currentSteps)
   }
 
-  const fetchCampaign = (view: 'full' | 'summary' = 'full', senderPoolMode: 'preview' | 'all' = showAllSenderPool ? 'all' : 'preview') => {
+  const fetchCampaign = (
+    view: 'full' | 'summary' = 'full',
+    senderPoolMode: 'preview' | 'all' = showAllSenderPool ? 'all' : 'preview',
+    isManualRefresh = false
+  ) => {
+    if (isManualRefresh) setRefreshing(true)
     const searchParams = new URLSearchParams()
     if (view === 'summary') searchParams.set('view', 'summary')
     searchParams.set('senderPool', senderPoolMode)
     const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
+
     fetch(`/api/campaigns/${params.id}${query}`)
       .then((r) => {
         if (!r.ok) throw new Error('not found')
@@ -235,9 +266,11 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
           syncSequenceDraftFromCampaign(data)
         }
         setLoading(false)
+        setRefreshing(false)
       })
       .catch(() => {
         setLoading(false)
+        setRefreshing(false)
         router.push('/campaigns')
       })
   }
@@ -251,12 +284,12 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
   const handleStatusChange = async (action: 'start' | 'pause') => {
     setActionLoading(true)
     await fetch(`/api/campaigns/${params.id}/${action}`, { method: 'POST' })
-    await fetchCampaign()
+    await fetchCampaign('full', showAllSenderPool ? 'all' : 'preview')
     setActionLoading(false)
   }
 
   const handleDelete = async () => {
-    if (!confirm('Delete this campaign? This cannot be undone.')) return
+    if (!confirm('Are you sure you want to delete this campaign? This action cannot be undone.')) return
     setActionLoading(true)
     await fetch(`/api/campaigns/${params.id}`, { method: 'DELETE' })
     router.push('/campaigns')
@@ -269,14 +302,14 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
   ) => {
     setSequenceDirty(true)
     setSequenceStepsDraft((current) =>
-      current.map((step, stepIndex) => (
+      current.map((step, stepIndex) =>
         stepIndex === index
           ? {
               ...step,
               [field]: field === 'delayDays' ? Math.max(0, Number(value) || 0) : value,
             }
           : step
-      ))
+      )
     )
   }
 
@@ -303,6 +336,20 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
     )
   }
 
+  const insertVariableToken = (index: number, token: string) => {
+    setSequenceDirty(true)
+    setSequenceStepsDraft((current) =>
+      current.map((step, stepIndex) =>
+        stepIndex === index
+          ? {
+              ...step,
+              bodyTemplate: `${step.bodyTemplate} {{${token}}}`,
+            }
+          : step
+      )
+    )
+  }
+
   const handleSequenceSave = async () => {
     if (!campaign || campaign.channel !== 'EMAIL') return
     setSequenceSaving(true)
@@ -322,14 +369,14 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
         setSequenceSaving(false)
         return
       }
-      const invalidStep = normalizedSteps.find((step) =>
-        !step.bodyTemplate || (step.stepNumber === 1 && !step.subjectTemplate)
+      const invalidStep = normalizedSteps.find(
+        (step) => !step.bodyTemplate || (step.stepNumber === 1 && !step.subjectTemplate)
       )
       if (invalidStep) {
         setSequenceError(
           invalidStep.stepNumber === 1
-            ? 'Step 1 needs both subject and body.'
-            : `Step ${invalidStep.stepNumber} needs a body.`
+            ? 'Step 1 needs both subject and body template.'
+            : `Step ${invalidStep.stepNumber} needs a body template.`
         )
         setSequenceSaving(false)
         return
@@ -353,7 +400,7 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
       setSequenceSuccess(
         campaign.status === 'completed' && sequenceEnabledDraft
           ? 'Sequence saved. The campaign will reopen only for leads that still have runnable follow-ups.'
-          : 'Sequence settings saved.'
+          : 'Sequence cadence settings saved successfully.'
       )
       await fetchCampaign('full')
     } catch (error) {
@@ -365,9 +412,14 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
 
   if (loading || !campaign) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="text-xs font-mono text-[#8a8780] uppercase tracking-wider">
-          Loading sequence details...
+      <div className="flex h-72 items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#121316] text-white shadow-xs animate-pulse">
+            <Megaphone className="h-6 w-6" />
+          </div>
+          <div className="text-xs font-mono font-bold uppercase tracking-wider text-[#62605c]">
+            Loading campaign workspace...
+          </div>
         </div>
       </div>
     )
@@ -380,81 +432,71 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
     !isDrive &&
     campaign.sendFormat !== 'text_only' &&
     campaign.openTrackingEnabled === true
-  const activeSenders = campaign.stats.senderPoolCount
-  const totalSent = campaign.stats.sent
-  const limitExplanation = isDrive
-    ? 'Google delivers each share notification directly, paced by per-account daily limits set on the GDrive page.'
-    : campaign.sequenceEnabled
-    ? 'Initial emails use this campaign daily allowance. Automated follow-ups draw from mailbox quotas without consuming initial pool slots.'
-    : 'Outbound dispatch balances across healthy senders adhering to daily quotas and ramp-up pace.'
+
+  const activeSenders = campaign.stats.senderPoolCount || 0
+  const totalSent = campaign.stats.sent || 0
+  const rowCount = campaign.csvFile?.rowCount || 0
+  const failedCount = (campaign.stats?.failed || 0) + (campaign.stats?.bounced || 0)
+  const deliveredCount = Math.max(0, totalSent - failedCount)
+  const deliveryRate = totalSent > 0 ? Math.min(100, Math.round((deliveredCount / totalSent) * 100)) : 100
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
-      {/* Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Megaphone className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Link
-                href="/campaigns"
-                className="text-xs font-bold text-[#62605c] hover:text-[#121316] uppercase tracking-wider flex items-center gap-1 transition-colors"
-              >
-                <ArrowLeft className="h-3 w-3" />
-                CAMPAIGNS
-              </Link>
-              <span className="text-[#8a8780]">/</span>
-              <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase">
-                {isDrive ? 'GDRIVE SEQUENCE' : 'EMAIL SEQUENCE'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-                {campaign.name}
-              </h1>
-              <StatusBadge status={campaign.status} />
-            </div>
-
-            {campaign.guardrailReason && (
-              <div className="mt-2 text-xs text-[#b7791f] bg-[#b7791f]/10 p-2.5 rounded-[10px] border border-[#b7791f]/20">
-                {campaign.guardrailReason}
-              </div>
-            )}
-          </div>
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
+      {/* Top Floating Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/campaigns"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2 text-xs font-semibold text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Campaigns</span>
+          </Link>
+          <span className="text-xs font-bold text-[#121316] truncate max-w-xs sm:max-w-md">
+            {campaign.name}
+          </span>
+          <StatusBadge status={campaign.status} />
         </div>
 
-        {/* Header Action Buttons */}
-        <div className="flex items-center gap-2.5 flex-wrap">
+        {/* Floating Action Control Buttons */}
+        <div className="flex items-center gap-2.5 ml-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => fetchCampaign('full', showAllSenderPool ? 'all' : 'preview', true)}
+            disabled={refreshing}
+            title="Refresh Metrics"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95 cursor-pointer"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-[#ee382b]' : ''}`} />
+          </button>
+
           {campaign.status === 'active' ? (
             <button
               type="button"
               onClick={() => handleStatusChange('pause')}
               disabled={actionLoading}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-4 py-2 text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] transition shadow-2xs"
+              className="inline-flex items-center gap-2 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] hover:bg-white hover:shadow-md active:scale-95 transition cursor-pointer shadow-sm"
             >
-              <Pause className="h-3.5 w-3.5" />
-              <span>Pause Campaign</span>
+              <Pause className="h-4 w-4 text-[#8a8780]" />
+              <span>Pause Dispatch</span>
             </button>
           ) : campaign.status !== 'completed' ? (
             <button
               type="button"
               onClick={() => handleStatusChange('start')}
               disabled={actionLoading || activeSenders === 0}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#0f8a5f] px-5 py-2 text-xs font-bold text-white shadow-[0_4px_16px_rgba(15,138,95,0.22)] hover:bg-[#0c724e] transition"
+              className="inline-flex items-center gap-2 rounded-full bg-[#0f8a5f] px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-[0_4px_16px_rgba(15,138,95,0.28)] hover:bg-[#0c724e] hover:shadow-[0_8px_24px_rgba(15,138,95,0.38)] active:scale-95 transition cursor-pointer"
             >
-              <Play className="h-3.5 w-3.5" />
+              <Play className="h-4 w-4" />
               <span>Resume Dispatch</span>
             </button>
           ) : null}
 
           <Link
             href={`/campaigns/${campaign.id}/logs`}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-4 py-2 text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] transition shadow-2xs"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] hover:bg-white hover:shadow-md active:scale-95 transition shadow-sm"
           >
-            <FileText className="h-3.5 w-3.5" />
+            <FileText className="h-4 w-4 text-[#62605c]" />
             <span>Audit Logs</span>
           </Link>
 
@@ -462,322 +504,282 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
             type="button"
             onClick={handleDelete}
             disabled={actionLoading}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[#c2414c]/20 bg-white px-3.5 py-2 text-xs font-semibold text-[#c2414c] hover:bg-[#c2414c]/08 transition"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#c2414c]/20 bg-white/90 backdrop-blur-md px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#c2414c] hover:bg-[#c2414c]/08 active:scale-95 transition shadow-sm cursor-pointer"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
             <span>Delete</span>
           </button>
         </div>
-      </header>
+      </div>
 
-      {/* Main Grid: Left Analytics & Activity (65%), Right Settings & Sender Pools (35%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] gap-6 items-start">
-        {/* Left Column */}
-        <div className="space-y-6">
-          {/* Progress & Ramp Card */}
-          <div className="uneevo-card p-6 md:p-7 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-baseline justify-between">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b] block mb-1">
-                  OVERALL COMPLETION
-                </span>
-                <div className="text-3xl sm:text-4xl font-bold font-mono text-[#121316] tabular-nums">
-                  {campaign.progress}%
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-xs font-mono font-bold text-[#121316] tabular-nums">
-                  {totalSent.toLocaleString()}
-                </span>
-                <span className="text-xs text-[#62605c]">
-                  {' '}
-                  / {campaign.csvFile.rowCount.toLocaleString()} prospects
-                </span>
-              </div>
+        {/* Guardrail Warning Banner */}
+        {campaign.guardrailReason && (
+          <div className="rounded-[16px] border border-[#b7791f]/20 bg-[#fde9b0]/35 p-3.5 text-xs text-[#5c4211] font-medium flex items-center gap-2.5">
+            <AlertTriangle className="h-4 w-4 text-[#8a5c0a] shrink-0" />
+            <span>{campaign.guardrailReason}</span>
+          </div>
+        )}
+
+        {/* ── KPI Summary Ribbon ─────────────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 border-t border-[#121316]/08">
+          {/* 1. Progress */}
+          <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780]">Completion</div>
+            <div className="font-mono text-xl sm:text-2xl font-bold text-[#121316] mt-0.5 tabular-nums">
+              {campaign.progress}%
             </div>
-
-            {/* Continuous Progress Bar */}
-            <div className="h-2.5 w-full bg-[#121316]/06 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#ee382b] rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.max(0, campaign.progress))}%` }}
-              />
-            </div>
-
-            {/* Metric Pills Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-              <div className="p-3 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06">
-                <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Active Senders</div>
-                <div className="text-base font-bold font-mono text-[#121316] mt-0.5">{activeSenders}</div>
-              </div>
-              <div className="p-3 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06">
-                <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Daily Allowance</div>
-                <div className="text-base font-bold font-mono text-[#121316] mt-0.5">{campaign.stats.todayAllowance}/day</div>
-              </div>
-              {!isDrive && (
-                <div className="p-3 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06">
-                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Warmup Pace</div>
-                  <div className="text-base font-bold font-mono text-[#121316] mt-0.5">{campaign.stats.rampPercent}%</div>
-                </div>
-              )}
-              <div className="p-3 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06">
-                <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Remaining</div>
-                <div className="text-base font-bold font-mono text-[#121316] mt-0.5">{campaign.stats.remaining}</div>
-              </div>
-            </div>
-
-            <div className="text-xs text-[#62605c] leading-relaxed pt-1">
-              {limitExplanation}
+            <div className="text-[10px] text-[#62605c] mt-0.5 truncate">
+              {totalSent} / {rowCount} sent
             </div>
           </div>
 
-          {/* Delivery & Engagement Metrics Grid */}
-          <div className="uneevo-card p-6 md:p-7 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b] block mb-1">
-              DISPATCH & ENGAGEMENT AUDIT
-            </span>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
-                <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Processed</div>
-                <div className="text-xl font-bold font-mono text-[#121316] mt-1">{campaign.stats.processed}</div>
-              </div>
-              <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
-                <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Sent Today</div>
-                <div className="text-xl font-bold font-mono text-[#121316] mt-1">
-                  {isDrive ? campaign.stats.sent : campaign.stats.todaySent}
-                </div>
-              </div>
-              {!isDrive ? (
-                <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
-                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Replies</div>
-                  <div className="text-xl font-bold font-mono text-[#0f8a5f] mt-1">{campaign.stats.replies}</div>
-                </div>
-              ) : (
-                <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
-                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Shares Sent</div>
-                  <div className="text-xl font-bold font-mono text-[#121316] mt-1">{campaign.stats.sent}</div>
-                </div>
-              )}
-              <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
-                <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Bounced / Failed</div>
-                <div className="text-xl font-bold font-mono text-[#c2414c] mt-1">
-                  {campaign.stats.failed + (campaign.stats.bounced || 0)}
-                </div>
-              </div>
+          {/* 2. Today's Sent */}
+          <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780]">Sent Today</div>
+            <div className="font-mono text-xl sm:text-2xl font-bold text-[#121316] mt-0.5 tabular-nums">
+              {isDrive ? campaign.stats.sent : campaign.stats.todaySent}
             </div>
-
-            {/* Email Open Stats if available */}
-            {!isWhatsApp && !isDrive && campaign.emailOpenStats && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-[#121316]/08">
-                <div className="p-3 rounded-[14px] bg-white border border-[#121316]/08">
-                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Opened</div>
-                  <div className="text-base font-bold font-mono text-[#0f8a5f] mt-0.5">
-                    {isTrackedCampaign ? campaign.emailOpenStats.opened : 'N/A'}
-                  </div>
-                </div>
-                <div className="p-3 rounded-[14px] bg-white border border-[#121316]/08">
-                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Open Rate</div>
-                  <div className="text-base font-bold font-mono text-[#ee382b] mt-0.5">
-                    {isTrackedCampaign ? `${campaign.emailOpenStats.openRate}%` : 'N/A'}
-                  </div>
-                </div>
-                <div className="p-3 rounded-[14px] bg-white border border-[#121316]/08">
-                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Replied</div>
-                  <div className="text-base font-bold font-mono text-[#0f8a5f] mt-0.5">
-                    {campaign.emailOpenStats.replied}
-                  </div>
-                </div>
-                <div className="p-3 rounded-[14px] bg-white border border-[#121316]/08">
-                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">Reply Rate</div>
-                  <div className="text-base font-bold font-mono text-[#0f8a5f] mt-0.5">
-                    {campaign.emailOpenStats.replyRate}%
-                  </div>
-                </div>
-              </div>
-            )}
+            <div className="text-[10px] text-[#62605c] mt-0.5 truncate">
+              Cap: {campaign.stats.todayAllowance}/day
+            </div>
           </div>
 
-          {/* Upcoming Schedule Card */}
-          <div className="uneevo-card p-6 md:p-7 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b]">
-                UPCOMING QUEUE SCHEDULE
-              </span>
-              <span className="text-xs font-mono text-[#8a8780]">
-                Next: {campaign.upcomingSchedule?.nextRunAt ? formatDateTime(campaign.upcomingSchedule.nextRunAt) : 'Pending'}
-              </span>
+          {/* 3. Delivery Rate */}
+          <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780]">Delivery Rate</div>
+            <div className="font-mono text-xl sm:text-2xl font-bold text-[#0f8a5f] mt-0.5 tabular-nums">
+              {deliveryRate}%
             </div>
-
-            {campaign.upcomingSchedule?.slots?.length ? (
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                {campaign.upcomingSchedule.slots.slice(0, 25).map((slot) => (
-                  <div
-                    key={`${slot.position}-${slot.scheduledAt}`}
-                    className="flex items-center justify-between p-3 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06 text-xs"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-[#8a8780] font-bold">#{slot.position}</span>
-                      <div>
-                        <div className="font-bold text-[#121316]">{slot.senderEmail}</div>
-                        <div className="text-[11px] text-[#62605c]">{slot.senderDisplayName}</div>
-                      </div>
-                    </div>
-                    <div className="font-mono text-xs text-[#ee382b] font-bold">
-                      {formatDateTime(slot.scheduledAt)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-xs text-[#62605c] bg-[#faf8f4] rounded-[16px] border border-[#121316]/06">
-                No active upcoming queue slots. Senders will receive dispatches once queues cycle.
-              </div>
-            )}
+            <div className="text-[10px] text-[#0f8a5f] mt-0.5 truncate">
+              {deliveredCount} clean
+            </div>
           </div>
 
-          {/* Recent Activity Card */}
-          <div className="uneevo-card p-6 md:p-7 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b]">
-                RECENT LOG ACTIVITY
-              </span>
-              <Link href={`/campaigns/${campaign.id}/logs`} className="text-xs text-[#ee382b] font-bold hover:underline">
-                View all logs
-              </Link>
+          {/* 4. Open Rate */}
+          <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780]">Open Rate</div>
+            <div className="font-mono text-xl sm:text-2xl font-bold text-[#ee382b] mt-0.5 tabular-nums">
+              {isTrackedCampaign && campaign.emailOpenStats?.openRate != null
+                ? `${campaign.emailOpenStats.openRate}%`
+                : isTrackedCampaign
+                ? '0%'
+                : 'N/A'}
             </div>
+            <div className="text-[10px] text-[#62605c] mt-0.5 truncate">
+              {isTrackedCampaign ? `${campaign.emailOpenStats?.opened ?? 0} opened` : 'Pixel tracking off'}
+            </div>
+          </div>
 
-            {campaign.recentSent.length ? (
-              <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                {campaign.recentSent.slice(0, 12).map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-3.5 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06 text-xs space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#121316]">
-                        {isWhatsApp ? log.toPhone : log.toEmail}
-                      </span>
-                      <StatusBadge status={log.status} />
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#62605c]">
-                      <span>
-                        Sender:{' '}
-                        {isWhatsApp
-                          ? log.whatsappAccount?.phoneNumber || log.whatsappAccount?.displayName || 'WhatsApp Pool'
-                          : log.mailAccount?.email || 'Mailbox Pool'}
-                      </span>
-                      <span className="font-mono">{formatDateTime(log.sentAt)}</span>
-                    </div>
-                    {log.errorMessage && (
-                      <div className="text-[11px] text-[#c2414c] bg-[#c2414c]/08 p-2 rounded-[8px]">
-                        {log.errorMessage}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-xs text-[#62605c] bg-[#faf8f4] rounded-[16px] border border-[#121316]/06">
-                No activity logs recorded yet.
-              </div>
-            )}
+          {/* 5. Replies */}
+          <div className="p-3.5 rounded-[16px] bg-[#0f8a5f]/08 border border-[#0f8a5f]/15">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#0f8a5f]">Replies</div>
+            <div className="font-mono text-xl sm:text-2xl font-bold text-[#0f8a5f] mt-0.5 tabular-nums">
+              {campaign.stats.replies}
+            </div>
+            <div className="text-[10px] text-[#0f8a5f] mt-0.5 truncate">
+              {campaign.emailOpenStats?.replyRate ?? 0}% reply rate
+            </div>
+          </div>
+
+          {/* 6. Active Senders */}
+          <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780]">Active Senders</div>
+            <div className="font-mono text-xl sm:text-2xl font-bold text-[#121316] mt-0.5 tabular-nums">
+              {activeSenders}
+            </div>
+            <div className="text-[10px] text-[#62605c] mt-0.5 truncate">
+              {campaign.stats.rampPercent}% ramp pace
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Right Column: Dataset & Sender Pool & Sequence Settings */}
-        <div className="space-y-6">
-          {/* Dataset Card */}
-          <div className="uneevo-card p-6 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b] block">
-              CONTACT DATASET
-            </span>
-            <Link
-              href={`/csv/${campaign.csvFile.id}`}
-              className="flex items-center justify-between p-3.5 rounded-[14px] bg-[#ee382b]/08 border border-[#ee382b]/20 text-xs font-bold text-[#ee382b] hover:bg-[#ee382b]/12 transition"
+      {/* ── Segmented Navigation Tabs ─────────────────────────────────── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#121316]/08">
+        {(
+          [
+            { id: 'overview', label: 'Performance & Analytics', icon: BarChart3 },
+            { id: 'sequence', label: 'Cadence & Sequence', icon: Layers },
+            { id: 'fleet', label: 'Sender Fleet & Health', icon: AtSign },
+            { id: 'schedule', label: 'Queue Schedule', icon: Clock },
+            { id: 'logs', label: 'Live Activity Stream', icon: FileText },
+          ] as const
+        ).map((tab) => {
+          const Icon = tab.icon
+          const isSelected = activeTab === tab.id
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                isSelected
+                  ? 'bg-[#121316] text-white shadow-xs'
+                  : 'text-[#62605c] hover:text-[#121316] hover:bg-[#121316]/06'
+              }`}
             >
-              <div className="flex items-center gap-2 truncate">
-                <FileSpreadsheet className="h-4 w-4 shrink-0" />
-                <span className="truncate">{campaign.csvFile.originalName}</span>
-              </div>
-              <span className="font-mono tabular-nums text-xs">{campaign.csvFile.rowCount.toLocaleString()} rows</span>
-            </Link>
-            <div className="text-xs text-[#62605c] flex items-center justify-between pt-1">
-              <span>Pool Distribution:</span>
-              <strong className="text-[#121316] uppercase font-mono">{campaign.senderAccountPreference}</strong>
-            </div>
-          </div>
+              <Icon className="h-3.5 w-3.5" />
+              <span>{tab.label}</span>
+            </button>
+          )
+        })}
+      </div>
 
-          {/* Sender Pool Card */}
-          <div className="uneevo-card p-6 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b]">
-                CONNECTED SENDER POOL
-              </span>
-              {campaign.senderPoolMeta?.hasMore && !showAllSenderPool && (
+      {/* ── Tab 1: Overview & Analytics ─────────────────────────────── */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          {/* Graph 1: Conversion & Delivery Pipeline Funnel */}
+          <CampaignPerformanceFunnel
+            stats={{
+              totalLeads: rowCount,
+              processed: campaign.stats.processed,
+              sent: campaign.stats.sent,
+              failed: campaign.stats.failed,
+              bounced: campaign.stats.bounced,
+              replies: campaign.stats.replies,
+              remaining: campaign.stats.remaining,
+              opened: campaign.emailOpenStats?.opened,
+              openRate: campaign.emailOpenStats?.openRate,
+              replyRate: campaign.emailOpenStats?.replyRate,
+              isTracked: isTrackedCampaign,
+              channel: campaign.channel,
+            }}
+          />
+
+          {/* Graph 2: Dispatch Pacing & Intraday Velocity */}
+          <CampaignVelocityChart
+            todaySent={campaign.stats.todaySent}
+            todayAllowance={campaign.stats.todayAllowance}
+            rampPercent={campaign.stats.rampPercent}
+            channel={campaign.channel}
+          />
+
+          {/* Sequence Roadmap Preview */}
+          <CampaignSequenceTree
+            channel={campaign.channel}
+            sequenceEnabled={campaign.sequenceEnabled}
+            steps={campaign.sequenceSteps as any}
+            subjectTemplate={campaign.subjectTemplate}
+            bodyTemplate={campaign.bodyTemplate}
+            messageTemplate={campaign.messageTemplate}
+            onEditSequence={() => setActiveTab('sequence')}
+          />
+
+          {/* Grid: Upcoming Schedule & Recent Logs stream */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Upcoming Queue Preview */}
+            <div className="uneevo-card p-6 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-widest text-[#ee382b]">
+                  UPCOMING QUEUE SLOTS
+                </span>
                 <button
                   type="button"
-                  onClick={() => setShowAllSenderPool(true)}
+                  onClick={() => setActiveTab('schedule')}
                   className="text-xs text-[#ee382b] font-bold hover:underline"
                 >
-                  Show all
+                  View full schedule ({campaign.upcomingSchedule?.slots?.length || 0})
                 </button>
-              )}
-            </div>
+              </div>
 
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {isWhatsApp
-                ? campaign.whatsappAccounts.map((a) => (
+              {campaign.upcomingSchedule?.slots?.length ? (
+                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  {campaign.upcomingSchedule.slots.slice(0, 5).map((slot) => (
                     <div
-                      key={a.whatsappAccount.id}
-                      className="p-3 rounded-[12px] bg-[#faf8f4] border border-[#121316]/06 text-xs space-y-1"
+                      key={`${slot.position}-${slot.scheduledAt}`}
+                      className="flex items-center justify-between p-3.5 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06 text-xs"
                     >
-                      <div className="font-bold text-[#121316]">{a.whatsappAccount.displayName}</div>
-                      <div className="text-[11px] text-[#62605c]">{a.whatsappAccount.phoneNumber || 'No number'}</div>
-                    </div>
-                  ))
-                : isDrive
-                ? (campaign.driveAccounts || []).map((a) => (
-                    <div
-                      key={a.driveAccount.id}
-                      className="p-3 rounded-[12px] bg-[#faf8f4] border border-[#121316]/06 text-xs space-y-1"
-                    >
-                      <div className="font-bold text-[#121316]">{a.driveAccount.email}</div>
-                      <div className="text-[11px] text-[#62605c]">
-                        Shares today: {a.driveAccount.sentToday}/{a.driveAccount.dailyLimit}
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-[#8a8780] font-bold">#{slot.position}</span>
+                        <div>
+                          <div className="font-bold text-[#121316] truncate max-w-[200px]">
+                            {slot.senderEmail}
+                          </div>
+                          <div className="text-[11px] text-[#62605c]">{slot.senderDisplayName}</div>
+                        </div>
                       </div>
-                      <div className="text-[11px] text-[#ee382b] truncate font-medium">
-                        {a.driveFileName || a.driveFileId}
-                      </div>
-                    </div>
-                  ))
-                : campaign.mailAccounts.map((a) => (
-                    <div
-                      key={a.mailAccount.id}
-                      className="p-3 rounded-[12px] bg-[#faf8f4] border border-[#121316]/06 text-xs space-y-1"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-[#121316] truncate max-w-[170px]">{a.mailAccount.email}</span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#0f8a5f]/10 text-[#0f8a5f] font-bold">
-                          {a.mailAccount.warmupStatus}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-[#62605c]">
-                        Health Score: {a.mailAccount.mailboxHealthScore}/100 ({a.mailAccount.mailboxHealthStatus})
+                      <div className="font-mono text-xs text-[#ee382b] font-bold">
+                        {formatDateTime(slot.scheduledAt)}
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-xs text-[#62605c] bg-[#faf8f4] rounded-[16px] border border-[#121316]/06">
+                  No pending queue slots. Senders will cycle next available batch.
+                </div>
+              )}
+            </div>
+
+            {/* Recent Activity Logs */}
+            <div className="uneevo-card p-6 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-widest text-[#ee382b]">
+                  RECENT LIVE ACTIVITY
+                </span>
+                <Link
+                  href={`/campaigns/${campaign.id}/logs`}
+                  className="text-xs text-[#ee382b] font-bold hover:underline"
+                >
+                  View all logs
+                </Link>
+              </div>
+
+              {campaign.recentSent?.length ? (
+                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  {campaign.recentSent.slice(0, 5).map((log) => (
+                    <div
+                      key={log.id}
+                      className="p-3.5 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06 text-xs space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#121316]">
+                          {isWhatsApp ? log.toPhone : log.toEmail}
+                        </span>
+                        <StatusBadge status={log.status} />
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-[#62605c]">
+                        <span>
+                          Sender:{' '}
+                          {isWhatsApp
+                            ? log.whatsappAccount?.displayName || 'WhatsApp'
+                            : log.mailAccount?.email || 'Mailbox'}
+                        </span>
+                        <span className="font-mono">{formatDateTime(log.sentAt)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-xs text-[#62605c] bg-[#faf8f4] rounded-[16px] border border-[#121316]/06">
+                  No activity logs recorded yet.
+                </div>
+              )}
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Template / Sequence Editor Card */}
-          <div className="uneevo-card p-6 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b]">
-                {isWhatsApp ? 'WHATSAPP TEMPLATE' : isDrive ? 'GDRIVE SHARE NOTE' : 'EMAIL TEMPLATES & SEQUENCE'}
-              </span>
+      {/* ── Tab 2: Sequence & Templates ─────────────────────────────── */}
+      {activeTab === 'sequence' && (
+        <div className="space-y-6">
+          <div className="uneevo-card p-6 md:p-8 rounded-[28px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#121316]/08 pb-5">
+              <div>
+                <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
+                  SEQUENCE ARCHITECTURE
+                </span>
+                <h2 className="zoho-puvi-headline text-xl sm:text-2xl font-bold text-[#121316]">
+                  Multi-Step Cadence & Message Templates
+                </h2>
+                <p className="text-xs text-[#62605c] mt-0.5">
+                  Configure automated multi-step cadences, delay triggers, and personalized variables.
+                </p>
+              </div>
+
               {!isWhatsApp && !isDrive && (
-                <label className="flex items-center gap-2 text-xs text-[#62605c] cursor-pointer">
+                <label className="flex items-center gap-3 p-2.5 rounded-[14px] bg-[#faf8f4] border border-[#121316]/08 cursor-pointer hover:bg-[#faf8f4]/80">
                   <input
                     type="checkbox"
                     checked={sequenceEnabledDraft}
@@ -787,82 +789,163 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
                       setSequenceError(null)
                       setSequenceSuccess(null)
                     }}
-                    className="h-3.5 w-3.5 rounded text-[#ee382b]"
+                    className="h-4 w-4 rounded text-[#ee382b]"
                   />
-                  <span>Multi-step sequence</span>
+                  <span className="text-xs font-bold text-[#121316]">
+                    Enable Multi-Step Sequence
+                  </span>
                 </label>
               )}
             </div>
 
+            {/* Variable Tokens helper bar */}
+            <div className="p-4 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-[#121316] uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-[#ee382b]" />
+                  Available Personalization Tokens
+                </span>
+                <span className="text-[10px] text-[#62605c]">
+                  Click token to insert into active step body
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {['FirstName', 'LastName', 'Email', 'Company', 'Title', 'City', 'CustomField'].map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => insertVariableToken(0, t)}
+                    className="px-2.5 py-1 rounded-full bg-white border border-[#121316]/10 text-xs font-mono font-semibold text-[#121316] hover:border-[#ee382b] hover:text-[#ee382b] transition-all shadow-2xs"
+                  >
+                    {`{{${t}}}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Editor depending on channel */}
             {isWhatsApp ? (
-              <div className="p-3.5 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06 text-xs leading-relaxed text-[#121316] whitespace-pre-wrap max-h-60 overflow-y-auto">
-                {campaign.messageTemplate || 'No template saved'}
+              <div className="space-y-3">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#62605c]">
+                  WhatsApp Message Template
+                </div>
+                <div className="p-4 rounded-[16px] bg-[#faf8f4] border border-[#121316]/08 text-xs leading-relaxed text-[#121316] whitespace-pre-wrap max-h-80 overflow-y-auto">
+                  {campaign.messageTemplate || 'No message template configured.'}
+                </div>
               </div>
             ) : isDrive ? (
-              <div className="p-3.5 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06 text-xs leading-relaxed text-[#121316] whitespace-pre-wrap max-h-60 overflow-y-auto">
-                {campaign.bodyTemplate || 'No share note saved'}
+              <div className="space-y-3">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#62605c]">
+                  GDrive Share Note Message
+                </div>
+                <div className="p-4 rounded-[16px] bg-[#faf8f4] border border-[#121316]/08 text-xs leading-relaxed text-[#121316] whitespace-pre-wrap max-h-80 overflow-y-auto">
+                  {campaign.bodyTemplate || 'No share note configured.'}
+                </div>
               </div>
             ) : sequenceEnabledDraft ? (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {sequenceStepsDraft.map((step, index) => (
                   <div
                     key={`${step.stepNumber}-${index}`}
-                    className="p-4 rounded-[16px] bg-[#faf8f4] border border-[#121316]/08 text-xs space-y-3"
+                    className="p-5 sm:p-6 rounded-[22px] bg-[#faf8f4] border border-[#121316]/08 text-xs space-y-4 shadow-2xs"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="font-bold text-[#121316]">
-                        {index === 0 ? 'Step 1 (Initial)' : `Step ${index + 1} (Follow-up)`}
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#121316] text-white font-bold text-xs shadow-xs">
+                          {step.stepNumber}
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm text-[#121316]">
+                            {index === 0 ? 'Step 1: Initial Pitch' : `Step ${index + 1}: Automated Follow-up`}
+                          </div>
+                          <div className="text-[11px] text-[#62605c]">
+                            {index === 0 ? 'Sent on initial cadence trigger' : 'Triggered only if no reply received'}
+                          </div>
+                        </div>
                       </div>
+
                       {index > 0 && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] text-[#8a8780]">Delay:</span>
+                        <div className="flex items-center gap-2 bg-white border border-[#121316]/10 px-3 py-1.5 rounded-full">
+                          <Clock className="h-3.5 w-3.5 text-[#ee382b]" />
+                          <span className="text-[11px] font-bold text-[#62605c]">Delay:</span>
                           <input
                             type="number"
                             min={1}
                             max={30}
                             value={step.delayDays}
                             onChange={(event) => handleSequenceStepChange(index, 'delayDays', event.target.value)}
-                            className="w-12 rounded-[6px] border border-[#121316]/12 bg-white px-1.5 py-0.5 text-center font-mono font-bold"
+                            className="w-12 rounded-[6px] border border-[#121316]/12 bg-[#faf8f4] px-1.5 py-0.5 text-center font-mono font-bold text-[#121316]"
                           />
-                          <span className="text-[11px] text-[#8a8780]">days</span>
+                          <span className="text-[11px] font-bold text-[#62605c]">days</span>
                         </div>
                       )}
                     </div>
 
                     {index === 0 && (
-                      <input
-                        type="text"
-                        value={step.subjectTemplate}
-                        onChange={(event) => handleSequenceStepChange(index, 'subjectTemplate', event.target.value)}
-                        placeholder="Subject line"
-                        className="w-full rounded-[10px] border border-[#121316]/12 bg-white px-3 py-2 text-xs text-[#121316]"
-                      />
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
+                          Subject Line
+                        </label>
+                        <input
+                          type="text"
+                          value={step.subjectTemplate}
+                          onChange={(event) => handleSequenceStepChange(index, 'subjectTemplate', event.target.value)}
+                          placeholder="e.g. Quick question regarding {{Company}} growth..."
+                          className="w-full rounded-[12px] border border-[#121316]/12 bg-white px-4 py-2.5 text-xs text-[#121316] focus:outline-none focus:ring-2 focus:ring-[#121316]/15 font-medium"
+                        />
+                      </div>
                     )}
 
-                    <textarea
-                      value={step.bodyTemplate}
-                      onChange={(event) => handleSequenceStepChange(index, 'bodyTemplate', event.target.value)}
-                      placeholder={`Step ${index + 1} message`}
-                      rows={4}
-                      className="w-full rounded-[10px] border border-[#121316]/12 bg-white p-3 text-xs text-[#121316] leading-relaxed"
-                    />
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
+                          Email Body Template
+                        </label>
+                        <div className="flex items-center gap-1 text-[11px] text-[#8a8780]">
+                          <span>Insert:</span>
+                          <button
+                            type="button"
+                            onClick={() => insertVariableToken(index, 'FirstName')}
+                            className="underline hover:text-[#ee382b]"
+                          >
+                            FirstName
+                          </button>
+                          <span>·</span>
+                          <button
+                            type="button"
+                            onClick={() => insertVariableToken(index, 'Company')}
+                            className="underline hover:text-[#ee382b]"
+                          >
+                            Company
+                          </button>
+                        </div>
+                      </div>
+                      <textarea
+                        value={step.bodyTemplate}
+                        onChange={(event) => handleSequenceStepChange(index, 'bodyTemplate', event.target.value)}
+                        placeholder={`Write Step ${index + 1} message...`}
+                        rows={5}
+                        className="w-full rounded-[14px] border border-[#121316]/12 bg-white p-4 text-xs text-[#121316] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#121316]/15 font-sans"
+                      />
+                    </div>
                   </div>
                 ))}
 
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-2">
+                {/* Actions & Save */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-[#121316]/08">
+                  <div className="flex items-center gap-3">
                     <button
                       type="button"
                       onClick={addSequenceStep}
-                      className="text-xs font-bold text-[#121316] hover:text-[#ee382b]"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-4 py-2 text-xs font-bold text-[#121316] hover:bg-[#faf8f4] transition shadow-2xs"
                     >
-                      + Add Step
+                      + Add Follow-up Step
                     </button>
                     {sequenceStepsDraft.length > 1 && (
                       <button
                         type="button"
                         onClick={removeSequenceStep}
-                        className="text-xs text-[#c2414c] hover:underline"
+                        className="text-xs text-[#c2414c] font-semibold hover:underline"
                       >
                         Remove Step
                       </button>
@@ -873,29 +956,183 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
                     type="button"
                     onClick={handleSequenceSave}
                     disabled={sequenceSaving}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#121316] px-4 py-1.5 text-xs font-bold text-white hover:bg-black transition"
+                    className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_6px_20px_rgba(238,56,43,0.22)] hover:bg-[#d92b1f] transition disabled:opacity-50"
                   >
-                    {sequenceSaving ? 'Saving...' : 'Save Sequence'}
+                    {sequenceSaving ? 'Saving Sequence...' : 'Save Sequence Changes'}
                   </button>
                 </div>
 
-                {sequenceError && <div className="text-xs text-[#c2414c]">{sequenceError}</div>}
-                {sequenceSuccess && <div className="text-xs text-[#0f8a5f]">{sequenceSuccess}</div>}
+                {sequenceError && (
+                  <div className="p-3 rounded-[12px] bg-[#c2414c]/08 border border-[#c2414c]/20 text-xs text-[#c2414c] font-semibold">
+                    {sequenceError}
+                  </div>
+                )}
+                {sequenceSuccess && (
+                  <div className="p-3 rounded-[12px] bg-[#0f8a5f]/10 border border-[#0f8a5f]/20 text-xs text-[#0f8a5f] font-semibold">
+                    {sequenceSuccess}
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="p-3 rounded-[12px] bg-[#faf8f4] border border-[#121316]/06">
-                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider mb-0.5">Subject</div>
-                  <div className="text-xs font-bold text-[#121316]">{campaign.subjectTemplate || 'No subject'}</div>
+              <div className="space-y-4">
+                <div className="p-4 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06 space-y-2">
+                  <div className="text-[10px] font-bold text-[#8a8780] uppercase tracking-wider">
+                    Subject Line
+                  </div>
+                  <div className="text-xs font-bold text-[#121316]">
+                    {campaign.subjectTemplate || 'No subject set'}
+                  </div>
                 </div>
-                <div className="p-3.5 rounded-[12px] bg-[#faf8f4] border border-[#121316]/06 text-xs text-[#121316] leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto">
+
+                <div className="p-5 rounded-[18px] bg-[#faf8f4] border border-[#121316]/06 text-xs text-[#121316] leading-relaxed whitespace-pre-wrap max-h-80 overflow-y-auto">
                   {campaign.bodyTemplate || 'No template saved'}
                 </div>
               </div>
             )}
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ── Tab 3: Sender Fleet & Health ────────────────────────────── */}
+      {activeTab === 'fleet' && (
+        <CampaignSenderFleet
+          channel={campaign.channel}
+          preference={campaign.senderAccountPreference}
+          mailAccounts={campaign.mailAccounts}
+          whatsappAccounts={campaign.whatsappAccounts}
+          driveAccounts={campaign.driveAccounts}
+          totalAvailable={campaign.senderPoolMeta?.totalAvailable}
+          hasMore={campaign.senderPoolMeta?.hasMore}
+          onShowAll={() => setShowAllSenderPool(true)}
+        />
+      )}
+
+      {/* ── Tab 4: Queue Schedule ──────────────────────────────────── */}
+      {activeTab === 'schedule' && (
+        <div className="uneevo-card p-6 md:p-8 rounded-[28px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#121316]/08 pb-4">
+            <div>
+              <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
+                DISPATCH QUEUE TIMELINE
+              </span>
+              <h2 className="zoho-puvi-headline text-xl sm:text-2xl font-bold text-[#121316]">
+                Upcoming Scheduled Delivery Slots
+              </h2>
+            </div>
+            <div className="text-xs font-mono font-bold text-[#8a8780]">
+              Next Run: {campaign.upcomingSchedule?.nextRunAt ? formatDateTime(campaign.upcomingSchedule.nextRunAt) : 'Pending Cycle'}
+            </div>
+          </div>
+
+          {campaign.upcomingSchedule?.slots?.length ? (
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {campaign.upcomingSchedule.slots.map((slot) => (
+                <div
+                  key={`${slot.position}-${slot.scheduledAt}`}
+                  className="flex items-center justify-between p-4 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06 text-xs hover:border-[#121316]/20 transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#121316] text-white font-mono font-bold text-xs">
+                      #{slot.position}
+                    </div>
+                    <div>
+                      <div className="font-bold text-[#121316] text-xs sm:text-sm">
+                        {slot.senderEmail}
+                      </div>
+                      <div className="text-[11px] text-[#62605c]">
+                        {slot.senderDisplayName} · <span className="uppercase font-mono">{slot.senderType}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="font-mono text-xs font-bold text-[#ee382b]">
+                      {formatDateTime(slot.scheduledAt)}
+                    </div>
+                    <div className="text-[10px] text-[#0f8a5f] font-semibold">
+                      Paced Dispatch
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center text-xs text-[#62605c] bg-[#faf8f4] rounded-[20px] border border-[#121316]/06 space-y-2">
+              <div className="font-bold text-sm text-[#121316]">No Scheduled Queue Slots Active</div>
+              <p>Senders will cycle slots once new batches are scheduled or queues resume.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Tab 5: Live Activity Logs ───────────────────────────────── */}
+      {activeTab === 'logs' && (
+        <div className="uneevo-card p-6 md:p-8 rounded-[28px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#121316]/08 pb-4">
+            <div>
+              <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
+                DISPATCH AUDIT
+              </span>
+              <h2 className="zoho-puvi-headline text-xl sm:text-2xl font-bold text-[#121316]">
+                Recent Outbound Log Stream
+              </h2>
+            </div>
+            <Link
+              href={`/campaigns/${campaign.id}/logs`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-4 py-2 text-xs font-semibold text-[#121316] hover:bg-[#faf8f4] transition shadow-2xs"
+            >
+              <span>Full Audit Logs Page</span>
+              <ArrowLeft className="h-3 w-3 rotate-180" />
+            </Link>
+          </div>
+
+          {campaign.recentSent?.length ? (
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {campaign.recentSent.map((log) => (
+                <div
+                  key={log.id}
+                  className="p-4 rounded-[18px] bg-[#faf8f4] border border-[#121316]/06 text-xs space-y-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-bold text-[#121316] text-xs sm:text-sm">
+                      {isWhatsApp ? log.toPhone : log.toEmail}
+                    </div>
+                    <StatusBadge status={log.status} />
+                  </div>
+
+                  {log.subject && (
+                    <div className="text-[11px] text-[#62605c] font-medium truncate">
+                      Subject: {log.subject}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center justify-between text-[11px] text-[#8a8780] pt-1 border-t border-[#121316]/06 gap-2">
+                    <span>
+                      Sender:{' '}
+                      <strong className="text-[#121316]">
+                        {isWhatsApp
+                          ? log.whatsappAccount?.displayName || 'WhatsApp Pool'
+                          : log.mailAccount?.email || 'Mailbox Pool'}
+                      </strong>
+                    </span>
+                    <span className="font-mono">{formatDateTime(log.sentAt)}</span>
+                  </div>
+
+                  {log.errorMessage && (
+                    <div className="p-2.5 rounded-[10px] bg-[#c2414c]/08 text-[#c2414c] font-medium text-[11px]">
+                      {log.errorMessage}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center text-xs text-[#62605c] bg-[#faf8f4] rounded-[20px] border border-[#121316]/06">
+              No activity logs recorded yet for this sequence.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

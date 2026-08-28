@@ -3,9 +3,24 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Mail } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Download,
+  Eye,
+  Mail,
+  MessageSquare,
+  RefreshCw,
+  Search,
+  Send,
+  X,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react'
 import { StatusBadge } from '@/components/shared/StatusBadge'
-import { PaginationControls } from '@/components/ui/pagination-controls'
 
 interface MailLog {
   id: string
@@ -81,8 +96,11 @@ interface CampaignsAndAccounts {
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -107,7 +125,7 @@ export default function GlobalSentMailPage() {
   const [total, setTotal] = useState(0)
   const [pages, setPages] = useState(1)
   const [limit, setLimit] = useState(50)
-  
+
   const [loading, setLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
   const [replyModal, setReplyModal] = useState<ReplyModalState | null>(null)
@@ -121,6 +139,7 @@ export default function GlobalSentMailPage() {
   const [accountProgressLoaded, setAccountProgressLoaded] = useState(false)
   const [accountProgressError, setAccountProgressError] = useState<string | null>(null)
   const [accountProgressAccounts, setAccountProgressAccounts] = useState<SentProgressAccount[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [filters, setFilters] = useState({
     campaignId: '',
     mailAccountId: '',
@@ -141,7 +160,7 @@ export default function GlobalSentMailPage() {
 
   function formatAccountOptionLabel(account: CampaignsAndAccounts['accounts'][number]) {
     const activity = account.isActive ? account.warmupStatus : 'INACTIVE'
-    return `${account.email} - ${account.sentToday}/${account.dailyLimit} - ${activity} - sync ${account.mailboxSyncStatus}`
+    return `${account.email} - ${account.sentToday}/${account.dailyLimit} - ${activity}`
   }
 
   function formatReplyTimestamp(message: ReplyMessage) {
@@ -155,8 +174,8 @@ export default function GlobalSentMailPage() {
   useEffect(() => {
     // Fetch dropdown options once
     Promise.all([
-      fetch('/api/campaigns?page=1&limit=100').then(r => r.json()),
-      fetch('/api/mail-accounts?resource=sent-filter-options&page=1&limit=100').then(r => r.json()),
+      fetch('/api/campaigns?page=1&limit=100').then((r) => r.json()),
+      fetch('/api/mail-accounts?resource=sent-filter-options&page=1&limit=100').then((r) => r.json()),
     ]).then(([camps, accs]) => {
       setOptions({
         campaigns: Array.isArray(camps?.items)
@@ -213,21 +232,23 @@ export default function GlobalSentMailPage() {
     params.append('limit', limit.toString())
 
     fetch(`/api/sent?${params.toString()}`)
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         setLogs(data.logs || [])
-        setCounts(data.counts || {
-          sent: 0,
-          failed: 0,
-          bounced: 0,
-          complaints: 0,
-          opened: 0,
-          unopened: 0,
-          openRate: 0,
-          replied: 0,
-          unreplied: 0,
-          replyRate: 0,
-        })
+        setCounts(
+          data.counts || {
+            sent: 0,
+            failed: 0,
+            bounced: 0,
+            complaints: 0,
+            opened: 0,
+            unopened: 0,
+            openRate: 0,
+            replied: 0,
+            unreplied: 0,
+            replyRate: 0,
+          }
+        )
         setTotal(data.total || 0)
         setPages(data.pages || 1)
         setLimit(data.limit || limit)
@@ -240,7 +261,10 @@ export default function GlobalSentMailPage() {
     fetchLogs()
   }, [filters, limit]) // eslint-disable-line
 
-  const handleLogAction = async (sentMailId: string, action: 'mark-bounced' | 'mark-complaint' | 'clear-complaint-log') => {
+  const handleLogAction = async (
+    sentMailId: string,
+    action: 'mark-bounced' | 'mark-complaint' | 'clear-complaint-log'
+  ) => {
     const res = await fetch('/api/sent', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -333,110 +357,154 @@ export default function GlobalSentMailPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [messageModal, replyModal])
 
+  const filteredLogs = useMemo(() => {
+    if (!searchQuery.trim()) return logs
+    const q = searchQuery.toLowerCase()
+    return logs.filter(
+      (log) =>
+        log.toEmail.toLowerCase().includes(q) ||
+        log.subject.toLowerCase().includes(q) ||
+        log.mailAccount.email.toLowerCase().includes(q) ||
+        (log.campaign?.name || '').toLowerCase().includes(q)
+    )
+  }, [logs, searchQuery])
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Mail className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
-              OUTBOUND LOGS
+    <div className="space-y-4 animate-fade-in pb-10">
+      {/* Top Floating Status & Action Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 backdrop-blur-md rounded-full border border-[#121316]/08 shadow-sm">
+            <Send className="h-3.5 w-3.5 text-[#ee382b]" />
+            <span className="text-xs font-semibold text-[#121316]">
+              {total.toLocaleString()} Dispatches
             </span>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Sent Mail Analytics
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Live audit trail of every dispatched email, open beacon, and recipient interaction.
-            </p>
+          </div>
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white/90 backdrop-blur-md rounded-full border border-[#0f8a5f]/20 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-[#0f8a5f]" />
+            <span className="text-xs font-semibold text-[#121316]">
+              {counts.sent.toLocaleString()} Delivered
+            </span>
           </div>
         </div>
 
-        <button
-          className="inline-flex items-center gap-2 rounded-full border border-[#121316]/12 bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] transition-all hover:bg-[#faf8f4] hover:shadow-xs"
-          onClick={handleExport}
-        >
-          <span>Export CSV Log</span>
-        </button>
-      </header>
+        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          {/* Quick Search */}
+          <div className="relative w-full sm:w-56 shrink-0">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8780]" />
+            <input
+              type="text"
+              placeholder="Search recipient / subject..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3.5 py-1.5 bg-white/90 backdrop-blur-md border border-[#121316]/10 rounded-full text-xs text-[#121316] placeholder-[#8a8780] focus:outline-none focus:ring-1 focus:ring-[#ee382b] focus:border-[#ee382b] transition-all shadow-sm"
+            />
+          </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        <div className="uneevo-card p-5 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-          <div className="font-mono text-2xl sm:text-3xl font-bold text-[#121316] tabular-nums">{total.toLocaleString()}</div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mt-1">Total Logs</div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md text-xs font-semibold text-[#121316] shadow-sm hover:bg-white hover:shadow-md active:scale-95 transition cursor-pointer shrink-0"
+            onClick={handleExport}
+          >
+            <Download className="h-3.5 w-3.5 text-[#8a8780]" />
+            <span>Export CSV</span>
+          </button>
         </div>
-        <div className="uneevo-card p-5 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-          <div className="font-mono text-2xl sm:text-3xl font-bold text-[#0f8a5f] tabular-nums">{counts.sent.toLocaleString()}</div>
+      </div>
+
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="uneevo-card p-4 sm:p-5 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-[#121316] tabular-nums">
+            {total.toLocaleString()}
+          </div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780] mt-1">Total Logs</div>
+        </div>
+        <div className="uneevo-card p-4 sm:p-5 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-[#0f8a5f] tabular-nums">
+            {counts.sent.toLocaleString()}
+          </div>
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#0f8a5f] mt-1">Sent</div>
         </div>
-        <div className="uneevo-card p-5 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-          <div className="font-mono text-2xl sm:text-3xl font-bold text-[#ee382b] tabular-nums">{counts.failed.toLocaleString()}</div>
+        <div className="uneevo-card p-4 sm:p-5 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-[#ee382b] tabular-nums">
+            {counts.failed.toLocaleString()}
+          </div>
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#ee382b] mt-1">Failed</div>
         </div>
-        <div className="uneevo-card p-5 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-          <div className="font-mono text-2xl sm:text-3xl font-bold text-[#b7791f] tabular-nums">{counts.bounced.toLocaleString()}</div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-[#b7791f] mt-1">Bounced</div>
+        <div className="uneevo-card p-4 sm:p-5 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-[#d97706] tabular-nums">
+            {counts.bounced.toLocaleString()}
+          </div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[#d97706] mt-1">Bounced</div>
         </div>
-        <div className="uneevo-card p-5 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-          <div className="font-mono text-2xl sm:text-3xl font-bold text-[#ee382b] tabular-nums">{counts.complaints.toLocaleString()}</div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-[#ee382b] mt-1">Complaints</div>
+        <div className="uneevo-card p-4 sm:p-5 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-[#c2414c] tabular-nums">
+            {counts.complaints.toLocaleString()}
+          </div>
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[#c2414c] mt-1">Complaints</div>
         </div>
-        <div className="uneevo-card p-5 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-          <div className="font-mono text-2xl sm:text-3xl font-bold text-[#121316] tabular-nums">{counts.replied.toLocaleString()}</div>
+        <div className="uneevo-card p-4 sm:p-5 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs">
+          <div className="font-mono text-xl sm:text-2xl font-bold text-[#121316] tabular-nums">
+            {counts.replied.toLocaleString()}
+          </div>
           <div className="text-[10px] font-bold uppercase tracking-wider text-[#121316] mt-1">Replied</div>
         </div>
       </div>
 
       {/* Engagement Rates Banner */}
-      <div className="uneevo-card p-6 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-1">Opened</div>
-            <div className="font-mono text-2xl font-bold text-[#0f8a5f] tabular-nums">{counts.opened.toLocaleString()}</div>
+      <div className="uneevo-card p-4 sm:p-5 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs space-y-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+          <div className="p-3 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-0.5">Opened</div>
+            <div className="font-mono text-lg sm:text-xl font-bold text-[#0f8a5f] tabular-nums">
+              {counts.opened.toLocaleString()}
+            </div>
           </div>
-          <div className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-1">Not opened</div>
-            <div className="font-mono text-2xl font-bold text-[#62605c] tabular-nums">{counts.unopened.toLocaleString()}</div>
+          <div className="p-3 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-0.5">Unopened</div>
+            <div className="font-mono text-lg sm:text-xl font-bold text-[#62605c] tabular-nums">
+              {counts.unopened.toLocaleString()}
+            </div>
           </div>
-          <div className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-1">Open rate</div>
-            <div className="font-mono text-2xl font-bold text-[#ee382b] tabular-nums">{counts.openRate}%</div>
+          <div className="p-3 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-0.5">Open rate</div>
+            <div className="font-mono text-lg sm:text-xl font-bold text-[#ee382b] tabular-nums">{counts.openRate}%</div>
           </div>
-          <div className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-1">Awaiting reply</div>
-            <div className="font-mono text-2xl font-bold text-[#62605c] tabular-nums">{counts.unreplied.toLocaleString()}</div>
+          <div className="p-3 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-0.5">Awaiting reply</div>
+            <div className="font-mono text-lg sm:text-xl font-bold text-[#62605c] tabular-nums">
+              {counts.unreplied.toLocaleString()}
+            </div>
           </div>
-          <div className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-1">Reply rate</div>
-            <div className="font-mono text-2xl font-bold text-[#0f8a5f] tabular-nums">{counts.replyRate}%</div>
+          <div className="p-3 rounded-xl bg-[#faf8f4] border border-[#121316]/06 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#62605c] mb-0.5">Reply rate</div>
+            <div className="font-mono text-lg sm:text-xl font-bold text-[#0f8a5f] tabular-nums">
+              {counts.replyRate}%
+            </div>
           </div>
-        </div>
-        <div className="mt-3 text-xs text-[#8a8780] leading-relaxed">
-          Open tracking is best-effort and depends on the prospect client loading remote images. Reply tracking is inferred from synced mailbox threads.
         </div>
       </div>
 
-      <div className="uneevo-card rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] overflow-hidden">
+      {/* Sender Pool Utilization Collapsible */}
+      <div className="uneevo-card rounded-2xl border border-[#121316]/10 bg-white shadow-2xs overflow-hidden">
         <button
           type="button"
           onClick={handleToggleAccountProgress}
-          className="w-full flex items-center justify-between gap-4 p-6 bg-transparent border-0 cursor-pointer text-left"
+          className="w-full flex items-center justify-between gap-4 px-5 py-3.5 bg-transparent border-0 cursor-pointer text-left hover:bg-[#faf8f4]/60 transition-colors"
           aria-expanded={accountProgressExpanded}
         >
           <div>
-            <div className="zoho-puvi-headline text-base sm:text-lg font-bold text-[#121316]">
-              Account Sending Progress & Sender Pool Utilization
+            <div className="text-xs sm:text-sm font-bold text-[#121316]">
+              Sender Pool Quota & Utilization Progress
             </div>
-            <div className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Expand to inspect sender mailbox quotas, warmup stages, and remaining daily limits.
+            <div className="text-[11px] text-[#62605c] mt-0.5">
+              Inspect mailbox quotas, warmup stages, and remaining daily limits.
             </div>
           </div>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#faf8f4] border border-[#121316]/08 text-[#121316] shrink-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#faf8f4] border border-[#121316]/08 text-[#121316] shrink-0">
             <ChevronDown
-              size={18}
+              size={16}
               style={{
                 transform: accountProgressExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                 transition: 'transform 0.2s ease',
@@ -446,67 +514,59 @@ export default function GlobalSentMailPage() {
         </button>
 
         {accountProgressExpanded ? (
-          <div className="p-6 pt-0 border-t border-[#121316]/08">
+          <div className="px-5 pb-5 pt-2 border-t border-[#121316]/08">
             {accountProgressLoading ? (
-              <div className="pt-4 text-xs font-mono text-[#8a8780]">
+              <div className="py-4 text-xs font-mono text-[#8a8780] text-center">
                 Loading sender account progress...
               </div>
             ) : accountProgressError ? (
-              <div className="pt-4 text-xs text-[#c2414c]">
-                {accountProgressError}
-              </div>
+              <div className="py-4 text-xs text-[#c2414c] text-center">{accountProgressError}</div>
             ) : accountProgressAccounts.length === 0 ? (
-              <div className="pt-4 text-xs text-[#8a8780]">
-                No sender accounts available yet.
-              </div>
+              <div className="py-4 text-xs text-[#8a8780] text-center">No sender accounts available yet.</div>
             ) : (
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2.5">
-                  {accountProgressAccounts.map((account) => {
-                    const progress = Math.min(100, ((account.sentToday || 0) / (account.dailyLimit || 1)) * 100)
-                    const isNearLimit = progress >= 90
+              <div className="space-y-2 pt-2">
+                {accountProgressAccounts.map((account) => {
+                  const progress = Math.min(100, ((account.sentToday || 0) / (account.dailyLimit || 1)) * 100)
+                  const isNearLimit = progress >= 90
 
-                    return (
-                      <div
-                        key={account.id}
-                        className="flex items-center gap-4 p-3.5 rounded-[14px] bg-[#faf8f4] border border-[#121316]/06"
-                      >
-                        <div className="w-56 font-bold text-xs text-[#121316] truncate">
-                          {account.email}
-                        </div>
-                        <div className="flex-1">
-                          <div className="h-2 w-full bg-[#121316]/08 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-300 ${
-                                isNearLimit ? 'bg-[#b7791f]' : 'bg-[#ee382b]'
-                              }`}
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                        </div>
-                        <div className="w-20 font-mono text-xs text-[#62605c] text-right font-bold tabular-nums">
-                          {account.sentToday || 0} / {account.dailyLimit || 0}
+                  return (
+                    <div
+                      key={account.id}
+                      className="flex items-center gap-4 p-3 rounded-xl bg-[#faf8f4] border border-[#121316]/06"
+                    >
+                      <div className="w-52 font-bold text-xs text-[#121316] truncate">{account.email}</div>
+                      <div className="flex-1">
+                        <div className="h-2 w-full bg-[#121316]/08 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              isNearLimit ? 'bg-[#d97706]' : 'bg-[#ee382b]'
+                            }`}
+                            style={{ width: `${progress}%` }}
+                          />
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
+                      <div className="w-24 font-mono text-xs text-[#62605c] text-right font-bold tabular-nums">
+                        {account.sentToday || 0} / {account.dailyLimit || 0}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
         ) : null}
       </div>
 
-      {/* Filters Card */}
-      <div className="uneevo-card p-6 rounded-[22px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[180px]">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-[#8a8780] mb-1.5 block">
+      {/* Filters Bar */}
+      <div className="uneevo-card p-4 rounded-2xl border border-[#121316]/10 bg-white shadow-2xs flex flex-wrap gap-3 items-end">
+        <div className="flex-1 min-w-[160px]">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780] mb-1 block">
             Campaign
           </label>
           <select
             value={filters.campaignId}
             onChange={(e) => setFilters((f) => ({ ...f, campaignId: e.target.value, page: 1 }))}
-            className="w-full rounded-[12px] border border-[#121316]/12 bg-[#faf8f4] px-3.5 py-2 text-xs text-[#121316] font-medium"
+            className="w-full rounded-xl border border-[#121316]/12 bg-[#faf8f4] px-3 py-1.5 text-xs text-[#121316] font-medium"
           >
             <option value="">All Campaigns</option>
             {options.campaigns.map((c) => (
@@ -517,16 +577,16 @@ export default function GlobalSentMailPage() {
           </select>
         </div>
 
-        <div className="flex-1 min-w-[180px]">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-[#8a8780] mb-1.5 block">
+        <div className="flex-1 min-w-[160px]">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780] mb-1 block">
             Sender Mailbox
           </label>
           <select
             value={filters.mailAccountId}
             onChange={(e) => setFilters((f) => ({ ...f, mailAccountId: e.target.value, page: 1 }))}
-            className="w-full rounded-[12px] border border-[#121316]/12 bg-[#faf8f4] px-3.5 py-2 text-xs text-[#121316] font-medium"
+            className="w-full rounded-xl border border-[#121316]/12 bg-[#faf8f4] px-3 py-1.5 text-xs text-[#121316] font-medium"
           >
-            <option value="">All Connected Mailboxes</option>
+            <option value="">All Mailboxes</option>
             {options.accounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {formatAccountOptionLabel(a)}
@@ -535,14 +595,14 @@ export default function GlobalSentMailPage() {
           </select>
         </div>
 
-        <div className="w-36">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-[#8a8780] mb-1.5 block">
+        <div className="w-32">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780] mb-1 block">
             Status
           </label>
           <select
             value={filters.status}
             onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value, page: 1 }))}
-            className="w-full rounded-[12px] border border-[#121316]/12 bg-[#faf8f4] px-3.5 py-2 text-xs text-[#121316] font-medium"
+            className="w-full rounded-xl border border-[#121316]/12 bg-[#faf8f4] px-3 py-1.5 text-xs text-[#121316] font-medium"
           >
             <option value="">All Statuses</option>
             <option value="sent">Sent</option>
@@ -551,27 +611,27 @@ export default function GlobalSentMailPage() {
           </select>
         </div>
 
-        <div className="w-36">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-[#8a8780] mb-1.5 block">
+        <div className="w-32">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780] mb-1 block">
             From Date
           </label>
           <input
             type="date"
             value={filters.from}
             onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value, page: 1 }))}
-            className="w-full rounded-[12px] border border-[#121316]/12 bg-[#faf8f4] px-3 py-1.5 text-xs text-[#121316]"
+            className="w-full rounded-xl border border-[#121316]/12 bg-[#faf8f4] px-2.5 py-1.5 text-xs text-[#121316]"
           />
         </div>
 
-        <div className="w-36">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-[#8a8780] mb-1.5 block">
+        <div className="w-32">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780] mb-1 block">
             To Date
           </label>
           <input
             type="date"
             value={filters.to}
             onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value, page: 1 }))}
-            className="w-full rounded-[12px] border border-[#121316]/12 bg-[#faf8f4] px-3 py-1.5 text-xs text-[#121316]"
+            className="w-full rounded-xl border border-[#121316]/12 bg-[#faf8f4] px-2.5 py-1.5 text-xs text-[#121316]"
           />
         </div>
 
@@ -579,299 +639,364 @@ export default function GlobalSentMailPage() {
           <button
             type="button"
             onClick={() => setFilters({ campaignId: '', mailAccountId: '', status: '', from: '', to: '', page: 1 })}
-            className="px-4 py-2 rounded-full border border-[#121316]/12 bg-white text-xs font-bold text-[#121316] hover:bg-[#faf8f4]"
+            className="px-3 py-1.5 rounded-full border border-[#121316]/12 bg-white text-xs font-bold text-[#121316] hover:bg-[#faf8f4] cursor-pointer"
           >
             Clear Filters
           </button>
         )}
       </div>
 
-      {/* Table Card */}
-      <div className="uneevo-card rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] overflow-hidden">
-        <div className="flex justify-between gap-4 flex-wrap items-center px-6 py-4 border-b border-[#121316]/08 bg-[#faf8f4]">
-          <div className="text-xs text-[#62605c] font-mono">
-            Showing <strong className="text-[#121316]">{visibleLogCount.toLocaleString()}</strong> of{' '}
-            <strong className="text-[#121316]">{total.toLocaleString()}</strong> sent mail logs
-          </div>
-          {pages > 0 && (
-            <PaginationControls
-              page={filters.page}
-              pages={pages}
-              total={total}
-              limit={limit}
-              onPageChange={(page) => setFilters((current) => ({ ...current, page }))}
-              onLimitChange={(value) => {
-                setLimit(value)
-                setFilters((current) => ({ ...current, page: 1 }))
-              }}
-              label="sent logs"
-            />
+      {/* Main Table Container */}
+      <section className="uneevo-card rounded-[20px] shadow-sm border border-[#121316]/12 bg-white flex flex-col overflow-hidden">
+        {/* Table Header */}
+        <div className="px-4 py-3 flex items-center bg-[#faf8f4] border-b border-[#121316]/12 text-[11px] text-[#62605c] uppercase tracking-wider font-bold">
+          <div className="flex-1 min-w-[200px]">Recipient & Subject</div>
+          <div className="w-36 shrink-0 hidden md:block">Campaign</div>
+          <div className="w-44 shrink-0 hidden lg:block">Sender</div>
+          <div className="w-28 shrink-0">Status</div>
+          <div className="w-32 shrink-0 hidden sm:block">Engagement</div>
+          <div className="w-28 shrink-0 text-right pr-4 hidden sm:block">Date</div>
+          <div className="w-20 shrink-0 text-right">Actions</div>
+        </div>
+
+        {/* Rows List */}
+        <div className="flex flex-col w-full divide-y divide-[#121316]/08">
+          {loading ? (
+            <div className="px-4 py-12 text-center text-xs text-[#8a8780]">
+              Loading sent mail logs...
+            </div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="px-4 py-12 text-center text-xs text-[#8a8780] italic">
+              {searchQuery ? 'No dispatches match your search query.' : 'No email dispatches recorded yet.'}
+            </div>
+          ) : (
+            filteredLogs.map((log) => {
+              const initialLetter = log.toEmail.charAt(0).toUpperCase()
+
+              return (
+                <article
+                  key={log.id}
+                  className="px-4 py-3 flex items-center hover:bg-[#faf8f4]/60 transition-colors group text-xs gap-3"
+                >
+                  {/* Avatar Initial */}
+                  <div className="w-8 h-8 rounded-lg bg-[#121316]/05 border border-[#121316]/10 flex items-center justify-center shrink-0 font-bold text-xs text-[#121316]">
+                    {initialLetter}
+                  </div>
+
+                  {/* Recipient & Subject */}
+                  <div className="flex flex-col flex-1 min-w-[180px] pr-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-[#121316] truncate text-xs sm:text-sm">
+                        {log.toEmail}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-[#62605c] truncate mt-0.5" title={log.subject}>
+                      {log.subject.replace(/^Subject:\s*/i, '') || '(no subject)'}
+                    </span>
+                  </div>
+
+                  {/* Campaign */}
+                  <div className="w-36 shrink-0 hidden md:block">
+                    {log.campaign ? (
+                      <Link
+                        href={`/campaigns/${log.campaign.id}`}
+                        className="font-semibold text-[#ee382b] hover:underline truncate block"
+                      >
+                        {log.campaign.name}
+                      </Link>
+                    ) : (
+                      <span className="text-[#8a8780] font-mono text-[11px]">
+                        API {log.apiDispatchRequest?.apiKey.name || 'Request'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Sender */}
+                  <div className="w-44 shrink-0 hidden lg:block">
+                    <span className="text-[#62605c] font-mono text-[11px] truncate block" title={log.mailAccount.email}>
+                      {log.mailAccount.email}
+                    </span>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="w-28 shrink-0">
+                    <StatusBadge status={log.status} />
+                    {log.errorMessage && (
+                      <div className="text-[10px] text-[#c2414c] mt-0.5 truncate max-w-[110px]" title={log.errorMessage}>
+                        {log.errorMessage}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Engagement Chips */}
+                  <div className="w-32 shrink-0 hidden sm:flex flex-col gap-1">
+                    {log.status === 'sent' ? (
+                      <>
+                        <div className="flex items-center gap-1">
+                          <StatusBadge status={isNoTracking(log) ? 'No tracking' : (log.openStatus || (log.openedAt ? 'opened' : 'unopened'))} />
+                          {log.repliedAt && <StatusBadge status="replied" />}
+                        </div>
+                        {log.repliedAt && (
+                          <button
+                            type="button"
+                            onClick={() => void handleOpenReplyModal(log)}
+                            disabled={replyLoadingId === log.id}
+                            className="text-[10px] font-bold text-[#ee382b] hover:underline text-left cursor-pointer"
+                          >
+                            {replyLoadingId === log.id ? 'Loading...' : 'View Reply ↗'}
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-[#8a8780] text-[11px]">N/A</span>
+                    )}
+                  </div>
+
+                  {/* Sent Date */}
+                  <div className="w-28 shrink-0 text-right pr-4 font-mono text-[11px] text-[#8a8780] hidden sm:block">
+                    {formatDate(log.sentAt)}
+                  </div>
+
+                  {/* Actions Dropdown / Buttons */}
+                  <div className="w-20 shrink-0 flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => void handleOpenMessageModal(log)}
+                      disabled={messageLoadingId === log.id}
+                      className="p-1.5 rounded-lg border border-[#121316]/10 text-[#121316] hover:bg-[#faf8f4] transition cursor-pointer"
+                      title="View Sent Message"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => void handleLogAction(log.id, 'mark-complaint')}
+                      className="p-1.5 rounded-lg border border-[#121316]/10 text-[#8a8780] hover:text-[#ee382b] hover:bg-[#faf8f4] transition cursor-pointer"
+                      title="Mark as Complaint"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </article>
+              )
+            })
           )}
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#faf8f4] border-b border-[#121316]/08">
-                <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[#8a8780]">Recipient</th>
-                <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[#8a8780]">Subject</th>
-                <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[#8a8780]">Campaign</th>
-                <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[#8a8780]">Sender</th>
-                <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[#8a8780]">Date</th>
-                <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[#8a8780]">Status</th>
-                <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[#8a8780]">Open / Reply</th>
-                <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-[#8a8780]">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#121316]/06 text-xs">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center text-[#8a8780]">
-                    Loading sent mail logs...
-                  </td>
-                </tr>
-              ) : logs.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center text-[#8a8780]">
-                    No email dispatches found matching filters.
-                  </td>
-                </tr>
-              ) : (
-                logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-[#faf8f4]/60 transition-colors">
-                    <td className="px-5 py-4 font-bold text-[#121316]">{log.toEmail}</td>
-                    <td className="px-5 py-4 text-[#62605c] max-w-xs truncate">
-                      {log.subject.replace(/^Subject:\s*/i, '')}
-                    </td>
-                    <td className="px-5 py-4">
-                      {log.campaign ? (
-                        <Link
-                          href={`/campaigns/${log.campaign.id}`}
-                          className="font-bold text-[#ee382b] hover:underline"
-                        >
-                          {log.campaign.name}
-                        </Link>
-                      ) : (
-                        <span className="text-[#8a8780] font-mono">
-                          API {log.apiDispatchRequest?.apiKey.name || 'request'}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 font-mono text-[11px] text-[#62605c]">{log.mailAccount.email}</td>
-                    <td className="px-5 py-4 font-mono text-[11px] text-[#8a8780]">{formatDate(log.sentAt)}</td>
-                    <td className="px-5 py-4">
-                      <StatusBadge status={log.status} />
-                      {log.errorMessage && (
-                        <div className="text-[11px] text-[#c2414c] mt-1 truncate max-w-[150px]" title={log.errorMessage}>
-                          {log.errorMessage}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-5 py-4">
-                      {log.status === 'sent' ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <StatusBadge status={isNoTracking(log) ? 'No tracking' : (log.openStatus || (log.openedAt ? 'opened' : 'unopened'))} />
-                            <StatusBadge status={log.repliedAt ? 'replied' : 'awaiting reply'} />
-                          </div>
-                          {log.openedAt && !isNoTracking(log) && (
-                            <div className="text-[10px] text-[#0f8a5f] font-mono">
-                              Opened {formatDate(log.openedAt)}
-                            </div>
-                          )}
-                          {log.repliedAt && (
-                            <div className="text-[10px] text-[#0f8a5f] font-mono">
-                              Replied {formatDate(log.repliedAt)}
-                            </div>
-                          )}
-                          {log.repliedAt && (
-                            <button
-                              type="button"
-                              onClick={() => void handleOpenReplyModal(log)}
-                              disabled={replyLoadingId === log.id}
-                              className="text-[11px] font-bold text-[#ee382b] hover:underline block pt-1"
-                            >
-                              {replyLoadingId === log.id ? 'Loading...' : 'View Reply'}
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-[#8a8780]">N/A</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col gap-1.5 min-w-[120px]">
-                        <button
-                          type="button"
-                          onClick={() => void handleOpenMessageModal(log)}
-                          disabled={messageLoadingId === log.id}
-                          className="px-2.5 py-1 rounded-[8px] border border-[#121316]/10 bg-white text-[11px] font-semibold text-[#121316] hover:bg-[#faf8f4] transition text-left"
-                        >
-                          {messageLoadingId === log.id ? 'Loading...' : 'View Message'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleLogAction(log.id, 'mark-complaint')}
-                          className="px-2.5 py-1 rounded-[8px] border border-[#121316]/10 bg-white text-[11px] font-semibold text-[#8a8780] hover:text-[#ee382b] hover:bg-[#faf8f4] transition text-left"
-                        >
-                          Mark Complaint
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleLogAction(log.id, 'mark-bounced')}
-                          className="px-2.5 py-1 rounded-[8px] border border-[#121316]/10 bg-white text-[11px] font-semibold text-[#8a8780] hover:text-[#c2414c] hover:bg-[#faf8f4] transition text-left"
-                        >
-                          Mark Bounced
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
         {/* Pagination Footer */}
-        {pages > 0 && (
-          <div className="px-6 py-4 border-t border-[#121316]/08 bg-[#faf8f4]">
-            <PaginationControls
-              page={filters.page}
-              pages={pages}
-              total={total}
-              limit={limit}
-              onPageChange={(page) => setFilters((current) => ({ ...current, page }))}
-              onLimitChange={(value) => {
-                setLimit(value)
-                setFilters((current) => ({ ...current, page: 1 }))
+        <div className="px-4 py-2.5 flex flex-wrap items-center justify-between border-t border-[#121316]/12 bg-white text-xs gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[#62605c]">Rows:</span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                const newLimit = Number(e.target.value)
+                setLimit(newLimit)
+                setFilters((f) => ({ ...f, page: 1 }))
               }}
-              label="sent logs"
-            />
+              className="bg-transparent text-[#121316] font-semibold border-none focus:ring-0 cursor-pointer p-0 text-xs"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span className="text-[#8a8780] ml-4 border-l border-[#121316]/15 pl-4">
+              {total > 0
+                ? `${(filters.page - 1) * limit + 1}–${Math.min(filters.page * limit, total)} of ${total}`
+                : '0 of 0'}
+            </span>
           </div>
-        )}
-      </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={filters.page <= 1}
+              onClick={() => setFilters((f) => ({ ...f, page: 1 }))}
+              className="w-7 h-7 flex items-center justify-center rounded text-[#62605c] hover:bg-[#faf8f4] disabled:opacity-40 cursor-pointer"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              disabled={filters.page <= 1}
+              onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
+              className="w-7 h-7 flex items-center justify-center rounded text-[#62605c] hover:bg-[#faf8f4] disabled:opacity-40 cursor-pointer"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-1 mx-1">
+              {Array.from({ length: pages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === pages || Math.abs(p - filters.page) <= 1)
+                .map((p, idx, arr) => {
+                  const showGap = idx > 0 && p - arr[idx - 1] > 1
+                  return (
+                    <span key={p} className="flex items-center gap-1">
+                      {showGap && <span className="text-[#8a8780] px-0.5">...</span>}
+                      <button
+                        type="button"
+                        onClick={() => setFilters((f) => ({ ...f, page: p }))}
+                        className={`w-7 h-7 rounded text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                          p === filters.page
+                            ? 'bg-[#121316] text-white shadow-2xs'
+                            : 'text-[#121316] hover:bg-[#faf8f4]'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </span>
+                  )
+                })}
+            </div>
+
+            <button
+              type="button"
+              disabled={filters.page >= pages}
+              onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
+              className="w-7 h-7 flex items-center justify-center rounded text-[#62605c] hover:bg-[#faf8f4] disabled:opacity-40 cursor-pointer"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              disabled={filters.page >= pages}
+              onClick={() => setFilters((f) => ({ ...f, page: pages }))}
+              className="w-7 h-7 flex items-center justify-center rounded text-[#62605c] hover:bg-[#faf8f4] disabled:opacity-40 cursor-pointer"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* Reply Modal */}
-      {isClient && replyModal ? createPortal(
-        <div
-          onClick={() => setReplyModal(null)}
-          className="fixed inset-0 bg-[#121316]/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-            className="uneevo-card p-6 md:p-8 rounded-[28px] border border-[#121316]/08 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12)] w-full max-w-2xl max-h-[85vh] overflow-y-auto space-y-5"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b] block mb-1">
-                  PROSPECT REPLY THREAD
-                </span>
-                <h2 className="zoho-puvi-headline text-xl font-bold text-[#121316]">
-                  {replyModal.subject || '(No subject)'}
-                </h2>
-                <p className="text-xs text-[#62605c] mt-1">
-                  Recipient: <strong className="text-[#121316]">{replyModal.recipient}</strong>
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setReplyModal(null)}
-                className="px-3.5 py-1.5 rounded-full border border-[#121316]/12 bg-white text-xs font-bold text-[#121316] hover:bg-[#faf8f4]"
+      {isClient && replyModal
+        ? createPortal(
+            <div
+              onClick={() => setReplyModal(null)}
+              className="fixed inset-0 bg-[#121316]/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                onClick={(e) => e.stopPropagation()}
+                className="uneevo-card p-6 md:p-8 rounded-[24px] border border-[#121316]/12 bg-white shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto space-y-5"
               >
-                Close
-              </button>
-            </div>
-
-            {replyModal.replies.length === 0 ? (
-              <div className="p-6 rounded-[16px] bg-[#faf8f4] text-center text-xs text-[#62605c]">
-                Reply event recorded, but message snippet is pending mailbox synchronization.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {replyModal.replies.map((reply, index) => (
-                  <div
-                    key={reply.id}
-                    className="p-5 rounded-[20px] bg-[#faf8f4] border border-[#121316]/08 space-y-3"
-                  >
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-[#121316]">
-                        From: {reply.fromEmail || 'Recipient'}
-                      </span>
-                      <span className="font-mono text-[#8a8780] text-[11px]">
-                        {formatReplyTimestamp(reply)}
-                      </span>
-                    </div>
-                    <div className="p-4 rounded-[14px] bg-white border border-[#121316]/06 text-xs leading-relaxed text-[#121316] whitespace-pre-wrap">
-                      {reply.snippet || 'No snippet text.'}
-                    </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b] block mb-1">
+                      PROSPECT REPLY THREAD
+                    </span>
+                    <h2 className="text-xl font-bold text-[#121316]">
+                      {replyModal.subject || '(No subject)'}
+                    </h2>
+                    <p className="text-xs text-[#62605c] mt-1">
+                      Recipient: <strong className="text-[#121316]">{replyModal.recipient}</strong>
+                    </p>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setReplyModal(null)}
+                    className="p-2 rounded-full text-[#8a8780] hover:text-[#121316] hover:bg-[#121316]/05 transition-colors cursor-pointer"
+                    title="Close (Esc)"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {replyModal.replies.length === 0 ? (
+                  <div className="p-6 rounded-xl bg-[#faf8f4] text-center text-xs text-[#62605c]">
+                    Reply event recorded, but message snippet is pending mailbox synchronization.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {replyModal.replies.map((reply) => (
+                      <div
+                        key={reply.id}
+                        className="p-4 rounded-xl bg-[#faf8f4] border border-[#121316]/08 space-y-2.5"
+                      >
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="font-bold text-[#121316]">
+                            From: {reply.fromEmail || 'Recipient'}
+                          </span>
+                          <span className="font-mono text-[#8a8780] text-[11px]">
+                            {formatReplyTimestamp(reply)}
+                          </span>
+                        </div>
+                        <div className="p-3 rounded-lg bg-white border border-[#121316]/06 text-xs leading-relaxed text-[#121316] whitespace-pre-wrap">
+                          {reply.snippet || 'No snippet text.'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>,
-        document.body
-      ) : null}
+            </div>,
+            document.body
+          )
+        : null}
 
       {/* Message Modal */}
-      {isClient && messageModal ? createPortal(
-        <div
-          onClick={() => setMessageModal(null)}
-          className="fixed inset-0 bg-[#121316]/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            onClick={(e) => e.stopPropagation()}
-            className="uneevo-card p-6 md:p-8 rounded-[28px] border border-[#121316]/08 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12)] w-full max-w-3xl max-h-[90vh] overflow-y-auto space-y-5"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b] block mb-1">
-                  RENDERED OUTBOUND DISPATCH
-                </span>
-                <h2 className="zoho-puvi-headline text-xl font-bold text-[#121316]">
-                  {messageModal.subject || '(No subject)'}
-                </h2>
-                <p className="text-xs text-[#62605c] mt-1">
-                  Sent to: <strong className="text-[#121316]">{messageModal.recipient}</strong> •{' '}
-                  <span className="font-mono">{formatDate(messageModal.sentAt)}</span>
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setMessageModal(null)}
-                className="px-3.5 py-1.5 rounded-full border border-[#121316]/12 bg-white text-xs font-bold text-[#121316] hover:bg-[#faf8f4]"
+      {isClient && messageModal
+        ? createPortal(
+            <div
+              onClick={() => setMessageModal(null)}
+              className="fixed inset-0 bg-[#121316]/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in"
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                onClick={(e) => e.stopPropagation()}
+                className="uneevo-card p-6 md:p-8 rounded-[24px] border border-[#121316]/12 bg-white shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto space-y-5"
               >
-                Close
-              </button>
-            </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#ee382b] block mb-1">
+                      RENDERED OUTBOUND DISPATCH
+                    </span>
+                    <h2 className="text-xl font-bold text-[#121316]">
+                      {messageModal.subject || '(No subject)'}
+                    </h2>
+                    <p className="text-xs text-[#62605c] mt-1">
+                      Sent to: <strong className="text-[#121316]">{messageModal.recipient}</strong> •{' '}
+                      <span className="font-mono">{formatDate(messageModal.sentAt)}</span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMessageModal(null)}
+                    className="p-2 rounded-full text-[#8a8780] hover:text-[#121316] hover:bg-[#121316]/05 transition-colors cursor-pointer"
+                    title="Close (Esc)"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
 
-            <div className="rounded-[18px] border border-[#121316]/08 overflow-hidden bg-white">
-              {messageModal.html ? (
-                <iframe
-                  title={messageModal.subject || 'Sent message'}
-                  srcDoc={messageModal.html}
-                  sandbox=""
-                  className="w-full min-h-[60vh] border-0 bg-white"
-                />
-              ) : messageModal.text ? (
-                <div className="p-6 text-xs text-[#121316] leading-relaxed whitespace-pre-wrap">
-                  {messageModal.text}
+                <div className="rounded-xl border border-[#121316]/08 overflow-hidden bg-white">
+                  {messageModal.html ? (
+                    <iframe
+                      title={messageModal.subject || 'Sent message'}
+                      srcDoc={messageModal.html}
+                      sandbox=""
+                      className="w-full min-h-[60vh] border-0 bg-white"
+                    />
+                  ) : messageModal.text ? (
+                    <div className="p-6 text-xs text-[#121316] leading-relaxed whitespace-pre-wrap">
+                      {messageModal.text}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-xs text-[#8a8780]">
+                      No message body content recorded for this log entry.
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="p-6 text-center text-xs text-[#8a8780]">
-                  No message body content recorded for this log entry.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>,
-        document.body
-      ) : null}
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   )
 }
-
