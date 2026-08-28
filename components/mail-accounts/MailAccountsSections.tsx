@@ -61,64 +61,40 @@ export function MailAccountsHero(props: {
   ]
 
   return (
-    <div className="space-y-6 mb-6">
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Mail className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
-              SENDER INFRASTRUCTURE
-            </span>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Mail Accounts & Sender Pools
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Connection health, warmup rotation status, and deliverability limits.
-            </p>
-          </div>
+    <div className="space-y-4 mb-6">
+      {/* Top Floating Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#121316] bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-full border border-[#121316]/08 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-[#121316]" />
+            <span>{props.accountCount} Connected</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0f8a5f] bg-[#0f8a5f]/10 backdrop-blur-md px-3.5 py-2 rounded-full border border-[#0f8a5f]/20 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-[#0f8a5f] animate-pulse" />
+            <span>{props.warmedCount} Warmed</span>
+          </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5 bg-[#121316]/06 border border-[#121316]/08 px-4 py-2 rounded-full">
-            <span className="font-mono text-base font-bold tabular-nums text-[#121316]">
-              {props.accountCount}
-            </span>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
-              Connected
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5 bg-[#0f8a5f]/10 border border-[#0f8a5f]/20 px-4 py-2 rounded-full">
-            <span className="font-mono text-base font-bold tabular-nums text-[#0f8a5f]">
-              {props.warmedCount}
-            </span>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f8a5f]">
-              Warmed
-            </span>
-          </div>
-        </div>
-      </header>
-
-      <nav className="flex items-center gap-2 overflow-x-auto pb-1" aria-label="Mail account views">
-        {tabs.map((tab) => {
-          const isActive = props.activeTab === tab.key
-          return (
-            <button
-              key={tab.key}
-              onClick={() => props.setActiveTab(tab.key)}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all ${
-                isActive
-                  ? 'bg-[#121316] text-white shadow-xs'
-                  : 'bg-white border border-[#121316]/12 text-[#121316] hover:bg-[#faf8f4]'
-              }`}
-            >
-              {tab.key === 'accounts' ? <Mail className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-              <span>{tab.label}</span>
-            </button>
-          )
-        })}
-      </nav>
+        <nav className="flex items-center gap-2 overflow-x-auto pb-1 ml-auto" aria-label="Mail account views">
+          {tabs.map((tab) => {
+            const isActive = props.activeTab === tab.key
+            return (
+              <button
+                key={tab.key}
+                onClick={() => props.setActiveTab(tab.key)}
+                className={`inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer shadow-sm ${
+                  isActive
+                    ? 'bg-[#121316] text-white shadow-xs'
+                    : 'bg-white/90 backdrop-blur-md border border-[#121316]/10 text-[#121316] hover:bg-white hover:shadow-md active:scale-95'
+                }`}
+              >
+                {tab.key === 'accounts' ? <Mail className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
+        </nav>
+      </div>
     </div>
   )
 }

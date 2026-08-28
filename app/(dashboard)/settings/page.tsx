@@ -409,46 +409,31 @@ function SettingsContent() {
 
   // Category Sub-view Header helper
   const renderCategoryHeader = (title: string, eyebrow: string, description: string) => (
-    <header className="uneevo-card p-6 sm:p-7 md:p-8 rounded-[26px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-5">
-      <div className="flex items-start gap-4 sm:gap-5">
+    <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mb-6">
+      <div className="flex items-center gap-2.5">
         <button
           type="button"
           onClick={() => selectCategory(null)}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#faf8f4] border border-[#121316]/10 text-[#121316] hover:bg-white hover:border-[#ee382b] hover:text-[#ee382b] transition-all cursor-pointer shadow-2xs"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2 text-xs font-semibold text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95 cursor-pointer"
           title="Back to all settings"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Back to Settings</span>
         </button>
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <button
-              type="button"
-              onClick={() => selectCategory(null)}
-              className="text-xs font-bold text-[#62605c] hover:text-[#121316] uppercase tracking-wider cursor-pointer"
-            >
-              SETTINGS
-            </button>
-            <span className="text-[#8a8780]">/</span>
-            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase">
-              {eyebrow}
-            </span>
-          </div>
-          <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-            {title}
-          </h1>
-          <p className="text-xs sm:text-sm text-[#62605c] mt-1">{description}</p>
-        </div>
+        <span className="text-xs font-bold text-[#121316] truncate">
+          {title}
+        </span>
       </div>
 
       <button
         type="button"
         onClick={() => selectCategory(null)}
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#121316]/12 bg-white text-xs font-bold text-[#121316] hover:bg-[#faf8f4] transition cursor-pointer shadow-2xs self-start md:self-auto"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md text-xs font-bold text-[#121316] hover:bg-white hover:shadow-md active:scale-95 transition cursor-pointer shadow-sm ml-auto"
       >
         <LayoutGrid className="h-3.5 w-3.5" />
         <span>All Settings</span>
       </button>
-    </header>
+    </div>
   )
 
   // 1. Profile Setting Subpage

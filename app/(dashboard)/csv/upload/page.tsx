@@ -33,32 +33,15 @@ export default function UploadCsvPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-      {/* Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Upload className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
-              LEAD SCRUBBER & IMPORT
-            </span>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Upload Lead CSV
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Upload your raw prospect contact list — we&apos;ll auto-detect column mappings for you.
-            </p>
-          </div>
-        </div>
-
+      {/* Top Floating Actions Bar */}
+      <div className="flex items-center justify-between gap-3 pt-1">
         <Link
           href="/csv"
-          className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-4 py-2 text-xs font-semibold text-[#121316] transition-all hover:bg-[#faf8f4]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2 text-xs font-semibold text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95 ml-auto"
         >
-          <span>Back to CSV files</span>
+          <span>← Back to CSV files</span>
         </Link>
-      </header>
+      </div>
 
       {/* Step Indicator Pill Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">

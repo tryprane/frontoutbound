@@ -141,25 +141,15 @@ export default function SendMailPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-in">
-      {/* Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Send className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
-              AD-HOC DISPATCH
-            </span>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Direct Mail Composer
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Send one-off messages or tests through any connected mailbox with verified deliverability.
-            </p>
-          </div>
+      {/* Top Floating Actions Bar */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#121316] bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-full border border-[#121316]/08 shadow-sm">
+            <Send className="h-3.5 w-3.5 text-[#ee382b]" />
+            <span>Direct Mail Composer</span>
+          </span>
         </div>
-      </header>
+      </div>
 
       {toast ? (
         <div

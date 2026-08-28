@@ -6,7 +6,6 @@ import {
   ArrowRight,
   HardDrive,
   Mail,
-  MessageCircle,
   Plus,
   Send,
   Users,
@@ -26,14 +25,13 @@ import { PaginationControls } from '@/components/ui/pagination-controls'
 interface Campaign {
   id: string
   name: string
-  channel: 'EMAIL' | 'WHATSAPP' | 'GDRIVE'
+  channel: 'EMAIL' | 'GDRIVE' | string
   status: 'draft' | 'active' | 'paused' | 'completed' | 'failed'
   guardrailReason: string | null
   createdAt: string
   senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook'
   csvFile: { originalName: string; rowCount: number }
-  mailAccounts: { mailAccount: { displayName: string } }[]
-  whatsappAccounts: { whatsappAccount: { displayName: string } }[]
+  mailAccounts?: { mailAccount: { displayName: string } }[]
   senderPoolCount: number
   stats: {
     sent: number
@@ -65,7 +63,7 @@ export default function CampaignsPage() {
 
   // Client-side quick filter state
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedChannel, setSelectedChannel] = useState<'ALL' | 'EMAIL' | 'GDRIVE' | 'WHATSAPP'>('ALL')
+  const [selectedChannel, setSelectedChannel] = useState<'ALL' | 'EMAIL' | 'GDRIVE'>('ALL')
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
 
   const fetchCampaigns = (isManualRefresh = false) => {
@@ -101,9 +99,9 @@ export default function CampaignsPage() {
       // Search query match
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchName = camp.name.toLowerCase().includes(q)
+        const matchName = camp.name?.toLowerCase().includes(q)
         const matchCsv = camp.csvFile?.originalName?.toLowerCase().includes(q)
-        const matchChannel = camp.channel.toLowerCase().includes(q)
+        const matchChannel = camp.channel?.toLowerCase().includes(q)
         if (!matchName && !matchCsv && !matchChannel) return false
       }
       return true
@@ -116,47 +114,36 @@ export default function CampaignsPage() {
   const completedCount = campaigns.filter((c) => c.status === 'completed').length
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Page Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Megaphone className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block">
-                WORKSPACE SEQUENCES
-              </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0f8a5f] bg-[#0f8a5f]/10 px-2.5 py-0.5 rounded-full border border-[#0f8a5f]/20">
-                <Flame className="h-3 w-3" />
-                {activeCount} Active
-              </span>
-            </div>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Campaigns & Outbound Cadences
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Monitor multi-step sequences, automated delivery pacing, and pooled mailbox rotation.
-            </p>
-          </div>
+    <div className="space-y-5 animate-fade-in">
+      {/* Top Floating Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#121316] bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-full border border-[#121316]/08 shadow-sm">
+            <span className="flex h-2 w-2 rounded-full bg-[#0f8a5f] animate-pulse" />
+            <span>{activeCount} Active Sequence{activeCount !== 1 ? 's' : ''}</span>
+          </span>
+          {total > 0 && (
+            <span className="text-xs font-medium text-[#8a8780] hidden sm:inline">
+              ({total} total campaigns)
+            </span>
+          )}
         </div>
 
-        {/* Action Controls & KPI Pill */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* 3 Floating Action Buttons */}
+        <div className="flex items-center gap-2.5 ml-auto">
           <button
             type="button"
             onClick={() => fetchCampaigns(true)}
             disabled={refreshing || loading}
             title="Refresh Campaigns"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#121316]/12 bg-white text-[#121316] transition-all hover:bg-[#faf8f4] hover:shadow-xs disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95 disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-[#ee382b]' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-[#ee382b]' : 'text-[#62605c]'}`} />
           </button>
 
           <Link
             href="/campaigns/new?mode=gdrive"
-            className="inline-flex items-center gap-2 rounded-full border border-[#121316]/12 bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] transition-all hover:bg-[#faf8f4] hover:shadow-xs"
+            className="inline-flex items-center gap-2 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95"
           >
             <HardDrive className="h-4 w-4 text-[#62605c]" />
             <span>GDrive campaign</span>
@@ -164,24 +151,23 @@ export default function CampaignsPage() {
 
           <Link
             href="/campaigns/new"
-            className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_6px_20px_rgba(238,56,43,0.22)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_10px_28px_rgba(238,56,43,0.32)]"
+            className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_16px_rgba(238,56,43,0.28)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_8px_24px_rgba(238,56,43,0.38)] active:scale-95"
           >
             <Plus className="h-4 w-4" />
             <span>New campaign</span>
           </Link>
         </div>
-      </header>
+      </div>
 
       {/* Filter & Search Bar */}
       <div className="uneevo-card p-4 sm:p-5 rounded-[20px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left: Channel Selector Tabs */}
+        {/* Left: Channel Selector Tabs (Email and GDrive only) */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {(
             [
               { id: 'ALL', label: 'All Channels', icon: Layers },
               { id: 'EMAIL', label: 'Email Pool', icon: Mail },
               { id: 'GDRIVE', label: 'GDrive Share', icon: HardDrive },
-              { id: 'WHATSAPP', label: 'WhatsApp', icon: MessageCircle },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon
@@ -319,16 +305,12 @@ export default function CampaignsPage() {
                         <div className="flex items-center gap-3 min-w-0">
                           <div
                             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] shadow-xs ${
-                              camp.channel === 'WHATSAPP'
-                                ? 'bg-[#0f8a5f]/15 text-[#0f8a5f]'
-                                : camp.channel === 'GDRIVE'
+                              camp.channel === 'GDRIVE'
                                 ? 'bg-[#fde9b0] text-[#5c4211]'
                                 : 'bg-[#121316] text-white'
                             }`}
                           >
-                            {camp.channel === 'WHATSAPP' ? (
-                              <MessageCircle className="h-5 w-5" />
-                            ) : camp.channel === 'GDRIVE' ? (
+                            {camp.channel === 'GDRIVE' ? (
                               <HardDrive className="h-5 w-5" />
                             ) : (
                               <Mail className="h-5 w-5" />

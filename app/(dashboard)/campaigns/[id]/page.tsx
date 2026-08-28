@@ -442,129 +442,75 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
-      {/* ── Main Hero Header ────────────────────────────────────────── */}
-      <header className="uneevo-card p-6 md:p-7 rounded-[28px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div className="flex items-start gap-4">
-            <div
-              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] shadow-xs ${
-                isWhatsApp
-                  ? 'bg-[#0f8a5f] text-white'
-                  : isDrive
-                  ? 'bg-[#fde9b0] text-[#5c4211]'
-                  : 'bg-[#121316] text-white'
-              }`}
-            >
-              {isWhatsApp ? (
-                <MessageCircle className="h-7 w-7" />
-              ) : isDrive ? (
-                <HardDrive className="h-7 w-7" />
-              ) : (
-                <Mail className="h-7 w-7" />
-              )}
-            </div>
-
-            <div>
-              {/* Breadcrumbs */}
-              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                <Link
-                  href="/campaigns"
-                  className="text-xs font-bold text-[#62605c] hover:text-[#121316] uppercase tracking-wider flex items-center gap-1 transition-colors"
-                >
-                  <ArrowLeft className="h-3 w-3" />
-                  CAMPAIGNS
-                </Link>
-                <span className="text-[#8a8780]">/</span>
-                <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase">
-                  {isDrive ? 'GDRIVE SEQUENCE' : isWhatsApp ? 'WHATSAPP CADENCE' : 'EMAIL CADENCE'}
-                </span>
-              </div>
-
-              {/* Title & Status */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-                  {campaign.name}
-                </h1>
-                <StatusBadge status={campaign.status} />
-              </div>
-
-              {/* Dataset & Creation Meta */}
-              <div className="flex items-center gap-4 mt-2 text-xs text-[#62605c] flex-wrap">
-                <Link
-                  href={`/csv/${campaign.csvFile?.id}`}
-                  className="inline-flex items-center gap-1.5 hover:text-[#121316] transition-colors"
-                >
-                  <FileSpreadsheet className="h-3.5 w-3.5 text-[#ee382b]" />
-                  <span className="font-semibold underline decoration-[#121316]/20">
-                    {campaign.csvFile?.originalName || 'Dataset'}
-                  </span>
-                  <span className="font-mono text-[#8a8780]">
-                    ({rowCount.toLocaleString()} leads)
-                  </span>
-                </Link>
-                <span>•</span>
-                <span>Created {formatDateTime(campaign.createdAt)}</span>
-                <span>•</span>
-                <span className="capitalize font-mono font-semibold">
-                  {campaign.senderAccountPreference} rotation
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Control Buttons */}
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <button
-              type="button"
-              onClick={() => fetchCampaign('full', showAllSenderPool ? 'all' : 'preview', true)}
-              disabled={refreshing}
-              title="Refresh Metrics"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#121316]/12 bg-white text-[#121316] transition-all hover:bg-[#faf8f4] shadow-2xs"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-[#ee382b]' : ''}`} />
-            </button>
-
-            {campaign.status === 'active' ? (
-              <button
-                type="button"
-                onClick={() => handleStatusChange('pause')}
-                disabled={actionLoading}
-                className="inline-flex items-center gap-2 rounded-full border border-[#121316]/12 bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] hover:bg-[#faf8f4] transition shadow-xs"
-              >
-                <Pause className="h-4 w-4 text-[#8a8780]" />
-                <span>Pause Dispatch</span>
-              </button>
-            ) : campaign.status !== 'completed' ? (
-              <button
-                type="button"
-                onClick={() => handleStatusChange('start')}
-                disabled={actionLoading || activeSenders === 0}
-                className="inline-flex items-center gap-2 rounded-full bg-[#0f8a5f] px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-[0_4px_16px_rgba(15,138,95,0.22)] hover:bg-[#0c724e] transition"
-              >
-                <Play className="h-4 w-4" />
-                <span>Resume Dispatch</span>
-              </button>
-            ) : null}
-
-            <Link
-              href={`/campaigns/${campaign.id}/logs`}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] hover:bg-[#faf8f4] transition shadow-2xs"
-            >
-              <FileText className="h-4 w-4 text-[#62605c]" />
-              <span>Audit Logs</span>
-            </Link>
-
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={actionLoading}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#c2414c]/20 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#c2414c] hover:bg-[#c2414c]/08 transition shadow-2xs"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete</span>
-            </button>
-          </div>
+      {/* Top Floating Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/campaigns"
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2 text-xs font-semibold text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Campaigns</span>
+          </Link>
+          <span className="text-xs font-bold text-[#121316] truncate max-w-xs sm:max-w-md">
+            {campaign.name}
+          </span>
+          <StatusBadge status={campaign.status} />
         </div>
+
+        {/* Floating Action Control Buttons */}
+        <div className="flex items-center gap-2.5 ml-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => fetchCampaign('full', showAllSenderPool ? 'all' : 'preview', true)}
+            disabled={refreshing}
+            title="Refresh Metrics"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95 cursor-pointer"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-[#ee382b]' : ''}`} />
+          </button>
+
+          {campaign.status === 'active' ? (
+            <button
+              type="button"
+              onClick={() => handleStatusChange('pause')}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-2 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] hover:bg-white hover:shadow-md active:scale-95 transition cursor-pointer shadow-sm"
+            >
+              <Pause className="h-4 w-4 text-[#8a8780]" />
+              <span>Pause Dispatch</span>
+            </button>
+          ) : campaign.status !== 'completed' ? (
+            <button
+              type="button"
+              onClick={() => handleStatusChange('start')}
+              disabled={actionLoading || activeSenders === 0}
+              className="inline-flex items-center gap-2 rounded-full bg-[#0f8a5f] px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-[0_4px_16px_rgba(15,138,95,0.28)] hover:bg-[#0c724e] hover:shadow-[0_8px_24px_rgba(15,138,95,0.38)] active:scale-95 transition cursor-pointer"
+            >
+              <Play className="h-4 w-4" />
+              <span>Resume Dispatch</span>
+            </button>
+          ) : null}
+
+          <Link
+            href={`/campaigns/${campaign.id}/logs`}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] hover:bg-white hover:shadow-md active:scale-95 transition shadow-sm"
+          >
+            <FileText className="h-4 w-4 text-[#62605c]" />
+            <span>Audit Logs</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={actionLoading}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[#c2414c]/20 bg-white/90 backdrop-blur-md px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#c2414c] hover:bg-[#c2414c]/08 active:scale-95 transition shadow-sm cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span>Delete</span>
+          </button>
+        </div>
+      </div>
 
         {/* Guardrail Warning Banner */}
         {campaign.guardrailReason && (

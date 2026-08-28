@@ -335,32 +335,25 @@ export default function GlobalSentMailPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Mail className="h-6 w-6" />
-          </div>
-          <div>
-            <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
-              OUTBOUND LOGS
-            </span>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Sent Mail Analytics
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Live audit trail of every dispatched email, open beacon, and recipient interaction.
-            </p>
-          </div>
+      {/* Top Floating Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#121316] bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-full border border-[#121316]/08 shadow-sm">
+            <Mail className="h-3.5 w-3.5 text-[#ee382b]" />
+            <span>Sent Mail Logs</span>
+          </span>
         </div>
 
-        <button
-          className="inline-flex items-center gap-2 rounded-full border border-[#121316]/12 bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-[#121316] transition-all hover:bg-[#faf8f4] hover:shadow-xs"
-          onClick={handleExport}
-        >
-          <span>Export CSV Log</span>
-        </button>
-      </header>
+        <div className="flex items-center gap-2.5 ml-auto">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold text-[#121316] shadow-sm transition-all hover:bg-white hover:shadow-md active:scale-95 cursor-pointer"
+            onClick={handleExport}
+          >
+            <span>Export CSV Log</span>
+          </button>
+        </div>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">

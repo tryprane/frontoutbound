@@ -272,38 +272,23 @@ export function WarmupWorkspace() {
 
   return (
     <div className="animate-fade-in space-y-6 pb-10">
-      {/* Header Card */}
-      <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-            <Flame className="h-6 w-6 text-[#ee382b]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase">
-                DELIVERABILITY INCUBATOR
-              </span>
-              <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                  settings.globalEnabled
-                    ? 'bg-[#0f8a5f]/10 text-[#0f8a5f] border border-[#0f8a5f]/20'
-                    : 'bg-[#b7791f]/10 text-[#b7791f] border border-[#b7791f]/20'
-                }`}
-              >
-                {settings.globalEnabled ? 'Active Running' : 'Engine Paused'}
-              </span>
-            </div>
-            <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-              Email Warmup Pulse
-            </h1>
-            <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-              Automated inbox rotation, progressive ramp schedules, and conversation engagement.
-            </p>
-          </div>
+      {/* Top Floating Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <span
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold shadow-sm backdrop-blur-md ${
+              settings.globalEnabled
+                ? 'bg-[#0f8a5f]/10 text-[#0f8a5f] border border-[#0f8a5f]/20'
+                : 'bg-[#b7791f]/10 text-[#b7791f] border border-[#b7791f]/20'
+            }`}
+          >
+            <span className={`flex h-2 w-2 rounded-full ${settings.globalEnabled ? 'bg-[#0f8a5f] animate-pulse' : 'bg-[#b7791f]'}`} />
+            <span>{settings.globalEnabled ? 'Warmup Active' : 'Engine Paused'}</span>
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-3 rounded-full border border-[#121316]/12 bg-white px-4 py-2 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2.5 ml-auto">
+          <div className="flex items-center gap-2.5 rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md px-4 py-2 shadow-sm">
             <span className="text-xs font-bold text-[#121316]">Warmup Engine</span>
             <Switch
               checked={settings.globalEnabled}
@@ -324,7 +309,7 @@ export function WarmupWorkspace() {
             type="button"
             variant="outline"
             size="icon"
-            className="rounded-full border border-[#121316]/12 bg-white text-[#121316] hover:bg-[#faf8f4]"
+            className="rounded-full border border-[#121316]/10 bg-white/90 backdrop-blur-md text-[#121316] hover:bg-white shadow-sm"
             title="Reset to defaults"
             aria-label="Reset to defaults"
             disabled={isLoading || isSaving}
@@ -334,7 +319,7 @@ export function WarmupWorkspace() {
           </Button>
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_6px_20px_rgba(238,56,43,0.22)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_10px_28px_rgba(238,56,43,0.32)] disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_4px_16px_rgba(238,56,43,0.28)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_8px_24px_rgba(238,56,43,0.38)] active:scale-95 disabled:opacity-50"
             disabled={isLoading || isSaving || !isDirty || !windowIsValid}
             onClick={() => void persistSettings(settings)}
           >
@@ -342,7 +327,7 @@ export function WarmupWorkspace() {
             <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
           </button>
         </div>
-      </header>
+      </div>
 
       {message ? (
         <div

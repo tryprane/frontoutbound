@@ -32,51 +32,21 @@ function formatBytes(bytes: number | null) {
 
 export function GDriveHero(props: { summary: DriveSummary }) {
   return (
-    <header className="uneevo-card p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_10px_30px_rgba(0,0,0,0.03)] mb-6">
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#121316] text-white shadow-xs">
-          <HardDrive className="h-6 w-6" />
-        </div>
-        <div>
-          <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-1">
-            GOOGLE DRIVE PROTOCOL
-          </span>
-          <h1 className="zoho-puvi-headline text-2xl sm:text-3xl font-bold tracking-tight text-[#121316]">
-            GDrive Share Outreach
-          </h1>
-          <p className="text-xs sm:text-sm text-[#62605c] mt-0.5">
-            Deliver cold outreach through official Google Drive notification emails with high inbox placement.
-          </p>
-        </div>
+    <div className="flex flex-wrap items-center justify-between gap-3 pt-1 mb-6">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#121316] bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-full border border-[#121316]/08 shadow-sm">
+          <span className="flex h-2 w-2 rounded-full bg-[#121316]" />
+          <span>{props.summary.connected} Connected</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#62605c] bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-full border border-[#121316]/08 shadow-sm">
+          <span>{props.summary.totalDailyCapacity} Daily Cap</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0f8a5f] bg-[#0f8a5f]/10 backdrop-blur-md px-3.5 py-2 rounded-full border border-[#0f8a5f]/20 shadow-sm">
+          <span className="flex h-2 w-2 rounded-full bg-[#0f8a5f] animate-pulse" />
+          <span>{props.summary.orgSentToday} / {props.summary.orgDailyCap} Org Today</span>
+        </span>
       </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2.5 bg-[#121316]/06 border border-[#121316]/08 px-4 py-2 rounded-full">
-          <span className="font-mono text-base font-bold tabular-nums text-[#121316]">
-            {props.summary.connected}
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
-            Connected
-          </span>
-        </div>
-        <div className="flex items-center gap-2.5 bg-[#121316]/06 border border-[#121316]/08 px-4 py-2 rounded-full">
-          <span className="font-mono text-base font-bold tabular-nums text-[#121316]">
-            {props.summary.totalDailyCapacity}
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#62605c]">
-            Daily Capacity
-          </span>
-        </div>
-        <div className="flex items-center gap-2.5 bg-[#0f8a5f]/10 border border-[#0f8a5f]/20 px-4 py-2 rounded-full">
-          <span className="font-mono text-base font-bold tabular-nums text-[#0f8a5f]">
-            {props.summary.orgSentToday} / {props.summary.orgDailyCap}
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f8a5f]">
-            Org Today
-          </span>
-        </div>
-      </div>
-    </header>
+    </div>
   )
 }
 
