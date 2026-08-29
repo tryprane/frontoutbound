@@ -109,6 +109,7 @@ export default function CampaignLogsPage({ params }: { params: { id: string } })
   const isWhatsApp = campaign.channel === 'WHATSAPP'
 
   return (
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
       {/* Top Floating Actions Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
         <div className="flex items-center gap-2.5">

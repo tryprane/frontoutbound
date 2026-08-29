@@ -12,4 +12,7 @@ import { defineCloudflareConfig } from '@opennextjs/cloudflare'
 // If a route ever adopts `revalidate` or `updateTag`, wire up
 // `incrementalCache: r2IncrementalCache` here and add the bucket + self
 // reference to wrangler.jsonc at the same time.
-export default defineCloudflareConfig({})
+export default {
+  ...defineCloudflareConfig({}),
+  buildCommand: 'npm run build:next',
+}

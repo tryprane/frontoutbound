@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { BrandLogo } from '@/components/shared/BrandLogo'
 import {
   ArrowRight,
   BarChart3,
@@ -163,10 +164,7 @@ export default function LandingPage() {
       {/* Transparent Floating Pill Navigation Bar */}
       <div className="landing-nav-pill-wrapper">
         <nav className="landing-nav-pill">
-          <Link href="/" className="landing-brand">
-            <span className="landing-brand-mark">OS</span>
-            <span>OUTREACH OS</span>
-          </Link>
+          <BrandLogo href="/" size="md" />
 
           <div className="flex items-center gap-6 sm:gap-8">
             <div className="landing-nav-links">
@@ -866,10 +864,7 @@ export default function LandingPage() {
       {/* Massive Footer with Cropped Wordmark */}
       <footer className="pt-10 pb-8 px-4 md:px-8 border-t border-[#121316]/10 bg-[#f5f3ef]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <span className="landing-brand-mark">OS</span>
-            <span className="font-extrabold text-[#121316]">OUTREACH OS</span>
-          </div>
+          <BrandLogo href="/" size="md" showTagline={true} />
 
           <div className="flex items-center gap-6 text-xs font-semibold text-[#62605c]">
             <Link href="/privacy" className="hover:text-[#121316]">Privacy Policy</Link>

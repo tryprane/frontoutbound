@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" fill="none">
+  <defs>
+    <linearGradient id="outreachBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0052FF" />
+      <stop offset="100%" stop-color="#0038D1" />
+    </linearGradient>
+  </defs>
+  <path d="M 68 28 C 68 28, 62 14, 44 14 C 24 14, 12 28, 12 50 C 12 72, 24 86, 44 86 C 62 86, 68 72, 68 72 L 54 72 C 54 72, 48 78, 44 78 C 30 78, 22 68, 22 50 C 22 32, 30 22, 44 22 C 48 22, 54 28, 54 28 Z" fill="url(#outreachBlue)" />
+  <path d="M 36 44 L 60 44 L 60 36 L 86 50 L 60 64 L 60 56 L 36 56 Z" fill="url(#outreachBlue)" />
+</svg>

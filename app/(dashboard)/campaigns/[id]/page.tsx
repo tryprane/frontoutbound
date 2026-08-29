@@ -592,7 +592,6 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
             </div>
           </div>
         </div>
-      </header>
 
       {/* ── Segmented Navigation Tabs ─────────────────────────────────── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#121316]/08">
