@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { BrandLogo } from '@/components/shared/BrandLogo'
 
 /**
  * Shared chrome for the public legal pages (privacy policy, terms). These are
@@ -17,10 +18,7 @@ export function LegalPage({
   return (
     <main className="landing-page">
       <nav className="landing-nav" aria-label="Main navigation">
-        <Link href="/" className="landing-brand" aria-label="OutreachOS home">
-          <span className="landing-brand-mark">OS</span>
-          <span>OutreachOS</span>
-        </Link>
+        <BrandLogo href="/" size="md" />
         <div className="landing-nav-links">
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
@@ -35,10 +33,7 @@ export function LegalPage({
       </article>
 
       <footer className="landing-footer">
-        <div className="landing-brand">
-          <span className="landing-brand-mark">OS</span>
-          <span>OutreachOS</span>
-        </div>
+        <BrandLogo href="/" size="sm" showTagline={true} />
         <div>Campaigns, sender health, warmup, and replies.</div>
         <div className="landing-footer-links">
           <Link href="/privacy">Privacy</Link>

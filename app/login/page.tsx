@@ -4,6 +4,7 @@ import { signIn } from 'next-auth/react'
 import { useState, useTransition, useEffect, Suspense, FormEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { BrandLogo } from '@/components/shared/BrandLogo'
 import {
   ArrowRight,
   Building2,
@@ -270,17 +271,9 @@ function LoginFormContent() {
         </Link>
 
         {/* Center — brand logo */}
-        <Link href="/" className="flex items-center gap-2.5 justify-self-center">
-          <div className="w-8 h-8 rounded-lg bg-[#121316] flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-extrabold text-xs tracking-tight">OS</span>
-          </div>
-          <span
-            className="font-extrabold text-[#121316] text-lg tracking-tight"
-            style={{ fontFamily: "'Zoho Puvi','ZohoPuvi',-apple-system,sans-serif" }}
-          >
-            Outreach OS
-          </span>
-        </Link>
+        <div className="justify-self-center">
+          <BrandLogo href="/" size="md" />
+        </div>
 
         {/* Right — empty spacer */}
         <div />
