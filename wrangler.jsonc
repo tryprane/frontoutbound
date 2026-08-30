@@ -19,6 +19,18 @@
     "binding": "ASSETS"
   },
 
+  // Workers Route — NOT a Custom Domain.
+  //
+  // A Custom Domain would override the DNS A record entirely and the VPS would
+  // stop receiving traffic. A Route lets the Worker sit in front of the
+  // existing origin: non-API paths are served by the Worker, while /api/*
+  // paths are rewritten by Next.js rewrites() to API_ORIGIN (which must point
+  // at the VPS through a separate grey-cloud subdomain such as
+  // api-origin.prane.one).
+  "routes": [
+    { "pattern": "prane.one/*", "zone_name": "prane.one" }
+  ],
+
   // Build-time variables. API_ORIGIN is compiled into the routes manifest by
   // next.config.js `rewrites()`, so setting it as a runtime secret in the
   // dashboard does nothing — it has to be present when the build runs.
