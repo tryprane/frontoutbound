@@ -221,7 +221,7 @@ export default function LandingPage() {
 
         {/* Headline stating concrete outcome (Point 1) */}
         <h1 className="zoho-puvi-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#121316] max-w-5xl mx-auto mb-4 tracking-tight">
-          Book 15+ Qualified Meetings Every Month — Without Burning Domains or Landing in Spam.
+          Book 15+ Meetings Monthly — Qualified Meetings, Zero Spam Risk.
         </h1>
 
         {/* Humanized Subheadline (Point 4) */}
