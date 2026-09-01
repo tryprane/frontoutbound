@@ -221,7 +221,7 @@ export default function LandingPage() {
 
         {/* Headline stating concrete outcome (Point 1) */}
         <h1 className="zoho-puvi-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#121316] max-w-5xl mx-auto mb-4 tracking-tight">
-          Book 15+ Qualified Meetings Every Month — Without the Fragmented Outbound Stack.
+          Book 15+ Qualified Meetings Every Month — Without Burning Domains or Landing in Spam.
         </h1>
 
         {/* Humanized Subheadline (Point 4) */}
@@ -629,7 +629,7 @@ export default function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-7">
             <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">COST COMPARISON</span>
             <h2 className="uneevo-serif-headline text-3xl md:text-5xl text-white mb-3">
-              Stop Paying $228+/mo Across 4 Fragmented Tools
+              Stop Paying $228+/mo Across 4 Disconnected Tools
             </h2>
             <p className="text-[#a09e97] text-sm md:text-base">
               Here is how Outreach OS stacks up against purchasing separate outreach, warmup, domain diagnostic, and scrubbing tools.
