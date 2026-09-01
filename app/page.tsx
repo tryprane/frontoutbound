@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/shared/BrandLogo'
 import {
@@ -35,12 +37,32 @@ import {
 } from 'lucide-react'
 
 export default function LandingPage() {
+  const { status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/dashboard')
+    }
+  }, [status, router])
+
   const [activeHeroTab, setActiveHeroTab] = useState<'campaigns' | 'mailboxes' | 'warmup' | 'replies'>('campaigns')
   const [activeStepTab, setActiveStepTab] = useState<number>(1)
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index)
+  }
+
+  if (status === 'authenticated') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#121316] border-t-transparent" />
+          <div className="text-sm font-medium text-[#62605c]">Redirecting to dashboard...</div>
+        </div>
+      </div>
+    )
   }
 
   const stepDetails = [

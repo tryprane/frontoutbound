@@ -1,13 +1,23 @@
 'use client'
 
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, Check, KeyRound, ShieldCheck } from 'lucide-react'
-import { FormEvent, MouseEvent, useState } from 'react'
+import { FormEvent, MouseEvent, useState, useEffect } from 'react'
 
 type Currency = 'INR' | 'USD'
 
 export default function GetStartedPage() {
+  const { status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/dashboard')
+    }
+  }, [status, router])
+
   const [currency, setCurrency] = useState<Currency>('INR')
   const [inviteCode, setInviteCode] = useState('')
   const [verifiedCode, setVerifiedCode] = useState('')
@@ -15,6 +25,17 @@ export default function GetStartedPage() {
   const [message, setMessage] = useState('')
   const isInr = currency === 'INR'
   const price = '₹999'
+
+  if (status === 'authenticated') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#121316] border-t-transparent" />
+          <div className="text-sm font-medium text-[#62605c]">Redirecting to dashboard...</div>
+        </div>
+      </div>
+    )
+  }
 
   const showInviteOnly = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()

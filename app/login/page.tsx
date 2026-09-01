@@ -1,8 +1,8 @@
 'use client'
 
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useState, useTransition, useEffect, Suspense, FormEvent } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/shared/BrandLogo'
 import {
@@ -21,6 +21,8 @@ import { Label } from '@/components/ui/label'
 type AuthMode = 'signin' | 'invite'
 
 function LoginFormContent() {
+  const router = useRouter()
+  const { status } = useSession()
   const searchParams = useSearchParams()
   const initialCode = searchParams.get('code') || searchParams.get('invite') || ''
   const initialTab = searchParams.get('tab') === 'invite' || !!initialCode ? 'invite' : 'signin'
@@ -62,6 +64,17 @@ function LoginFormContent() {
       setMode('invite')
     }
   }, [initialCode])
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const callbackUrl = getCallbackUrl()
+      if (callbackUrl.startsWith('http')) {
+        window.location.href = callbackUrl
+      } else {
+        router.replace(callbackUrl)
+      }
+    }
+  }, [status, router])
 
   const getCallbackUrl = () => {
     if (typeof window === 'undefined') return '/dashboard'
@@ -250,6 +263,23 @@ function LoginFormContent() {
       setInviteError('Failed to create account. Please check your connection and try again.')
       setIsRedeeming(false)
     }
+  }
+
+  if (status === 'authenticated') {
+    return (
+      <div
+        className="flex min-h-screen items-center justify-center"
+        style={{
+          background:
+            'radial-gradient(circle at top left, rgba(215,179,120,0.18), transparent 24%), radial-gradient(circle at 85% 12%, rgba(33,44,63,0.08), transparent 20%), linear-gradient(180deg, #f8f4ed 0%, #f5f1e8 100%)',
+        }}
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#121316] border-t-transparent" />
+          <div className="text-sm font-medium text-[#62605c]">Redirecting to dashboard...</div>
+        </div>
+      </div>
+    )
   }
 
   return (
