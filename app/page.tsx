@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { BrandLogo } from '@/components/shared/BrandLogo'
@@ -38,13 +37,6 @@ import {
 
 export default function LandingPage() {
   const { status } = useSession()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      router.replace('/dashboard')
-    }
-  }, [status, router])
 
   const [activeHeroTab, setActiveHeroTab] = useState<'campaigns' | 'mailboxes' | 'warmup' | 'replies'>('campaigns')
   const [activeStepTab, setActiveStepTab] = useState<number>(1)
@@ -52,17 +44,6 @@ export default function LandingPage() {
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index)
-  }
-
-  if (status === 'authenticated') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f4ef]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#121316] border-t-transparent" />
-          <div className="text-sm font-medium text-[#62605c]">Redirecting to dashboard...</div>
-        </div>
-      </div>
-    )
   }
 
   const stepDetails = [
@@ -195,8 +176,11 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Link href="/login" className="text-sm font-semibold text-[#62605c] hover:text-[#121316] transition-colors hidden sm:inline-block">
-                Log in
+              <Link
+                href={status === 'authenticated' ? '/dashboard' : '/login'}
+                className="text-sm font-semibold text-[#62605c] hover:text-[#121316] transition-colors hidden sm:inline-block"
+              >
+                {status === 'authenticated' ? 'Dashboard' : 'Log in'}
               </Link>
               <Link href="#pricing" className="uneevo-btn-red">
                 <span>Claim Batch Seat</span>
@@ -891,7 +875,12 @@ export default function LandingPage() {
           <div className="flex items-center gap-6 text-xs font-semibold text-[#62605c]">
             <Link href="/privacy" className="hover:text-[#121316]">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-[#121316]">Terms of Service</Link>
-            <Link href="/login" className="hover:text-[#121316]">Login</Link>
+            <Link
+              href={status === 'authenticated' ? '/dashboard' : '/login'}
+              className="hover:text-[#121316]"
+            >
+              {status === 'authenticated' ? 'Dashboard' : 'Login'}
+            </Link>
           </div>
         </div>
 
