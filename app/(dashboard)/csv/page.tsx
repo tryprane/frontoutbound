@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { FileSpreadsheet, Upload, Trash2, ArrowRight, Layers, Calendar, CheckCircle2 } from 'lucide-react'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 
 interface CsvFileRecord {
   id: string
@@ -24,6 +25,8 @@ export default function CsvListPage() {
   const [files, setFiles] = useState<CsvFileRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<CsvFileRecord | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/csv/upload')
@@ -35,19 +38,24 @@ export default function CsvListPage() {
       .catch(() => setLoading(false))
   }, [])
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
+  const executeDelete = async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget.id
     setDeletingId(id)
+    setDeleteError(null)
     try {
       const response = await fetch(`/api/csv/${id}`, { method: 'DELETE' })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) {
-        alert(data.error || 'Failed to delete CSV file.')
+        setDeleteError(data.error || 'Failed to delete CSV file.')
         return
       }
       setFiles((prev) => prev.filter((f) => f.id !== id))
+      setDeleteTarget(null)
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete CSV file.')
     } finally {
-      setDeletingId((current) => (current === id ? null : current))
+      setDeletingId(null)
     }
   }
 
@@ -155,9 +163,11 @@ export default function CsvListPage() {
                           <ArrowRight className="h-3 w-3" />
                         </Link>
                         <button
-                          onClick={() => handleDelete(file.id, file.originalName)}
+                          type="button"
+                          onClick={() => setDeleteTarget(file)}
                           disabled={deletingId === file.id}
-                          className="inline-flex items-center justify-center rounded-full border border-[#ee382b]/20 bg-[#ee382b]/08 px-3 py-1.5 text-xs font-semibold text-[#ee382b] transition-all hover:bg-[#ee382b]/15 disabled:opacity-50"
+                          className="inline-flex items-center justify-center rounded-full border border-[#ee382b]/20 bg-[#ee382b]/08 px-3 py-1.5 text-xs font-semibold text-[#ee382b] transition-all hover:bg-[#ee382b]/15 disabled:opacity-50 cursor-pointer"
+                          title="Delete dataset"
                         >
                           {deletingId === file.id ? '...' : <Trash2 className="h-3.5 w-3.5" />}
                         </button>
@@ -170,6 +180,41 @@ export default function CsvListPage() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget)}
+        title="Delete Dataset"
+        description={
+          deleteTarget ? (
+            <div className="space-y-2">
+              <p>
+                Are you sure you want to delete <span className="font-bold text-[#121316]">&ldquo;{deleteTarget.originalName}&rdquo;</span>?
+              </p>
+              <p className="text-xs text-[#8a8780]">
+                All {deleteTarget.rowCount.toLocaleString()} contact prospects in this dataset will be permanently removed. This action cannot be undone.
+              </p>
+              {deleteError && (
+                <div className="rounded-xl border border-[#ee382b]/20 bg-[#ee382b]/08 p-2.5 text-xs text-[#ee382b] font-medium">
+                  {deleteError}
+                </div>
+              )}
+            </div>
+          ) : ''
+        }
+        confirmLabel="Delete Dataset"
+        cancelLabel="Keep Dataset"
+        variant="danger"
+        icon="trash"
+        isLoading={Boolean(deletingId)}
+        onConfirm={executeDelete}
+        onClose={() => {
+          if (!deletingId) {
+            setDeleteTarget(null)
+            setDeleteError(null)
+          }
+        }}
+      />
     </div>
   )
 }
