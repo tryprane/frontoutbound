@@ -30,7 +30,8 @@ const EMPTY_STATS: DashboardStats = {
 }
 
 export default function DashboardPage() {
-  const { data, loading, error } = useApiResource<DashboardStats>('/api/dashboard/stats')
+  // Fetch dashboard stats from backend proxy. Include reload handler for Retry button on failure.
+  const { data, loading, error, reload } = useApiResource<DashboardStats>('/api/dashboard/stats')
 
   if (loading && !data) {
     return (
@@ -45,6 +46,12 @@ export default function DashboardPage() {
       <div className="animate-fade-in py-20 text-center">
         <div className="text-sm font-semibold text-[#ee382b]">Could not load the dashboard</div>
         <div className="mt-1 text-sm text-[#62605c]">{error}</div>
+        <button
+          onClick={reload}
+          className="mt-4 px-4 py-2 text-xs font-semibold text-[#121316] bg-[#121316]/08 hover:bg-[#121316]/14 rounded-xl transition-colors inline-flex items-center gap-1.5"
+        >
+          Retry
+        </button>
       </div>
     )
   }
