@@ -22,7 +22,6 @@ import {
   LogOut,
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
 import { BrandIcon, BrandLogo } from './BrandLogo'
 
 const navGroups = [
@@ -79,7 +78,7 @@ export function Sidebar() {
 
   return (
     <>
-      {/* 📱 MOBILE TOP HEADER BAR (Replaces horizontal scrolling bar on small screens) */}
+      {/* 📱 MOBILE TOP HEADER BAR (Small screen viewports) */}
       <header className="sticky top-2 z-40 flex items-center justify-between rounded-2xl border border-white/60 bg-white/90 backdrop-blur-md px-4 py-3 shadow-[0_10px_30px_rgba(60,45,25,0.06)] xl:hidden mb-3">
         <BrandLogo href="/dashboard" size="sm" showTagline={false} />
         <button
@@ -102,7 +101,7 @@ export function Sidebar() {
           />
 
           {/* Slide-out Menu */}
-          <div className="fixed top-0 bottom-0 left-0 w-[290px] sm:w-[320px] bg-[#f8f6f0] border-r border-[#121316]/10 p-5 flex flex-col justify-between shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-300 z-50">
+          <div className="fixed top-0 bottom-0 left-0 w-[290px] sm:w-[320px] bg-[#f8f6f0] border-r border-[#121316]/10 p-5 flex flex-col justify-between shadow-2xl overflow-y-auto no-scrollbar animate-in slide-in-from-left duration-300 z-50">
             <div>
               {/* Header inside drawer */}
               <div className="flex items-center justify-between pb-4 border-b border-[#121316]/08 mb-4">
@@ -118,7 +117,7 @@ export function Sidebar() {
               </div>
 
               {/* Categorized nav list */}
-              <nav className="space-y-4">
+              <nav className="space-y-4 no-scrollbar">
                 {navGroups.map((group) => (
                   <div key={group.label} className="space-y-1">
                     <div className="px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#62605c]">
@@ -141,7 +140,7 @@ export function Sidebar() {
                                 : 'text-[#52504b] hover:bg-white/80 hover:text-[#121316]',
                             ].join(' ')}
                           >
-                            <Icon className="h-4 w-4" />
+                            <Icon className="h-4 w-4 shrink-0" />
                             <span>{item.label}</span>
                           </Link>
                         )
@@ -190,37 +189,88 @@ export function Sidebar() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={[
-          'group/sidebar page-shell sticky top-6 z-30 hidden xl:flex h-[calc(100vh-3rem)] flex-col rounded-[30px] border border-white/60 shadow-[0_20px_50px_rgba(60,45,25,0.06)]',
-          'transition-all duration-300 ease-in-out select-none overflow-hidden shrink-0',
-          isHovered ? 'w-[230px] px-4 py-5 shadow-2xl' : 'w-[68px] px-2 py-5 items-center',
+          'group/sidebar page-shell sticky top-6 z-30 hidden xl:flex h-[calc(100vh-3rem)] flex-col rounded-[28px] border border-white/60 px-4 py-4 select-none overflow-hidden shrink-0',
+          'transition-[width,box-shadow,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[width]',
+          isHovered
+            ? 'w-[240px] bg-white/95 shadow-[0_25px_60px_rgba(60,45,25,0.12)]'
+            : 'w-[72px] bg-white/90 shadow-[0_20px_50px_rgba(60,45,25,0.06)]',
         ].join(' ')}
       >
-        {/* Brand Logo Header */}
-        <div className="mb-6 flex items-center justify-center shrink-0 w-full overflow-hidden">
-          {isHovered ? (
-            <div className="w-full flex items-center px-1 animate-in fade-in duration-200">
-              <BrandLogo href="/dashboard" size="md" showTagline={false} />
+        {/* Brand Logo Header (Smoothly anchored badge + sliding brand typography) */}
+        <div className="mb-4 h-11 w-full shrink-0 flex items-center">
+          <Link
+            href="/dashboard"
+            className="flex items-center h-10 w-full rounded-2xl transition-colors duration-200 hover:bg-[#121316]/05 overflow-hidden"
+            title="Outreach OS"
+          >
+            {/* Outreach OS Brand Logo Badge (40px x 40px centered anchor) */}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0052FF] text-white shadow-sm shadow-[#0052FF]/25">
+              <svg
+                viewBox="0 0 100 100"
+                className="h-5.5 w-5.5 text-white"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Outer C shape */}
+                <path
+                  d="M 68 28 C 68 28, 62 14, 44 14 C 24 14, 12 28, 12 50 C 12 72, 24 86, 44 86 C 62 86, 68 72, 68 72 L 54 72 C 54 72, 48 78, 44 78 C 30 78, 22 68, 22 50 C 22 32, 30 22, 44 22 C 48 22, 54 28, 54 28 Z"
+                  fill="currentColor"
+                />
+                {/* Arrow shaft & head */}
+                <path
+                  d="M 36 44 L 60 44 L 60 36 L 86 50 L 60 64 L 60 56 L 36 56 Z"
+                  fill="currentColor"
+                />
+              </svg>
             </div>
-          ) : (
-            <Link href="/dashboard" className="flex items-center justify-center p-1" title="Outreach OS">
-              <BrandIcon size="md" />
-            </Link>
-          )}
+
+            {/* Brand Text Lockup (Continuous interpolation) */}
+            <div
+              className={`flex flex-col whitespace-nowrap overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                isHovered
+                  ? 'opacity-100 max-w-[160px] translate-x-0 ml-2.5'
+                  : 'opacity-0 max-w-0 -translate-x-3 pointer-events-none'
+              }`}
+            >
+              <div className="flex items-center gap-1 leading-none">
+                <span className="font-extrabold tracking-tight uppercase text-base text-[#0B0F19]" style={{ letterSpacing: '-0.03em' }}>
+                  OUTREACH
+                </span>
+                <span className="font-extrabold tracking-tight uppercase text-base text-[#0052FF]" style={{ letterSpacing: '-0.03em' }}>
+                  OS
+                </span>
+              </div>
+              <span className="text-[8.5px] font-bold uppercase tracking-[0.2em] text-[#64748B] mt-0.5">
+                Outbound suite
+              </span>
+            </div>
+          </Link>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex flex-1 flex-col space-y-4 overflow-y-auto overflow-x-hidden w-full pr-0.5">
+        {/* Navigation Items (Smooth continuous width scaling from circle to full pill) */}
+        <nav className="flex flex-1 flex-col space-y-2.5 overflow-y-auto overflow-x-hidden no-scrollbar w-full overscroll-contain">
           {navGroups.map((group) => (
             <div key={group.label} className="w-full">
-              {isHovered ? (
-                <div className="px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#62605c] animate-in fade-in duration-200">
+              {/* Group Header Label / Divider Line */}
+              <div className="w-full overflow-hidden">
+                <div
+                  className={`text-[10px] font-bold uppercase tracking-[0.2em] text-[#62605c] px-2.5 whitespace-nowrap overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                    isHovered
+                      ? 'max-h-5 opacity-100 mb-1'
+                      : 'max-h-0 opacity-0 mb-0 pointer-events-none'
+                  }`}
+                >
                   {group.label}
                 </div>
-              ) : (
-                <div className="my-1.5 mx-auto h-[1px] w-6 bg-[#121316]/08" />
-              )}
+                <div
+                  className={`mx-auto h-[1px] bg-[#121316]/08 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                    isHovered ? 'w-0 opacity-0 my-0' : 'w-6 opacity-100 my-1'
+                  }`}
+                />
+              </div>
 
-              <div className="mt-1.5 space-y-1 w-full">
+              {/* Group Nav Items */}
+              <div className="space-y-1 w-full">
                 {group.items.map((item) => {
                   const isActive = pathname.startsWith(item.href)
                   const Icon = item.icon
@@ -231,17 +281,28 @@ export function Sidebar() {
                       href={item.href}
                       title={!isHovered ? item.label : undefined}
                       className={[
-                        'flex items-center rounded-full transition-all text-sm font-medium',
-                        isHovered
-                          ? 'gap-3 px-3.5 py-2 w-full whitespace-nowrap'
-                          : 'h-10 w-10 mx-auto justify-center p-0',
+                        'group/item relative flex items-center h-10 w-full rounded-full transition-colors duration-200 overflow-hidden',
                         isActive
-                          ? 'bg-[#121316] text-white font-semibold shadow-xs'
-                          : 'text-[#52504b] hover:bg-white/80 hover:text-[#121316]',
+                          ? 'bg-[#121316] text-white font-semibold shadow-md'
+                          : 'text-[#52504b] hover:bg-[#121316]/06 hover:text-[#121316]',
                       ].join(' ')}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      {isHovered && <span className="truncate animate-in fade-in duration-200">{item.label}</span>}
+                      {/* Fixed Centered Icon Anchor (40px x 40px) */}
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                        <Icon className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover/item:scale-110" />
+                      </div>
+
+                      {/* Smooth Sliding Label (Continuous width & opacity transition) */}
+                      <span
+                        className={[
+                          'whitespace-nowrap text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden',
+                          isHovered
+                            ? 'opacity-100 max-w-[150px] translate-x-0 ml-1'
+                            : 'opacity-0 max-w-0 -translate-x-3 pointer-events-none',
+                        ].join(' ')}
+                      >
+                        {item.label}
+                      </span>
                     </Link>
                   )
                 })}
@@ -250,39 +311,20 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* User Profile Footer */}
-        <div className="mt-4 shrink-0 w-full pt-2">
-          {isHovered ? (
-            <div className="rounded-[20px] border border-[#121316]/08 bg-white/90 p-3 shadow-xs animate-in fade-in duration-200">
-              <div className="flex items-center gap-2.5">
-                <Avatar className="h-9 w-9 border border-[#121316]/10 shrink-0">
-                  {session?.user?.image ? (
-                    <AvatarImage src={session.user.image} alt={session?.user?.name ?? 'User'} />
-                  ) : null}
-                  <AvatarFallback className="bg-[#121316] text-white text-xs font-bold">
-                    {getInitials(session?.user?.name, session?.user?.email)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-bold text-[#121316]">
-                    {session?.user?.name || 'Outreach Admin'}
-                  </div>
-                  <div className="truncate text-[10px] text-[#62605c]">
-                    {session?.user?.email || 'Internal workspace'}
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="mt-2.5 w-full rounded-full border border-[#121316]/12 bg-white px-3 py-1.5 text-xs font-semibold text-[#52504b] transition-all hover:bg-[#f5f3ef] hover:text-[#121316] cursor-pointer"
-                onClick={() => signOut({ callbackUrl: logoutCallbackUrl })}
-              >
-                Log out
-              </button>
-            </div>
-          ) : (
-            <div className="flex justify-center" title={`${session?.user?.name || 'User'} (${session?.user?.email || ''})`}>
-              <Avatar className="h-10 w-10 border border-[#121316]/10 cursor-pointer shadow-2xs">
+        {/* User Profile Footer (Smooth expansion from avatar circle to card) */}
+        <div className="mt-auto shrink-0 w-full pt-2">
+          <div
+            className={`w-full rounded-[22px] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden ${
+              isHovered
+                ? 'border border-[#121316]/08 bg-white/95 p-2.5 shadow-xs'
+                : 'border-transparent bg-transparent p-0'
+            }`}
+          >
+            <div
+              className="flex items-center w-full"
+              title={!isHovered ? `${session?.user?.name || 'User'} (${session?.user?.email || ''})` : undefined}
+            >
+              <Avatar className="h-10 w-10 border border-[#121316]/10 shrink-0 cursor-pointer shadow-2xs">
                 {session?.user?.image ? (
                   <AvatarImage src={session.user.image} alt={session?.user?.name ?? 'User'} />
                 ) : null}
@@ -290,10 +332,44 @@ export function Sidebar() {
                   {getInitials(session?.user?.name, session?.user?.email)}
                 </AvatarFallback>
               </Avatar>
+
+              <div
+                className={`flex flex-col min-w-0 whitespace-nowrap overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  isHovered
+                    ? 'opacity-100 max-w-[140px] translate-x-0 ml-2.5'
+                    : 'opacity-0 max-w-0 -translate-x-3 pointer-events-none'
+                }`}
+              >
+                <div className="truncate text-xs font-bold text-[#121316]">
+                  {session?.user?.name || 'Outreach Admin'}
+                </div>
+                <div className="truncate text-[10px] text-[#62605c]">
+                  {session?.user?.email || 'Internal workspace'}
+                </div>
+              </div>
             </div>
-          )}
+
+            {/* Expandable Logout Button */}
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                isHovered
+                  ? 'max-h-12 opacity-100 mt-2.5 translate-y-0'
+                  : 'max-h-0 opacity-0 mt-0 -translate-y-2 pointer-events-none'
+              }`}
+            >
+              <button
+                type="button"
+                className="w-full flex items-center justify-center gap-1.5 rounded-full border border-[#121316]/12 bg-white px-3 py-1.5 text-xs font-semibold text-[#52504b] transition-all hover:bg-red-50 hover:text-red-600 hover:border-red-200 cursor-pointer shadow-2xs"
+                onClick={() => signOut({ callbackUrl: logoutCallbackUrl })}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Log out</span>
+              </button>
+            </div>
+          </div>
         </div>
       </aside>
     </>
   )
 }
+
