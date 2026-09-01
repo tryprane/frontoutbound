@@ -31,6 +31,7 @@ import {
   AtSign,
 } from 'lucide-react'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { CampaignPerformanceFunnel } from '@/components/campaigns/CampaignPerformanceFunnel'
 import { CampaignVelocityChart } from '@/components/campaigns/CampaignVelocityChart'
 import { CampaignSequenceTree } from '@/components/campaigns/CampaignSequenceTree'
@@ -205,6 +206,8 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
   ])
   const [sequenceDirty, setSequenceDirty] = useState(false)
   const [showAllSenderPool, setShowAllSenderPool] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const syncSequenceDraftFromCampaign = (data: CampaignDetail) => {
     if (data.channel !== 'EMAIL' || sequenceDirty) return
@@ -300,13 +303,20 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
     }
   }
 
-  const handleDelete = async () => {
+  const executeDelete = async () => {
     if (!campaignId) return
-    if (!confirm('Are you sure you want to delete this campaign? This action cannot be undone.')) return
     setActionLoading(true)
+    setDeleteError(null)
     try {
-      await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}`, { method: 'DELETE' })
+      const res = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error || 'Failed to delete campaign')
+      }
+      setShowDeleteModal(false)
       router.push('/campaigns')
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete campaign')
     } finally {
       setActionLoading(false)
     }
@@ -519,7 +529,10 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
 
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={() => {
+              setDeleteError(null)
+              setShowDeleteModal(true)
+            }}
             disabled={actionLoading}
             className="inline-flex items-center gap-1.5 rounded-full border border-[#c2414c]/20 bg-white/90 backdrop-blur-md px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#c2414c] hover:bg-[#c2414c]/08 active:scale-95 transition shadow-sm cursor-pointer"
           >
@@ -1149,6 +1162,39 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
           )}
         </div>
       )}
+
+      {/* Campaign Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={showDeleteModal}
+        title="Delete Campaign"
+        description={
+          <div className="space-y-2">
+            <p>
+              Are you sure you want to delete <span className="font-bold text-[#121316]">&ldquo;{campaign.name}&rdquo;</span>?
+            </p>
+            <p className="text-xs text-[#8a8780]">
+              All schedule queues, follow-up sequences, and worker tasks for this campaign will be permanently cancelled. This cannot be undone.
+            </p>
+            {deleteError && (
+              <div className="rounded-xl border border-[#ee382b]/20 bg-[#ee382b]/08 p-2.5 text-xs text-[#ee382b] font-medium">
+                {deleteError}
+              </div>
+            )}
+          </div>
+        }
+        confirmLabel="Delete Campaign"
+        cancelLabel="Keep Campaign"
+        variant="danger"
+        icon="trash"
+        isLoading={actionLoading}
+        onConfirm={executeDelete}
+        onClose={() => {
+          if (!actionLoading) {
+            setShowDeleteModal(false)
+            setDeleteError(null)
+          }
+        }}
+      />
     </div>
   )
 }
