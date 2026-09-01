@@ -221,7 +221,7 @@ export default function LandingPage() {
 
         {/* Headline stating concrete outcome (Point 1) */}
         <h1 className="zoho-puvi-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#121316] max-w-5xl mx-auto mb-4 tracking-tight">
-          Book 15+ Qualified Meetings Every Month — Without Paying ₹300/mo Across 4 Different Outbound Tools.
+          Book 15+ Meetings Monthly — Qualified Meetings, Zero Spam Risk.
         </h1>
 
         {/* Humanized Subheadline (Point 4) */}
@@ -431,16 +431,16 @@ export default function LandingPage() {
           <div className="lg:col-span-8">
             <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">FOUNDER&rsquo;S NOTE</span>
             <h3 className="uneevo-serif-headline text-2xl sm:text-3xl md:text-4xl text-[#121316] mb-3.5 leading-tight">
-              &ldquo;We built Outreach OS because paying ₹600/mo across 4 broken tools was killing our agency economics.&rdquo;
+              &ldquo;We built Outreach OS because paying $300+/mo across 4 broken tools was killing our agency economics.&rdquo;
             </h3>
 
             {/* Price chips — scannable proof instead of buried prose */}
             <div className="flex flex-wrap gap-2 mb-4">
               {[
-                { label: 'Smartlead', price: '₹94/mo' },
-                { label: 'Warmup', price: '₹50/mo' },
-                { label: 'Domain Health', price: '₹49/mo' },
-                { label: 'CSV Scrubber', price: '₹35/mo' },
+                { label: 'Smartlead', price: '$94/mo' },
+                { label: 'Warmup', price: '$50/mo' },
+                { label: 'Domain Health', price: '$49/mo' },
+                { label: 'CSV Scrubber', price: '$35/mo' },
               ].map((chip) => (
                 <span
                   key={chip.label}
@@ -629,7 +629,7 @@ export default function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-7">
             <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">COST COMPARISON</span>
             <h2 className="uneevo-serif-headline text-3xl md:text-5xl text-white mb-3">
-              Stop Paying ₹228+/mo Across 4 Fragmented Tools
+              Stop Paying $228+/mo Across 4 Disconnected Tools
             </h2>
             <p className="text-[#a09e97] text-sm md:text-base">
               Here is how Outreach OS stacks up against purchasing separate outreach, warmup, domain diagnostic, and scrubbing tools.
@@ -644,24 +644,24 @@ export default function LandingPage() {
                   <h4 className="font-bold text-white text-base md:text-lg">Traditional Scattered Stack</h4>
                   <p className="text-xs text-[#a09e97]">4 separate subscriptions & broken sync</p>
                 </div>
-                <span className="text-xl font-extrabold text-[#ee382b]">₹228/mo</span>
+                <span className="text-xl font-extrabold text-[#ee382b]">$228/mo</span>
               </div>
               <ul className="space-y-2.5 text-xs text-[#d0ceb8]">
                 <li className="flex items-center justify-between">
                   <span>Smartlead / Instantly Plan</span>
-                  <span className="font-bold text-white">₹94/mo</span>
+                  <span className="font-bold text-white">$94/mo</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Standalone Warmup Service</span>
-                  <span className="font-bold text-white">₹50/mo</span>
+                  <span className="font-bold text-white">$50/mo</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>Domain Health & SPF Monitor</span>
-                  <span className="font-bold text-white">₹49/mo</span>
+                  <span className="font-bold text-white">$49/mo</span>
                 </li>
                 <li className="flex items-center justify-between">
                   <span>CSV Lead Scrubbing Utility</span>
-                  <span className="font-bold text-white">₹35/mo</span>
+                  <span className="font-bold text-white">$35/mo</span>
                 </li>
               </ul>
             </div>
