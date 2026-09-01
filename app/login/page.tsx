@@ -9,6 +9,8 @@ import {
   ArrowRight,
   Building2,
   Check,
+  Eye,
+  EyeOff,
   KeyRound,
   LockKeyhole,
   Mail,
@@ -34,6 +36,7 @@ function LoginFormContent() {
     email: '',
     password: '',
   })
+  const [showSignInPassword, setShowSignInPassword] = useState(false)
   const [signInErrors, setSignInErrors] = useState<{ email?: string; password?: string }>({})
   const [signInError, setSignInError] = useState('')
   const [isSigningIn, startSignInTransition] = useTransition()
@@ -45,6 +48,8 @@ function LoginFormContent() {
   const [isRedeeming, setIsRedeeming] = useState(false)
   const [inviteMessage, setInviteMessage] = useState('')
   const [inviteError, setInviteError] = useState('')
+  const [showRegPassword, setShowRegPassword] = useState(false)
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false)
   const [registration, setRegistration] = useState({
     organizationName: '',
     email: '',
@@ -461,9 +466,9 @@ function LoginFormContent() {
                       <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
                       <Input
                         id="password"
-                        type="password"
+                        type={showSignInPassword ? 'text' : 'password'}
                         placeholder="••••••••"
-                        className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                        className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 pr-10 text-sm placeholder:text-[#a09e97] ${
                           signInErrors.password
                             ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
                             : 'border-[#121316]/10'
@@ -477,6 +482,14 @@ function LoginFormContent() {
                           if (event.key === 'Enter') handleCredentialsSignIn()
                         }}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignInPassword((prev) => !prev)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8d877d] hover:text-[#121316] transition-colors focus:outline-none p-0.5 cursor-pointer"
+                        aria-label={showSignInPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                     {signInErrors.password && (
                       <p className="text-xs text-[#ee382b] font-medium mt-1">{signInErrors.password}</p>
@@ -676,9 +689,9 @@ function LoginFormContent() {
                         <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
                         <Input
                           id="regPassword"
-                          type="password"
+                          type={showRegPassword ? 'text' : 'password'}
                           placeholder="At least 8 characters"
-                          className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                          className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 pr-10 text-sm placeholder:text-[#a09e97] ${
                             registrationErrors.password
                               ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
                               : 'border-[#121316]/10'
@@ -692,6 +705,14 @@ function LoginFormContent() {
                           }}
                           required
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegPassword((prev) => !prev)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8d877d] hover:text-[#121316] transition-colors focus:outline-none p-0.5 cursor-pointer"
+                          aria-label={showRegPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showRegPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </div>
                       {registrationErrors.password && (
                         <p className="text-xs text-[#ee382b] font-medium">{registrationErrors.password}</p>
@@ -706,9 +727,9 @@ function LoginFormContent() {
                         <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d877d]" />
                         <Input
                           id="confirmPassword"
-                          type="password"
+                          type={showRegConfirmPassword ? 'text' : 'password'}
                           placeholder="Re-enter password"
-                          className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 text-sm placeholder:text-[#a09e97] ${
+                          className={`h-11 rounded-xl border bg-[#faf8f4] pl-10 pr-10 text-sm placeholder:text-[#a09e97] ${
                             registrationErrors.confirmPassword
                               ? 'border-[#ee382b]/60 focus-visible:ring-[#ee382b]/30'
                               : 'border-[#121316]/10'
@@ -722,6 +743,14 @@ function LoginFormContent() {
                           }}
                           required
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegConfirmPassword((prev) => !prev)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8d877d] hover:text-[#121316] transition-colors focus:outline-none p-0.5 cursor-pointer"
+                          aria-label={showRegConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                        >
+                          {showRegConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </div>
                       {registrationErrors.confirmPassword && (
                         <p className="text-xs text-[#ee382b] font-medium">{registrationErrors.confirmPassword}</p>
@@ -790,3 +819,4 @@ export default function LoginPage() {
     </Suspense>
   )
 }
+
