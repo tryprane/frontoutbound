@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -51,8 +52,9 @@ function formatDate(iso: string) {
   })
 }
 
-export default function CampaignLogsPage({ params }: { params: { id: string } }) {
-  const campaignId = params.id
+export default function CampaignLogsPage({ params }: { params?: { id?: string } }) {
+  const routeParams = useParams<{ id?: string }>()
+  const campaignId = String(routeParams?.id ?? params?.id ?? '')
   const [campaign, setCampaign] = useState<CampaignMeta>({ name: 'Loading...', channel: 'EMAIL' })
   const [logs, setLogs] = useState<Array<EmailLog | WhatsAppLog>>([])
   const [counts, setCounts] = useState({ sent: 0, failed: 0, bounced: 0 })
@@ -62,7 +64,8 @@ export default function CampaignLogsPage({ params }: { params: { id: string } })
   const [filters, setFilters] = useState({ status: '', page: 1 })
 
   useEffect(() => {
-    fetch(`/api/campaigns/${campaignId}`)
+    if (!campaignId) return
+    fetch(`/api/campaigns/${encodeURIComponent(campaignId)}`)
       .then((r) => r.json())
       .then((data) => {
         if (data?.name) {
@@ -78,6 +81,7 @@ export default function CampaignLogsPage({ params }: { params: { id: string } })
   }, [campaignId])
 
   useEffect(() => {
+    if (!campaignId) return
     setLoading(true)
     const urlParams = new URLSearchParams()
     urlParams.append('campaignId', campaignId)
