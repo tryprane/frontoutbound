@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -177,8 +177,11 @@ function formatDateTime(iso: string) {
   })
 }
 
-export default function CampaignDetailPage({ params }: { params: { id: string } }) {
+export default function CampaignDetailPage({ params }: { params?: { id?: string } }) {
   const router = useRouter()
+  const routeParams = useParams<{ id?: string }>()
+  const campaignId = String(routeParams?.id ?? params?.id ?? '')
+
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -238,13 +241,14 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
     senderPoolMode: 'preview' | 'all' = showAllSenderPool ? 'all' : 'preview',
     isManualRefresh = false
   ) => {
+    if (!campaignId) return
     if (isManualRefresh) setRefreshing(true)
     const searchParams = new URLSearchParams()
     if (view === 'summary') searchParams.set('view', 'summary')
     searchParams.set('senderPool', senderPoolMode)
     const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
 
-    fetch(`/api/campaigns/${params.id}${query}`)
+    fetch(`/api/campaigns/${encodeURIComponent(campaignId)}${query}`)
       .then((r) => {
         if (!r.ok) throw new Error('not found')
         return r.json()
@@ -268,31 +272,44 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
         setLoading(false)
         setRefreshing(false)
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Failed to load campaign:', err)
         setLoading(false)
         setRefreshing(false)
-        router.push('/campaigns')
+        if (view === 'full' && campaignId) {
+          router.push('/campaigns')
+        }
       })
   }
 
   useEffect(() => {
+    if (!campaignId) return
     fetchCampaign('full', showAllSenderPool ? 'all' : 'preview')
     const timer = setInterval(() => fetchCampaign('summary', showAllSenderPool ? 'all' : 'preview'), 45_000)
     return () => clearInterval(timer)
-  }, [params.id, showAllSenderPool]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [campaignId, showAllSenderPool]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusChange = async (action: 'start' | 'pause') => {
+    if (!campaignId) return
     setActionLoading(true)
-    await fetch(`/api/campaigns/${params.id}/${action}`, { method: 'POST' })
-    await fetchCampaign('full', showAllSenderPool ? 'all' : 'preview')
-    setActionLoading(false)
+    try {
+      await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/${action}`, { method: 'POST' })
+      await fetchCampaign('full', showAllSenderPool ? 'all' : 'preview')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const handleDelete = async () => {
+    if (!campaignId) return
     if (!confirm('Are you sure you want to delete this campaign? This action cannot be undone.')) return
     setActionLoading(true)
-    await fetch(`/api/campaigns/${params.id}`, { method: 'DELETE' })
-    router.push('/campaigns')
+    try {
+      await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}`, { method: 'DELETE' })
+      router.push('/campaigns')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const handleSequenceStepChange = (
