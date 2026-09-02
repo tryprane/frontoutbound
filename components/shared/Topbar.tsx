@@ -23,7 +23,7 @@ export function Topbar() {
   }
 
   return (
-    <header className="page-shell sticky top-[92px] z-20 mb-4 flex flex-col gap-3 rounded-[22px] border border-white/60 px-3 py-3 shadow-[0_16px_44px_rgba(60,45,25,0.06)] sm:flex-row sm:items-center sm:justify-between sm:px-4 xl:top-6 xl:mb-8 xl:rounded-[28px] xl:px-5 xl:py-3.5 xl:shadow-[0_20px_50px_rgba(60,45,25,0.06)]">
+    <header className="page-shell sticky top-2 sm:top-3 md:top-4 lg:top-6 z-20 mb-4 md:mb-6 xl:mb-8 flex flex-col gap-3 rounded-[22px] md:rounded-[28px] border border-white/60 px-3 py-3 md:px-5 md:py-3.5 shadow-[0_16px_44px_rgba(60,45,25,0.06)] md:shadow-[0_20px_50px_rgba(60,45,25,0.06)] sm:flex-row sm:items-center sm:justify-between sm:px-4">
       <button
         type="button"
         onClick={handleOpenSearch}

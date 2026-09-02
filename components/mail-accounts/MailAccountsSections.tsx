@@ -1258,7 +1258,7 @@ export function WarmupView(props: {
   )
 }
 
-// ── Add Zoho View (Clean, Modern, No Broken Nested Modals) ───────────────────
+// ── Add Zoho View (2-Step Unified Setup: Step 1 SMTP + Step 2 OAuth) ────────
 export function AddZohoView({
   onAdded,
   onClose,
@@ -1266,10 +1266,15 @@ export function AddZohoView({
   onAdded: () => void
   onClose?: () => void
 }) {
-  const [tab, setTab] = useState<'smtp' | 'oauth'>('smtp')
+  const [connectingOAuth, setConnectingOAuth] = useState(false)
+
+  const handleConnectOAuth = () => {
+    setConnectingOAuth(true)
+    window.location.href = '/api/mail-accounts/zoho/connect'
+  }
 
   return (
-    <div className="uneevo-card p-6 sm:p-8 rounded-[24px] border border-[#121316]/12 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6 max-w-3xl mx-auto animate-fade-in">
+    <div className="uneevo-card p-6 sm:p-8 rounded-[24px] border border-[#121316]/12 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-7 max-w-3xl mx-auto animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="text-[11px] font-bold tracking-widest text-[#d97706] uppercase block mb-1">
@@ -1279,7 +1284,7 @@ export function AddZohoView({
             Connect Zoho Mail Account
           </h2>
           <p className="text-xs sm:text-sm text-[#62605c] mt-1">
-            Connect your Zoho mailbox using an App Password for fast, reliable campaign sending, or via OAuth.
+            Follow the two steps below to connect your Zoho mailbox for reliable campaign sending and full inbox synchronization.
           </p>
         </div>
 
@@ -1295,61 +1300,69 @@ export function AddZohoView({
         )}
       </div>
 
-      {/* Mode Switcher */}
-      <div className="flex items-center gap-2 border-b border-[#121316]/10 pb-3">
-        <button
-          type="button"
-          onClick={() => setTab('smtp')}
-          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-            tab === 'smtp'
-              ? 'bg-[#121316] text-white shadow-2xs'
-              : 'bg-[#faf8f4] text-[#62605c] hover:text-[#121316]'
-          }`}
-        >
-          Zoho App Password / SMTP (Recommended)
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('oauth')}
-          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-            tab === 'oauth'
-              ? 'bg-[#121316] text-white shadow-2xs'
-              : 'bg-[#faf8f4] text-[#62605c] hover:text-[#121316]'
-          }`}
-        >
-          Zoho OAuth (1-Click)
-        </button>
+      {/* Step 1: App Password / SMTP */}
+      <div className="space-y-4 rounded-2xl border border-[#121316]/08 bg-[#faf8f4]/60 p-5 sm:p-6">
+        <div className="flex items-center gap-2.5 mb-1">
+          <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-[#d97706]/15 text-[#d97706]">
+            Step 1
+          </span>
+          <h3 className="text-sm sm:text-base font-bold text-[#121316]">
+            Zoho App Password / SMTP (Outbound Sending)
+          </h3>
+        </div>
+        <p className="text-xs text-[#62605c]">
+          Enter your Zoho account details and app password for campaign dispatch.
+        </p>
+
+        <div className="pt-2">
+          <ZohoAccountForm onAccountAdded={onAdded} />
+        </div>
       </div>
 
-      {tab === 'smtp' ? (
-        <ZohoAccountForm onAccountAdded={onAdded} />
-      ) : (
-        <div className="space-y-4 pt-2">
-          <div className="p-5 rounded-2xl border border-[#d97706]/20 bg-[#d97706]/06 flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-[#d97706] text-white font-bold text-lg flex items-center justify-center shrink-0">
-                Z
-              </div>
-              <div>
-                <div className="font-bold text-sm text-[#121316]">Authorize via Zoho OAuth</div>
-                <div className="text-xs text-[#62605c] mt-0.5">
-                  Redirects to Zoho to authorize account permissions.
-                </div>
+      {/* Step 2: Zoho OAuth (Inbox Sync & Mailbox Tools) */}
+      <div className="space-y-4 rounded-2xl border border-[#121316]/08 bg-[#faf8f4]/60 p-5 sm:p-6">
+        <div className="flex items-center gap-2.5 mb-1">
+          <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-[#2563eb]/15 text-[#2563eb]">
+            Step 2
+          </span>
+          <h3 className="text-sm sm:text-base font-bold text-[#121316]">
+            Zoho OAuth Authorization (Inbox Sync &amp; Reply Tools)
+          </h3>
+        </div>
+        <p className="text-xs text-[#62605c]">
+          Link Zoho OAuth to unlock inbox sync, spam rescue, and automatic reply detection for the same mailbox.
+        </p>
+
+        <div className="p-4 sm:p-5 rounded-xl border border-[#2563eb]/15 bg-white flex items-center justify-between gap-4 flex-wrap shadow-2xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white font-bold text-lg flex items-center justify-center shrink-0 shadow-xs">
+              Z
+            </div>
+            <div>
+              <div className="font-bold text-xs sm:text-sm text-[#121316]">Authorize via Zoho OAuth</div>
+              <div className="text-[11px] sm:text-xs text-[#62605c] mt-0.5">
+                Redirects to Zoho to authorize account permissions.
               </div>
             </div>
-
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#121316] text-xs font-bold text-white shadow-sm hover:bg-black transition-all cursor-pointer"
-              onClick={() => {
-                window.location.href = '/api/mail-accounts/zoho/connect'
-              }}
-            >
-              <span>Connect via OAuth</span>
-            </button>
           </div>
+
+          <button
+            type="button"
+            disabled={connectingOAuth}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#121316] text-xs font-bold text-white shadow-sm hover:bg-black disabled:opacity-50 transition-all cursor-pointer"
+            onClick={handleConnectOAuth}
+          >
+            {connectingOAuth ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Redirecting...</span>
+              </>
+            ) : (
+              <span>Connect via OAuth</span>
+            )}
+          </button>
         </div>
-      )}
+      </div>
     </div>
   )
 }
