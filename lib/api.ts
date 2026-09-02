@@ -2,8 +2,8 @@
  * Typed fetch wrapper for the OutreachOS backend.
  *
  * Requests go to relative `/api/*` paths so the browser treats them as
- * same-origin and sends the next-auth session cookie. `next.config.js`
- * rewrites those paths to API_ORIGIN, so the backend can live anywhere
+ * same-origin and sends the next-auth session cookie. `app/api/[...path]/route.ts`
+ * forwards those paths to API_ORIGIN, so the backend can live anywhere
  * without any CORS or cookie-domain work.
  *
  * Set NEXT_PUBLIC_API_BASE_URL only if you deliberately want direct

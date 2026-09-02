@@ -11,8 +11,8 @@ Two modes, selected by env vars:
 
 ### 1. Proxy mode (recommended)
 
-Set `API_ORIGIN` to the backend origin. `next.config.js` rewrites every
-`/api/*` request to that host:
+Set `API_ORIGIN` to the backend origin. `app/api/[...path]/route.ts` forwards
+every `/api/*` request to that host:
 
 ```
 API_ORIGIN=https://api.example.com
@@ -23,6 +23,21 @@ The browser only ever sees this frontend's own origin, so:
 - the next-auth session cookie stays **first-party** (no `SameSite=None`)
 - there is **no CORS** handshake and no cookie-domain configuration
 - `fetch('/api/...')` works unchanged in every component
+
+The proxy forwards the method, headers, streamed body and every `Set-Cookie`
+value, and pins `redirect: 'manual'` so the backend's 3xx responses reach the
+browser intact. That last part is not cosmetic: this used to be a `rewrites()`
+entry in `next.config.js`, and an external rewrite is served by the OpenNext
+Cloudflare adapter's fetch proxy, which follows redirects *inside the Worker*.
+The browser got a `200` with the final page's HTML and no `Location`, which
+broke every OAuth flow (Gmail, Zoho, Outlook, Google Drive) and any next-auth
+provider sign-in, while cookie/JSON endpoints kept working. Do not reintroduce
+the rewrite — `afterFiles` rewrites resolve before dynamic routes, so it would
+shadow the handler.
+
+Redirects whose `Location` points back at `API_ORIGIN` are rewritten onto this
+origin, so the backend hostname is never handed to the browser. Every other
+`Location` is passed through byte-for-byte.
 
 ### 2. Direct mode
 
@@ -37,14 +52,15 @@ Copy `.env.example` to `.env.local`:
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `API_ORIGIN` | proxy mode | Backend origin that `/api/*` is rewritten to |
+| `API_ORIGIN` | proxy mode | Backend origin that `/api/*` is forwarded to. Read at **runtime** |
 | `NEXT_PUBLIC_API_BASE_URL` | direct mode | Absolute backend base URL used by `lib/api.ts` |
 | `NEXT_PUBLIC_SITE_URL` | no | Public URL of this frontend, used for absolute metadata URLs |
 | `NEXT_STANDALONE` | no | Set to `true` to emit `.next/standalone` for a Node server or container |
 
-All four are read at **build** time. `API_ORIGIN` in particular is compiled into
-the routes manifest by `rewrites()`, so on a hosted builder it must be set as a
-build variable — a runtime-only secret leaves the proxy doing nothing.
+`API_ORIGIN` is read per request by the proxy route, so on a hosted builder it
+must be present in the **runtime** environment — a build-only variable is
+invisible to the running Worker. The other three are compiled in at **build**
+time (`NEXT_PUBLIC_*` by Next, `NEXT_STANDALONE` by `next.config.js`).
 
 No secrets belong in this repo. `NEXTAUTH_SECRET`, the database URL, Redis, and
 all provider credentials live only in the backend.
@@ -68,8 +84,12 @@ npm run cf:preview    # build, then serve locally in the workerd runtime
 npm run cf:deploy     # build, then deploy
 ```
 
-Set `API_ORIGIN` in the project's **build** environment variables (not as a
-runtime secret). `public/_headers` already marks `/_next/static/*` immutable.
+Set `API_ORIGIN` as a **secret** in the Worker (dashboard → Variables and
+Secrets, or `npx wrangler secret put API_ORIGIN`). A plain-text var set in the
+dashboard would be wiped on the next deploy, because `wrangler.jsonc` declares
+`"vars": {}` and Wrangler treats that block as authoritative; secrets are left
+alone. It is not committed — this repo is public. `public/_headers` already marks
+`/_next/static/*` immutable.
 
 #### Cloudflare project settings
 
@@ -132,12 +152,12 @@ route means wiring up all three together.
 
 #### Auth behind the proxy
 
-`signIn()` posts to `/api/auth/...`, which the rewrite forwards to the backend.
-The backend's `Set-Cookie` comes back through this origin, so the session cookie
-lands as first-party on the frontend domain — provided the backend does **not**
-pin an explicit `Domain=` on it. The backend's `NEXTAUTH_URL` must be set to this
-frontend's public origin, or next-auth will build callback URLs and CSRF checks
-against the wrong host.
+`signIn()` posts to `/api/auth/...`, which the proxy route forwards to the
+backend. The backend's `Set-Cookie` comes back through this origin, so the
+session cookie lands as first-party on the frontend domain — provided the backend
+does **not** pin an explicit `Domain=` on it. The backend's `NEXTAUTH_URL` must be
+set to this frontend's public origin, or next-auth will build callback URLs and
+CSRF checks against the wrong host.
 
 ### Node / container
 
@@ -169,6 +189,9 @@ production ones.
 - **All data-fetching pages are client components.** The server-rendered pages
   from the monolith were converted to `'use client'` + `useEffect`; the markup is
   otherwise unchanged.
+- **`app/api/[...path]/route.ts`** is the only server-side code in the app: a
+  reverse proxy to `API_ORIGIN` that preserves redirects and cookies. It is the
+  reason there is no `/api/*` rewrite in `next.config.js`.
 - **`lib/api.ts`** is the typed fetch wrapper. It always sends
   `credentials: 'include'`, passes `FormData` through untouched, and raises
   `ApiError` with the backend's `code` field so callers can branch on
