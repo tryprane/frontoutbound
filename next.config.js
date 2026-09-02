@@ -1,13 +1,5 @@
 /** @type {import('next').NextConfig} */
 
-// Origin of the OutreachOS backend (the `outbound` repo's apps/web deployment).
-// Example: https://api.outreachos.example.com
-//
-// NOTE: this is read at *build* time, because rewrites() are compiled into the
-// routes manifest. On Cloudflare it has to be set as a build variable, not a
-// runtime secret, or the proxy silently does nothing.
-const apiOrigin = (process.env.API_ORIGIN || '').replace(/\/$/, '')
-
 // Only emit .next/standalone when we're actually targeting a Node server or a
 // container. The Cloudflare adapter builds its own bundle from the default
 // output and does not want a standalone tree.
@@ -18,15 +10,16 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || '',
   },
-  async rewrites() {
-    // Proxy mode (recommended): the browser only ever talks to this origin, so
-    // session cookies stay first-party and no CORS handshake is involved.
-    // Leave API_ORIGIN unset to run against a backend mounted on this origin.
-    if (!apiOrigin) return []
-    return [
-      { source: '/api/:path*', destination: `${apiOrigin}/api/:path*` },
-    ]
-  },
+  // NOTE: /api/* is deliberately *not* a rewrite.
+  //
+  // A rewrite to an external origin is served by the OpenNext Cloudflare
+  // adapter's fetch proxy, which follows redirects inside the Worker and hands
+  // the browser the final 200 instead of the backend's 3xx — that breaks every
+  // OAuth flow. app/api/[...path]/route.ts forwards those requests instead,
+  // with redirect: 'manual', and reads API_ORIGIN at runtime.
+  //
+  // Re-adding a rewrite here would shadow that handler, because afterFiles
+  // rewrites resolve before dynamic routes.
 }
 
 module.exports = nextConfig
