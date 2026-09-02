@@ -90,7 +90,7 @@ export function GDriveConnectPanel(props: { onConnect: () => void; hasAccounts: 
       </div>
       <button
         type="button"
-        className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_6px_20px_rgba(238,56,43,0.22)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_10px_28px_rgba(238,56,43,0.32)] shrink-0"
+        className="inline-flex items-center gap-2 rounded-full bg-[#ee382b] px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[0_6px_20px_rgba(238,56,43,0.22)] transition-all hover:bg-[#d92b1f] hover:shadow-[0_10px_28px_rgba(238,56,43,0.32)] active:scale-95 cursor-pointer shrink-0"
         onClick={props.onConnect}
       >
         <Plus className="h-4 w-4" />

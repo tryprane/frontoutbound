@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { TemplateVariableOption } from '@/lib/csv-parser/column-detector'
-import { Sparkles, Eye, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
+import { Sparkles, Eye, ChevronLeft, ChevronRight, AlertCircle, CornerDownRight } from 'lucide-react'
 
 type TemplateMode = 'email' | 'gdrive'
 
@@ -23,6 +23,7 @@ interface TemplateEditorProps {
   onBodyTemplateChange: (value: string) => void
   onMessageTemplateChange: (value: string) => void
   variables: TemplateVariableOption[]
+  isFollowUp?: boolean
 }
 
 export function TemplateEditor({
@@ -35,6 +36,7 @@ export function TemplateEditor({
   onBodyTemplateChange,
   onMessageTemplateChange,
   variables,
+  isFollowUp = false,
 }: TemplateEditorProps) {
   const [previewing, setPreviewing] = useState(false)
   const [previewResult, setPreviewResult] = useState<PreviewResult | null>(null)
@@ -111,25 +113,34 @@ export function TemplateEditor({
 
         {mode === 'email' ? (
           <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-[#121316]">Subject line</label>
-                <span className="text-[11px] font-mono text-[#8a8780]">Click tags below to insert</span>
+            {!isFollowUp ? (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-[#121316]">Subject line</label>
+                  <span className="text-[11px] font-mono text-[#8a8780]">Click tags below to insert</span>
+                </div>
+                <input
+                  value={subjectTemplate}
+                  onChange={(event) => onSubjectTemplateChange(event.target.value)}
+                  placeholder="Quick idea for {{companyName}}"
+                  className="w-full rounded-[14px] border border-[#121316]/12 bg-[#faf8f4] px-4 py-3 text-sm text-[#121316] transition focus:border-[#ee382b] focus:bg-white focus:outline-none"
+                />
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {variableChips.map((variable) =>
+                    renderVariableButton(variable, (token) =>
+                      onSubjectTemplateChange(`${subjectTemplate}${token}`)
+                    )
+                  )}
+                </div>
               </div>
-              <input
-                value={subjectTemplate}
-                onChange={(event) => onSubjectTemplateChange(event.target.value)}
-                placeholder="Quick idea for {{companyName}}"
-                className="w-full rounded-[14px] border border-[#121316]/12 bg-[#faf8f4] px-4 py-3 text-sm text-[#121316] transition focus:border-[#ee382b] focus:bg-white focus:outline-none"
-              />
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {variableChips.map((variable) =>
-                  renderVariableButton(variable, (token) =>
-                    onSubjectTemplateChange(`${subjectTemplate}${token}`)
-                  )
-                )}
+            ) : (
+              <div className="flex items-center gap-3 rounded-[16px] bg-[#faf8f4] border border-[#121316]/08 p-4 text-xs text-[#62605c]">
+                <CornerDownRight className="h-4 w-4 text-[#ee382b] shrink-0" />
+                <div>
+                  <span className="font-bold text-[#121316]">In-Thread Reply:</span> Follow-up messages automatically send in the same email thread using the initial email's subject line (<code>Re: &lt;Step 1 Subject&gt;</code>).
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -138,7 +149,11 @@ export function TemplateEditor({
               <textarea
                 value={bodyTemplate}
                 onChange={(event) => onBodyTemplateChange(event.target.value)}
-                placeholder={'Hi {{firstName}},\n\nI noticed {{companyName}} and wanted to share one idea.\n\n{{Personalization}}'}
+                placeholder={
+                  isFollowUp
+                    ? 'Hi {{firstName}},\n\nWanted to follow up on my previous note. Did you have a chance to review it?'
+                    : 'Hi {{firstName}},\n\nI noticed {{companyName}} and wanted to share one idea.\n\n{{Personalization}}'
+                }
                 rows={8}
                 className="w-full rounded-[16px] border border-[#121316]/12 bg-[#faf8f4] p-4 text-sm text-[#121316] leading-relaxed transition focus:border-[#ee382b] focus:bg-white focus:outline-none"
               />
@@ -263,10 +278,17 @@ export function TemplateEditor({
               <div className="space-y-3">
                 <div>
                   <div className="text-[11px] font-bold text-[#8a8780] uppercase tracking-wider mb-1">
-                    Subject
+                    {isFollowUp ? 'Subject (Threaded Follow-up)' : 'Subject'}
                   </div>
                   <div className="text-sm font-bold text-[#121316]">
-                    {previewResult.subject}
+                    {isFollowUp ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#121316] bg-[#121316]/06 px-2.5 py-1 rounded-md">
+                        <CornerDownRight className="h-3 w-3 text-[#ee382b]" />
+                        {previewResult.subject ? (previewResult.subject.startsWith('Re:') ? previewResult.subject : `Re: ${previewResult.subject}`) : 'Re: <Step 1 Subject>'}
+                      </span>
+                    ) : (
+                      previewResult.subject
+                    )}
                   </div>
                 </div>
                 <div>

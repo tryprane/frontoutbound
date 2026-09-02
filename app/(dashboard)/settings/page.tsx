@@ -14,12 +14,14 @@ import {
   Mail,
   Plus,
   Save,
+  Search,
   Send,
   ShieldBan,
   Sliders,
   Trash2,
   User,
   Webhook,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -106,6 +108,7 @@ function SettingsContent() {
   })
 
   const [newEmail, setNewEmail] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalEntries, setTotalEntries] = useState(0)
@@ -134,10 +137,11 @@ function SettingsContent() {
     }
   }
 
-  const fetchList = async (p = 1) => {
+  const fetchList = async (p = 1, search = searchQuery) => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/unsubscribe?page=${p}&limit=50`)
+      const queryParam = search.trim() ? `&q=${encodeURIComponent(search.trim())}` : ''
+      const res = await fetch(`/api/unsubscribe?page=${p}&limit=50${queryParam}`)
       if (!res.ok) throw new Error('Failed to load')
       const data = await res.json()
       setEntries(data.list || [])
@@ -245,9 +249,11 @@ function SettingsContent() {
         const d = await res.json()
         throw new Error(d.error || 'Failed to add email')
       }
-      toast.success('Added to unsubscribe list')
+      const data = await res.json().catch(() => ({}))
+      const count = data?.count || 1
+      toast.success(count > 1 ? `Added ${count} emails to suppression list` : 'Added to suppression list')
       setNewEmail('')
-      fetchList(1)
+      fetchList(1, searchQuery)
     } catch (err: any) {
       toast.error(err.message)
     } finally {
@@ -264,8 +270,8 @@ function SettingsContent() {
         method: 'DELETE',
       })
       if (!res.ok) throw new Error('Failed to remove email')
-      toast.success('Removed from unsubscribe list')
-      fetchList(page)
+      toast.success('Removed from suppression list')
+      fetchList(page, searchQuery)
     } catch (err: any) {
       toast.error(err.message)
     } finally {
@@ -990,56 +996,142 @@ function SettingsContent() {
             </div>
           </div>
         </div>
+      </div>
+    )
+  }
+
+  // 7. Global Suppression List Subpage
+  if (activeCategory === 'unsubscribe') {
+    return (
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 md:py-8 space-y-6 animate-fade-in">
+        {renderCategoryHeader(
+          'Global Suppression List',
+          'SAFETY & COMPLIANCE',
+          'Emails blocked from receiving dispatches across all campaigns.'
+        )}
 
         <div className="uneevo-card p-6 md:p-8 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6">
-          <div className="space-y-1.5">
-            <h2 className="text-base font-bold text-[#121316]">Global Unsubscribe List</h2>
-            <p className="text-[11px] text-[#8a8780]">
-              Emails added here will NOT be contacted by any campaign, overriding even individual campaign logic.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#121316]/08">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[#faf8f4] border border-[#121316]/10 text-[#ee382b]">
+                  <ShieldBan className="h-4 w-4" />
+                </div>
+                <h2 className="text-base font-bold text-[#121316]">Global Suppression List</h2>
+              </div>
+              <p className="text-xs text-[#62605c]">
+                Emails listed here are globally excluded from receiving cold outreach and follow-up sequence steps.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#121316]/05 text-[#121316] border border-[#121316]/08">
+                {totalEntries} suppressed
+              </span>
+            </div>
           </div>
-          <form onSubmit={handleAdd} className="flex gap-2 items-center">
-            <Input 
-              type="email" 
-              placeholder="name@example.com" 
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              className="flex-1 rounded-[14px] border border-[#121316]/12 bg-[#faf8f4] px-4 py-2.5 text-xs text-[#121316] focus:border-[#ee382b] focus:bg-white focus:outline-hidden"
-              required
-            />
-            <button
-              type="submit"
-              disabled={adding || !newEmail.trim()}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#121316] px-5 py-2.5 text-xs font-bold text-white hover:bg-black disabled:opacity-50 shrink-0 cursor-pointer"
-            >
-              {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-              <span>{adding ? 'Adding...' : 'Add to Suppression'}</span>
-            </button>
+
+          <form onSubmit={handleAdd} className="space-y-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[#121316] block">
+              Add Email to Suppression
+            </label>
+            <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+              <Input
+                type="text"
+                placeholder="name@example.com (or comma/newline separated)"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="flex-1 rounded-[14px] border border-[#121316]/12 bg-[#faf8f4] px-4 py-2.5 text-xs text-[#121316] focus:border-[#ee382b] focus:bg-white focus:outline-hidden"
+                required
+              />
+              <button
+                type="submit"
+                disabled={adding || !newEmail.trim()}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#121316] px-5 py-2.5 text-xs font-bold text-white hover:bg-black disabled:opacity-50 shrink-0 transition-all cursor-pointer shadow-sm active:scale-95"
+              >
+                {adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                <span>{adding ? 'Adding...' : 'Add to Suppression'}</span>
+              </button>
+            </div>
+            <p className="text-[11px] text-[#8a8780]">
+              Enter an email address or paste multiple addresses separated by commas or new lines.
+            </p>
           </form>
 
-          <div className="rounded-[18px] border border-[#121316]/08 bg-white overflow-hidden">
+          {/* Search bar */}
+          <div className="flex items-center gap-2 pt-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8a8780]" />
+              <input
+                type="text"
+                placeholder="Search suppressed emails..."
+                value={searchQuery}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setSearchQuery(val)
+                  fetchList(1, val)
+                }}
+                className="w-full rounded-[14px] border border-[#121316]/10 bg-[#faf8f4] pl-10 pr-9 py-2.5 text-xs text-[#121316] placeholder-[#8a8780] focus:border-[#ee382b] focus:bg-white focus:outline-hidden"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('')
+                    fetchList(1, '')
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8a8780] hover:text-[#121316] cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Table / List */}
+          <div className="rounded-[18px] border border-[#121316]/08 bg-white overflow-hidden shadow-2xs">
             {loading ? (
-              <div className="flex h-32 items-center justify-center text-xs text-[#8a8780]">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              <div className="flex h-36 items-center justify-center text-xs text-[#8a8780]">
+                <Loader2 className="h-4 w-4 animate-spin mr-2 text-[#ee382b]" />
                 Loading suppression list...
               </div>
             ) : entries.length === 0 ? (
-              <div className="flex h-32 items-center justify-center text-xs text-[#8a8780]">
-                No emails in the suppression list.
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#faf8f4] border border-[#121316]/08 text-[#8a8780] mb-3">
+                  <ShieldBan className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-bold text-[#121316]">
+                  {searchQuery ? 'No matching suppressed emails' : 'No emails in the suppression list'}
+                </p>
+                <p className="text-xs text-[#8a8780] mt-1 max-w-xs">
+                  {searchQuery
+                    ? `No records found for "${searchQuery}". Try a different search term.`
+                    : 'Any emails added here or opt-out recipients will automatically appear in this list.'}
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-[#121316]/06">
                 {entries.map((e) => (
                   <div
                     key={e.id}
-                    className="flex items-center justify-between p-3.5 hover:bg-[#faf8f4] transition-colors"
+                    className="flex items-center justify-between p-3.5 sm:px-5 hover:bg-[#faf8f4]/80 transition-colors group"
                   >
-                    <span className="font-mono text-xs font-bold text-[#121316]">{e.email}</span>
+                    <div className="min-w-0 flex flex-col sm:flex-row sm:items-center sm:gap-4">
+                      <span className="font-mono text-xs font-bold text-[#121316] truncate">{e.email}</span>
+                      {e.createdAt && (
+                        <span className="text-[11px] text-[#8a8780]">
+                          Added {new Date(e.createdAt).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleRemove(e.email)}
                       disabled={removeId === e.email}
-                      className="p-1.5 rounded-lg text-[#c2414c] hover:bg-[#c2414c]/10 transition cursor-pointer"
+                      className="p-2 rounded-xl text-[#c2414c] hover:bg-[#c2414c]/10 transition-all cursor-pointer disabled:opacity-50 shrink-0"
                       title="Remove from suppression"
                     >
                       {removeId === e.email ? (
@@ -1054,13 +1146,13 @@ function SettingsContent() {
             )}
           </div>
 
-          {!loading && totalPages > 0 && (
+          {!loading && totalPages > 1 && (
             <PaginationControls
               page={page}
               pages={totalPages}
               total={totalEntries}
               limit={50}
-              onPageChange={fetchList}
+              onPageChange={(p) => fetchList(p, searchQuery)}
               label="suppressed emails"
             />
           )}

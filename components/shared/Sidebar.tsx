@@ -79,7 +79,7 @@ export function Sidebar() {
   return (
     <>
       {/* 📱 MOBILE TOP HEADER BAR (Small screen viewports) */}
-      <header className="sticky top-2 z-40 flex items-center justify-between rounded-2xl border border-white/60 bg-white/90 backdrop-blur-md px-4 py-3 shadow-[0_10px_30px_rgba(60,45,25,0.06)] xl:hidden mb-3">
+      <header className="sticky top-2 z-40 flex items-center justify-between rounded-2xl border border-white/60 bg-white/90 backdrop-blur-md px-4 py-3 shadow-[0_10px_30px_rgba(60,45,25,0.06)] md:hidden mb-3">
         <BrandLogo href="/dashboard" size="sm" showTagline={false} />
         <button
           type="button"
@@ -93,7 +93,7 @@ export function Sidebar() {
 
       {/* 📱 MOBILE DRAWER SLIDE-OVER */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 xl:hidden">
+        <div className="fixed inset-0 z-50 md:hidden">
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200"
@@ -189,7 +189,7 @@ export function Sidebar() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={[
-          'group/sidebar page-shell sticky top-6 z-30 hidden xl:flex h-[calc(100vh-3rem)] flex-col rounded-[28px] border border-white/60 px-4 py-4 select-none overflow-hidden shrink-0',
+          'group/sidebar page-shell sticky top-4 lg:top-6 z-30 hidden md:flex h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] flex-col rounded-[28px] border border-white/60 px-4 py-4 select-none overflow-hidden shrink-0',
           'transition-[width,box-shadow,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[width]',
           isHovered
             ? 'w-[240px] bg-white/95 shadow-[0_25px_60px_rgba(60,45,25,0.12)]'
