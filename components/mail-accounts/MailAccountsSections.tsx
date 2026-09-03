@@ -72,17 +72,17 @@ function HealthBadge({ score }: { score: number }) {
   return (
     <div className="flex justify-center">
       <div
-        className={`h-8.5 inline-flex items-center justify-center px-3.5 rounded-lg border ${
+        className={`h-10 inline-flex items-center justify-center px-4 rounded-xl border shadow-2xs transition-all ${
           isHealthy
-            ? 'bg-green-50 text-green-700 border-green-100'
+            ? 'bg-green-50 text-green-700 border-green-200/80'
             : isWarming
-            ? 'bg-yellow-50 text-yellow-700 border-yellow-100'
-            : 'bg-red-50 text-red-700 border-red-100'
+            ? 'bg-yellow-50 text-yellow-700 border-yellow-200/80'
+            : 'bg-red-50 text-red-700 border-red-200/80'
         }`}
       >
-        <span className="text-sm font-bold">{safeScore}</span>
+        <span className="text-base font-extrabold">{safeScore}</span>
         <span
-          className={`text-xs font-semibold ml-0.5 ${
+          className={`text-xs font-bold ml-1 ${
             isHealthy ? 'text-green-600/70' : isWarming ? 'text-yellow-600/70' : 'text-red-600/70'
           }`}
         >
@@ -638,26 +638,26 @@ export function AccountsView(props: {
       </div>
 
       {/* Main Table Container */}
-      <div className="max-w-[1400px] mx-auto bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-hidden">
+      <div className="max-w-[1600px] mx-auto bg-white rounded-2xl shadow-sm border border-gray-200/80 overflow-hidden">
         {/* Table Header */}
-        <div className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3.5 bg-white border-b border-gray-100 text-[13px] font-semibold text-gray-500 uppercase tracking-wider sticky top-0 z-10">
+        <div className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1fr_auto] gap-5 px-7 py-4.5 bg-white border-b border-gray-100 text-sm font-bold text-gray-500 uppercase tracking-wider sticky top-0 z-10">
           <div>Account</div>
           <div>Status</div>
           <div className="text-center">Sent</div>
           <div className="text-center">Warmup</div>
           <div className="text-center">Health</div>
-          <div className="w-8" />
+          <div className="w-10" />
         </div>
 
         {/* Table Body */}
         <div className="divide-y divide-gray-100">
           {props.loading ? (
-            <div className="px-6 py-12 text-center text-sm text-gray-500">
-              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-[#10B981]" />
+            <div className="px-6 py-16 text-center text-sm text-gray-500">
+              <Loader2 className="h-7 w-7 animate-spin mx-auto mb-3 text-[#10B981]" />
               Loading email accounts...
             </div>
           ) : filteredAccounts.length === 0 ? (
-            <div className="px-6 py-12 text-center text-sm text-gray-500 italic">
+            <div className="px-6 py-16 text-center text-sm text-gray-500 italic">
               {searchQuery
                 ? 'No accounts match your search query.'
                 : statusFilter === 'error'
@@ -685,7 +685,7 @@ export function AccountsView(props: {
                 <div
                   key={account.id}
                   className={`flex flex-col transition-colors border-b border-gray-100 last:border-b-0 ${
-                    isSelected ? 'bg-emerald-50/20' : 'bg-white'
+                    isSelected ? 'bg-emerald-50/25' : 'bg-white'
                   }`}
                 >
                   {/* Row Summary Header */}
@@ -696,24 +696,24 @@ export function AccountsView(props: {
                         props.loadMailAccountDetail(account.id)
                       }
                     }}
-                    className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4.5 items-center hover:bg-gray-50 cursor-pointer transition-colors group"
+                    className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1fr_auto] gap-5 px-7 py-6 items-center hover:bg-gray-50/80 cursor-pointer transition-all group min-h-[92px]"
                   >
                     {/* Account Info */}
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <MailboxAvatar account={account} />
+                    <div className="flex items-center gap-4 min-w-0">
+                      <MailboxAvatar account={account} size="lg" />
                       <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-[15px] font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="text-base sm:text-[17px] font-bold text-gray-900 truncate group-hover:text-emerald-700 transition-colors tracking-tight">
                             {account.email}
                           </span>
                           {account.trulyInboxConnected && (
-                            <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 text-xs font-medium flex items-center gap-1 shrink-0">
-                              <Sparkles className="h-3 w-3 text-[#10B981]" />
+                            <span className="px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200/80 text-xs font-semibold flex items-center gap-1 shrink-0">
+                              <Sparkles className="h-3.5 w-3.5 text-[#10B981]" />
                               TrulyInbox
                             </span>
                           )}
                         </div>
-                        <span className="text-[13px] text-gray-500 truncate mt-0.5">
+                        <span className="text-sm text-gray-500 truncate mt-1 font-medium">
                           {provider.label} · {account.displayName || account.email}
                         </span>
                       </div>
@@ -721,45 +721,45 @@ export function AccountsView(props: {
 
                     {/* Status */}
                     <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold bg-green-50 text-green-700 border border-green-200/80 shadow-2xs">
+                        <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
                         Connected
                       </span>
                       {account.mailboxSyncStatus === 'error' ? (
-                        <span className="text-xs font-medium text-red-500 flex items-center gap-1.5">
-                          <AlertTriangle className="h-3.5 w-3.5" /> Sync error
+                        <span className="text-sm font-semibold text-red-500 flex items-center gap-1.5">
+                          <AlertTriangle className="h-4 w-4" /> Sync error
                         </span>
                       ) : account.mailboxSyncStatus === 'syncing' ? (
-                        <span className="text-xs font-medium text-blue-600 flex items-center gap-1.5">
-                          <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Syncing
+                        <span className="text-sm font-semibold text-blue-600 flex items-center gap-1.5">
+                          <RefreshCw className="h-4 w-4 animate-spin" /> Syncing
                         </span>
                       ) : (
-                        <span className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
-                          <Check className="h-3.5 w-3.5 text-green-500" /> Synced
+                        <span className="text-sm font-medium text-gray-500 flex items-center gap-1.5">
+                          <Check className="h-4 w-4 text-green-600" /> Synced
                         </span>
                       )}
                     </div>
 
                     {/* Sent */}
-                    <div className="text-center text-sm font-medium text-gray-700">
-                      <span className="text-gray-900 font-bold text-[15px]">{account.sentToday}</span>{' '}
-                      <span className="text-gray-500 font-normal text-[13px]">/{account.dailyLimit}</span>
+                    <div className="text-center">
+                      <span className="text-gray-900 font-extrabold text-lg sm:text-xl font-mono">{account.sentToday}</span>{' '}
+                      <span className="text-gray-400 font-semibold text-sm">/{account.dailyLimit}</span>
                     </div>
 
                     {/* Warmup */}
-                    <div className="text-center text-sm font-medium text-gray-700">
-                      <span className="text-gray-900 font-bold text-[15px]">{account.warmupSentToday}</span>{' '}
-                      <span className="text-gray-500 font-normal text-[13px]">/{account.warmupDailyLimit}</span>
+                    <div className="text-center">
+                      <span className="text-gray-900 font-extrabold text-lg sm:text-xl font-mono">{account.warmupSentToday}</span>{' '}
+                      <span className="text-gray-400 font-semibold text-sm">/{account.warmupDailyLimit}</span>
                     </div>
 
                     {/* Health Badge */}
                     <HealthBadge score={account.mailboxHealthScore} />
 
                     {/* Actions / Settings Button */}
-                    <div className="w-8 flex justify-end">
+                    <div className="w-10 flex justify-end">
                       <button
                         type="button"
-                        className="text-gray-400 hover:text-gray-900 p-1.5 rounded-lg hover:bg-gray-100 transition-colors focus:outline-hidden cursor-pointer"
+                        className="text-gray-500 hover:text-gray-900 p-2.5 rounded-xl bg-gray-50 border border-gray-200/80 hover:bg-gray-100 hover:border-gray-300 transition-all focus:outline-hidden cursor-pointer shadow-2xs"
                         title="Manage mailbox settings"
                         onClick={(e) => {
                           e.stopPropagation()
@@ -767,7 +767,7 @@ export function AccountsView(props: {
                           if (!account.detailsLoaded) props.loadMailAccountDetail(account.id)
                         }}
                       >
-                        <Settings2 className="h-4.5 w-4.5" />
+                        <Settings2 className="h-5 w-5" />
                       </button>
                     </div>
                   </div>

@@ -111,6 +111,22 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
       border: 'border-[#0f8a5f]/25',
       description: 'Direct inbound replies received. Automatically halts further follow-up cadences.',
     },
+    ...((stats?.bounced || 0) > 0 || failed > 0
+      ? [
+          {
+            id: 'bounced',
+            label: 'Bounced / Rejected',
+            count: (stats?.bounced || 0) + (stats?.failed || 0),
+            rateText: `${sent > 0 ? Math.round((((stats?.bounced || 0) + (stats?.failed || 0)) / sent) * 100) : 0}% drop-off`,
+            percentOfTotal: sent > 0 ? Math.min(100, Math.round((((stats?.bounced || 0) + (stats?.failed || 0)) / total) * 100)) : 0,
+            icon: AlertTriangle,
+            color: 'bg-[#c2414c] text-white',
+            badgeBg: 'bg-[#c2414c]/10 text-[#c2414c]',
+            border: 'border-[#c2414c]/20',
+            description: `${(stats?.bounced ?? 0).toLocaleString()} bounced, ${(stats?.failed ?? 0).toLocaleString()} delivery errors.`,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -136,13 +152,13 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
           <div className="inline-flex items-center gap-2 bg-[#c2414c]/08 border border-[#c2414c]/20 px-3.5 py-1.5 rounded-full text-xs text-[#c2414c] font-semibold">
             <AlertTriangle className="h-3.5 w-3.5" />
             <span>
-              {failed} bounced / failed ({Math.round((failed / Math.max(1, sent)) * 100)}%)
+              {stats?.bounced ?? 0} bounced · {stats?.failed ?? 0} failed ({Math.round((failed / Math.max(1, sent)) * 100)}%)
             </span>
           </div>
         ) : (
           <div className="inline-flex items-center gap-2 bg-[#0f8a5f]/08 border border-[#0f8a5f]/20 px-3.5 py-1.5 rounded-full text-xs text-[#0f8a5f] font-semibold">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>100% Clean Deliverability</span>
+            <span>100% Clean Deliverability (0 Bounced)</span>
           </div>
         )}
       </div>

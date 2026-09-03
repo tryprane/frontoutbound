@@ -182,7 +182,7 @@ export function MailboxAvatar({
 }: {
   account: MailboxAccountLike
   className?: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
 }) {
   const provider = getMailboxProvider(account)
   const initialLetter = (account.displayName || account.email || 'M').charAt(0).toUpperCase()
@@ -190,19 +190,22 @@ export function MailboxAvatar({
   const sizeClasses = {
     sm: 'w-8 h-8',
     md: 'w-10 h-10',
-    lg: 'w-12 h-12',
+    lg: 'w-13 h-13',
+    xl: 'w-16 h-16',
   }[size]
 
   const iconSizes = {
     sm: 'w-4 h-4',
     md: 'w-5 h-5',
-    lg: 'w-6 h-6',
+    lg: 'w-6.5 h-6.5',
+    xl: 'w-8 h-8',
   }[size]
 
   const fontSizes = {
     sm: 'text-xs',
     md: 'text-base',
     lg: 'text-lg',
+    xl: 'text-xl',
   }[size]
 
   if (provider === 'gmail') {
