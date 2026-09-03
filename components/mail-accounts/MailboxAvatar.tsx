@@ -135,7 +135,7 @@ export function ZohoMailEnvelopeLogo({ className = 'w-5 h-5' }: { className?: st
       />
       <path
         fill="#226DB4"
-        d="M269.7 292.9H31.1c-14.1 0-25.7-11.5-25.7-25.7v-67.8c0-4.7 3.8-8.5 8.5-8.5s8.5 3.8 8.5 8.5v67.8c0 4.8 3.9 8.7 8.7 8.7h238.6c4.8 0 8.7-3.9 8.7-8.7V123.4c0-2.7-1.2-5.1-3.3-6.8L155.8 21.9c-3.2-2.5-7.6-2.5-10.8 0L25.7 116.6c-2.1 1.6-3.3,4.1-3.3 6.8v29.1c0 3.2 1.8 6.1 4.6 7.7l119.3 63.5c2.6 1.4 5.6 1.4 8.2 0l76.9-41c4.1-2.2 9.3-0.6 11.5 3.5 2.2 4.1.6 9.3-3.5 11.5l-76.9 41c-7.6 4-16.6 4-24.1 0L19 175.1c-8.4-4.5-13.6-13.2-13.6-22.7v-29.1c0-7.9 3.6-15.2 9.7-20.1L134.4 8.6c4.5-3.6 10.2-5.6 16-5.6s11.4 2 16 5.6l119.3 94.7c6.2 4.9 9.7 12.2 9.7 20.1v143.9c0 14.2-11.5 25.7-25.7 25.7z"
+        d="M269.7 292.9H31.1c-14.1 0-25.7-11.5-25.7-25.7v-67.8c0-4.7 3.8-8.5 8.5-8.5s8.5 3.8 8.5 8.5v67.8c0 4.8 3.9 8.7 8.7 8.7h238.6c4.8 0 8.7-3.9 8.7-8.7V123.4c0-2.7-1.2-5.1-3.3-6.8L155.8 21.9c-3.2-2.5-7.6-2.5-10.8 0L25.7 116.6c-2.1 1.6-3.3 4.1-3.3 6.8v29.1c0 3.2 1.8 6.1 4.6 7.7l119.3 63.5c2.6 1.4 5.6 1.4 8.2 0l76.9-41c4.1-2.2 9.3-0.6 11.5 3.5 2.2 4.1.6 9.3-3.5 11.5l-76.9 41c-7.6 4-16.6 4-24.1 0L19 175.1c-8.4-4.5-13.6-13.2-13.6-22.7v-29.1c0-7.9 3.6-15.2 9.7-20.1L134.4 8.6c4.5-3.6 10.2-5.6 16-5.6s11.4 2 16 5.6l119.3 94.7c6.2 4.9 9.7 12.2 9.7 20.1v143.9c0 14.2-11.5 25.7-25.7 25.7z"
       />
     </svg>
   )
@@ -199,6 +199,12 @@ export function MailboxAvatar({
     lg: 'w-6 h-6',
   }[size]
 
+  const fontSizes = {
+    sm: 'text-xs',
+    md: 'text-base',
+    lg: 'text-lg',
+  }[size]
+
   if (provider === 'gmail') {
     return (
       <div
@@ -235,7 +241,7 @@ export function MailboxAvatar({
   return (
     <div
       title={`Custom SMTP (${account.email || ''})`}
-      className={`${sizeClasses} rounded-full bg-gray-100 border border-gray-200 text-gray-700 font-bold text-sm flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${className}`}
+      className={`${sizeClasses} rounded-full bg-gray-100 border border-gray-200 text-gray-700 font-bold ${fontSizes} flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${className}`}
     >
       {initialLetter}
     </div>

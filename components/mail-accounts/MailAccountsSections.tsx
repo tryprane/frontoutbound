@@ -63,7 +63,7 @@ import type {
   WarmupRecipient,
 } from '@/components/mail-accounts/types'
 
-// ── Health Badge Component (32px inline badge matching template) ─────────────
+// ── Health Badge Component (inline badge matching template) ─────────────────
 function HealthBadge({ score }: { score: number }) {
   const safeScore = Math.max(0, Math.min(100, score || 0))
   const isHealthy = safeScore >= 70
@@ -72,7 +72,7 @@ function HealthBadge({ score }: { score: number }) {
   return (
     <div className="flex justify-center">
       <div
-        className={`h-8 inline-flex items-center justify-center px-3 rounded border ${
+        className={`h-8.5 inline-flex items-center justify-center px-3.5 rounded-lg border ${
           isHealthy
             ? 'bg-green-50 text-green-700 border-green-100'
             : isWarming
@@ -80,9 +80,9 @@ function HealthBadge({ score }: { score: number }) {
             : 'bg-red-50 text-red-700 border-red-100'
         }`}
       >
-        <span className="text-xs font-bold">{safeScore}</span>
+        <span className="text-sm font-bold">{safeScore}</span>
         <span
-          className={`text-[10px] font-medium ml-0.5 ${
+          className={`text-xs font-semibold ml-0.5 ${
             isHealthy ? 'text-green-600/70' : isWarming ? 'text-yellow-600/70' : 'text-red-600/70'
           }`}
         >
@@ -92,6 +92,7 @@ function HealthBadge({ score }: { score: number }) {
     </div>
   )
 }
+
 
 // ── Top Bar placeholder ──────────────────────────────────────────────────────
 export function MailAccountsHero(props: {
@@ -352,7 +353,7 @@ export function AccountsView(props: {
           <button
             type="button"
             onClick={() => setStatusFilter(statusFilter === 'connected' ? 'all' : 'connected')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border shadow-2xs transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border shadow-2xs transition-all cursor-pointer ${
               statusFilter === 'connected'
                 ? 'bg-emerald-700 text-white border-emerald-700'
                 : 'bg-gray-50 hover:bg-emerald-50/50 border-gray-100 text-gray-700'
@@ -360,28 +361,28 @@ export function AccountsView(props: {
             title="Click to filter connected accounts"
           >
             <span
-              className={`w-2 h-2 rounded-full ${
+              className={`w-2.5 h-2.5 rounded-full ${
                 statusFilter === 'connected' ? 'bg-white' : 'bg-[#10B981]'
               }`}
             />
-            <span className="text-sm font-medium">{connectedCount} Connected</span>
+            <span className="text-sm font-semibold">{connectedCount} Connected</span>
           </button>
-          <div className="flex items-center gap-2 bg-orange-50 px-3.5 py-1.5 rounded-full border border-orange-100 text-orange-700 shadow-2xs">
-            <Flame className="h-3.5 w-3.5 text-orange-500" />
-            <span className="text-sm font-medium">{totalWarmed} Warmed</span>
+          <div className="flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-full border border-orange-100 text-orange-700 shadow-2xs">
+            <Flame className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-semibold">{totalWarmed} Warmed</span>
           </div>
           {erroredCount > 0 && (
             <button
               type="button"
               onClick={() => setStatusFilter(statusFilter === 'error' ? 'all' : 'error')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold shadow-2xs transition-all cursor-pointer ${
                 statusFilter === 'error'
                   ? 'bg-red-600 text-white border-red-600'
                   : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
               }`}
               title="Click to filter errored accounts"
             >
-              <AlertTriangle className="h-3.5 w-3.5" />
+              <AlertTriangle className="h-4 w-4" />
               <span>{erroredCount} Errored</span>
             </button>
           )}
@@ -394,17 +395,17 @@ export function AccountsView(props: {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="px-3.5 py-1.5 text-xs font-semibold rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-[#10B981] focus:outline-hidden shadow-2xs cursor-pointer appearance-none pr-8 transition-colors"
+              className="px-4 py-2 text-sm font-semibold rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-[#10B981] focus:outline-hidden shadow-2xs cursor-pointer appearance-none pr-9 transition-colors"
             >
               <option value="all">Show: All Mails ({totalCount})</option>
               <option value="connected">Show: Connected ({connectedCount})</option>
               <option value="disconnected">Show: Disconnected ({disconnectedCount})</option>
               <option value="error">Show: Errored ({erroredCount})</option>
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
           </div>
 
-          <div className="relative flex-1 sm:w-56">
+          <div className="relative flex-1 sm:w-60">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             <input
               type="text"
@@ -419,7 +420,7 @@ export function AccountsView(props: {
               placeholder="Search accounts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-1.5 text-sm border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] transition-colors shadow-2xs placeholder-gray-400 text-gray-900 focus:outline-hidden"
+              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] transition-colors shadow-2xs placeholder-gray-400 text-gray-900 focus:outline-hidden"
             />
             {searchQuery && (
               <button
@@ -428,7 +429,7 @@ export function AccountsView(props: {
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
                 title="Clear search"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -436,9 +437,9 @@ export function AccountsView(props: {
           <button
             type="button"
             onClick={() => setShowTrulyInboxModal(true)}
-            className="flex items-center gap-2 bg-green-50 text-[#10B981] border border-green-100 px-4 py-1.5 rounded-full text-sm font-medium hover:bg-green-100 transition-colors shadow-2xs shrink-0 cursor-pointer"
+            className="flex items-center gap-2 bg-green-50 text-[#10B981] border border-green-100 px-4 py-2 rounded-full text-sm font-semibold hover:bg-green-100 transition-colors shadow-2xs shrink-0 cursor-pointer"
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#10B981]" />
+            <Sparkles className="h-4 w-4 text-[#10B981]" />
             <span>TrulyInbox AI ({trulyInboxConnectedCount})</span>
           </button>
         </div>
@@ -451,7 +452,7 @@ export function AccountsView(props: {
           <button
             type="button"
             onClick={() => setStatusFilter('all')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-full text-sm font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-2 ${
               statusFilter === 'all'
                 ? 'bg-gray-900 text-white shadow-xs'
                 : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -459,7 +460,7 @@ export function AccountsView(props: {
           >
             <span>All Mails</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 statusFilter === 'all' ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-600'
               }`}
             >
@@ -470,16 +471,16 @@ export function AccountsView(props: {
           <button
             type="button"
             onClick={() => setStatusFilter('connected')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-full text-sm font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-2 ${
               statusFilter === 'connected'
                 ? 'bg-emerald-700 text-white shadow-xs'
                 : 'bg-white border border-gray-200 text-gray-700 hover:bg-emerald-50/50 hover:border-emerald-200'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
             <span>Connected</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 statusFilter === 'connected'
                   ? 'bg-emerald-800 text-emerald-100'
                   : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
@@ -492,16 +493,16 @@ export function AccountsView(props: {
           <button
             type="button"
             onClick={() => setStatusFilter('disconnected')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-full text-sm font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-2 ${
               statusFilter === 'disconnected'
                 ? 'bg-gray-700 text-white shadow-xs'
                 : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-gray-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-gray-400" />
             <span>Disconnected</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 statusFilter === 'disconnected'
                   ? 'bg-gray-800 text-gray-200'
                   : 'bg-gray-100 text-gray-600'
@@ -514,7 +515,7 @@ export function AccountsView(props: {
           <button
             type="button"
             onClick={() => setStatusFilter('error')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3.5 py-1.5 rounded-full text-sm font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-2 ${
               statusFilter === 'error'
                 ? 'bg-red-600 text-white shadow-xs'
                 : erroredCount > 0
@@ -523,11 +524,11 @@ export function AccountsView(props: {
             }`}
           >
             <AlertTriangle
-              className={`h-3.5 w-3.5 ${statusFilter === 'error' ? 'text-white' : 'text-red-500'}`}
+              className={`h-4 w-4 ${statusFilter === 'error' ? 'text-white' : 'text-red-500'}`}
             />
             <span>Errored</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                 statusFilter === 'error'
                   ? 'bg-red-800 text-red-100'
                   : erroredCount > 0
@@ -548,7 +549,7 @@ export function AccountsView(props: {
               e.stopPropagation()
               setShowAddMenu((prev) => !prev)
             }}
-            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-all shadow-xs cursor-pointer active:scale-95"
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-95"
             aria-label="Add Mail Account"
           >
             <Plus
@@ -561,7 +562,7 @@ export function AccountsView(props: {
 
           {showAddMenu && (
             <div
-              className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 flex flex-col gap-1 min-w-[210px] z-30 animate-scale-in"
+              className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 flex flex-col gap-1 min-w-[220px] z-30 animate-scale-in"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -570,14 +571,14 @@ export function AccountsView(props: {
                   setShowAddMenu(false)
                   props.setActiveTab?.('add-zoho')
                 }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left cursor-pointer group"
+                className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left cursor-pointer group"
               >
-                <div className="w-6 h-6 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
-                  <ZohoLogo className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                  <ZohoLogo className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <span className="block font-bold text-gray-900 group-hover:text-orange-700">Zoho Mail</span>
-                  <span className="text-[10px] text-gray-400 font-normal">OAuth or IMAP/SMTP</span>
+                  <span className="block font-bold text-gray-900 group-hover:text-orange-700 text-sm">Zoho Mail</span>
+                  <span className="text-xs text-gray-400 font-normal">OAuth or IMAP/SMTP</span>
                 </div>
               </button>
 
@@ -587,14 +588,14 @@ export function AccountsView(props: {
                   setShowAddMenu(false)
                   props.setActiveTab?.('add-gmail')
                 }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left cursor-pointer group"
+                className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left cursor-pointer group"
               >
-                <div className="w-6 h-6 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
-                  <GmailLogo className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                  <GmailLogo className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="block font-bold text-gray-900 group-hover:text-red-700">Google / Gmail</span>
-                  <span className="text-[10px] text-gray-400 font-normal">App password setup</span>
+                  <span className="block font-bold text-gray-900 group-hover:text-red-700 text-sm">Google / Gmail</span>
+                  <span className="text-xs text-gray-400 font-normal">App password setup</span>
                 </div>
               </button>
 
@@ -604,14 +605,14 @@ export function AccountsView(props: {
                   setShowAddMenu(false)
                   props.setActiveTab?.('add-outlook')
                 }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left cursor-pointer group"
+                className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left cursor-pointer group"
               >
-                <div className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                  <OutlookLogo className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                  <OutlookLogo className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="block font-bold text-gray-900 group-hover:text-blue-700">Microsoft Outlook</span>
-                  <span className="text-[10px] text-gray-400 font-normal">Office 365 / Exchange</span>
+                  <span className="block font-bold text-gray-900 group-hover:text-blue-700 text-sm">Microsoft Outlook</span>
+                  <span className="text-xs text-gray-400 font-normal">Office 365 / Exchange</span>
                 </div>
               </button>
 
@@ -621,14 +622,14 @@ export function AccountsView(props: {
                   setShowAddMenu(false)
                   props.setActiveTab?.('add-smtp-imap')
                 }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors text-left cursor-pointer group"
+                className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors text-left cursor-pointer group"
               >
-                <div className="w-6 h-6 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-bold text-gray-600">SMTP</span>
+                <div className="w-7 h-7 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-gray-600">SMTP</span>
                 </div>
                 <div>
-                  <span className="block font-bold text-gray-900 group-hover:text-gray-900">Custom SMTP / IMAP</span>
-                  <span className="text-[10px] text-gray-400 font-normal">Any mail server</span>
+                  <span className="block font-bold text-gray-900 group-hover:text-gray-900 text-sm">Custom SMTP / IMAP</span>
+                  <span className="text-xs text-gray-400 font-normal">Any mail server</span>
                 </div>
               </button>
             </div>
@@ -639,7 +640,7 @@ export function AccountsView(props: {
       {/* Main Table Container */}
       <div className="max-w-[1400px] mx-auto bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-hidden">
         {/* Table Header */}
-        <div className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3 bg-white border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider sticky top-0 z-10">
+        <div className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-3.5 bg-white border-b border-gray-100 text-[13px] font-semibold text-gray-500 uppercase tracking-wider sticky top-0 z-10">
           <div>Account</div>
           <div>Status</div>
           <div className="text-center">Sent</div>
@@ -651,12 +652,12 @@ export function AccountsView(props: {
         {/* Table Body */}
         <div className="divide-y divide-gray-100">
           {props.loading ? (
-            <div className="px-6 py-12 text-center text-xs text-gray-400">
-              <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-[#10B981]" />
+            <div className="px-6 py-12 text-center text-sm text-gray-500">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-[#10B981]" />
               Loading email accounts...
             </div>
           ) : filteredAccounts.length === 0 ? (
-            <div className="px-6 py-12 text-center text-xs text-gray-400 italic">
+            <div className="px-6 py-12 text-center text-sm text-gray-500 italic">
               {searchQuery
                 ? 'No accounts match your search query.'
                 : statusFilter === 'error'
@@ -695,60 +696,60 @@ export function AccountsView(props: {
                         props.loadMailAccountDetail(account.id)
                       }
                     }}
-                    className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 items-center hover:bg-gray-50 cursor-pointer transition-colors group"
+                    className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4.5 items-center hover:bg-gray-50 cursor-pointer transition-colors group"
                   >
                     {/* Account Info */}
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-3.5 min-w-0">
                       <MailboxAvatar account={account} />
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
+                          <span className="text-[15px] font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
                             {account.email}
                           </span>
                           {account.trulyInboxConnected && (
-                            <span className="px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-100 text-[10px] font-medium flex items-center gap-1 shrink-0">
-                              <Sparkles className="h-2.5 w-2.5 text-[#10B981]" />
+                            <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 text-xs font-medium flex items-center gap-1 shrink-0">
+                              <Sparkles className="h-3 w-3 text-[#10B981]" />
                               TrulyInbox
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-gray-500 truncate mt-0.5">
+                        <span className="text-[13px] text-gray-500 truncate mt-0.5">
                           {provider.label} · {account.displayName || account.email}
                         </span>
                       </div>
                     </div>
 
                     {/* Status */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-green-50 text-green-700 border border-green-100">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
                         Connected
                       </span>
                       {account.mailboxSyncStatus === 'error' ? (
-                        <span className="text-[11px] text-red-500 flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" /> Sync error
+                        <span className="text-xs font-medium text-red-500 flex items-center gap-1.5">
+                          <AlertTriangle className="h-3.5 w-3.5" /> Sync error
                         </span>
                       ) : account.mailboxSyncStatus === 'syncing' ? (
-                        <span className="text-[11px] text-blue-600 flex items-center gap-1">
-                          <RefreshCw className="h-3 w-3 animate-spin" /> Syncing
+                        <span className="text-xs font-medium text-blue-600 flex items-center gap-1.5">
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Syncing
                         </span>
                       ) : (
-                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
-                          <Check className="h-3 w-3 text-green-500" /> Synced
+                        <span className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
+                          <Check className="h-3.5 w-3.5 text-green-500" /> Synced
                         </span>
                       )}
                     </div>
 
                     {/* Sent */}
                     <div className="text-center text-sm font-medium text-gray-700">
-                      <span className="text-gray-900 font-semibold">{account.sentToday}</span>{' '}
-                      <span className="text-gray-400 font-normal">/{account.dailyLimit}</span>
+                      <span className="text-gray-900 font-bold text-[15px]">{account.sentToday}</span>{' '}
+                      <span className="text-gray-500 font-normal text-[13px]">/{account.dailyLimit}</span>
                     </div>
 
                     {/* Warmup */}
                     <div className="text-center text-sm font-medium text-gray-700">
-                      <span className="text-gray-900 font-semibold">{account.warmupSentToday}</span>{' '}
-                      <span className="text-gray-400 font-normal">/{account.warmupDailyLimit}</span>
+                      <span className="text-gray-900 font-bold text-[15px]">{account.warmupSentToday}</span>{' '}
+                      <span className="text-gray-500 font-normal text-[13px]">/{account.warmupDailyLimit}</span>
                     </div>
 
                     {/* Health Badge */}
@@ -766,7 +767,7 @@ export function AccountsView(props: {
                           if (!account.detailsLoaded) props.loadMailAccountDetail(account.id)
                         }}
                       >
-                        <Settings2 className="h-4 w-4" />
+                        <Settings2 className="h-4.5 w-4.5" />
                       </button>
                     </div>
                   </div>
@@ -777,32 +778,32 @@ export function AccountsView(props: {
         </div>
 
         {/* Pagination Footer */}
-        <div className="px-6 py-3 flex flex-wrap items-center justify-between border-t border-gray-100 bg-white text-xs gap-3">
+        <div className="px-6 py-3.5 flex flex-wrap items-center justify-between border-t border-gray-100 bg-white text-sm gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-gray-500">Rows:</span>
+            <span className="text-gray-500 font-medium">Rows:</span>
             <select
               value={currentLimit}
               onChange={(e) => props.setAccountsLimit(Number(e.target.value))}
-              className="bg-transparent text-gray-900 font-semibold border-none focus:ring-0 cursor-pointer p-0 text-xs focus:outline-hidden"
+              className="bg-transparent text-gray-900 font-semibold border-none focus:ring-0 cursor-pointer p-0 text-sm focus:outline-hidden"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            <span className="text-gray-400 ml-4 border-l border-gray-200 pl-4">
+            <span className="text-gray-500 ml-4 border-l border-gray-200 pl-4 font-medium">
               {totalCount > 0
                 ? `${(currentPage - 1) * currentLimit + 1}–${Math.min(currentPage * currentLimit, totalCount)} of ${totalCount}`
                 : '0 of 0'}
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               disabled={currentPage <= 1}
               onClick={() => props.setAccountsPage(1)}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-600 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
             >
               <ChevronsLeft className="h-4 w-4" />
             </button>
@@ -810,23 +811,23 @@ export function AccountsView(props: {
               type="button"
               disabled={currentPage <= 1}
               onClick={() => props.setAccountsPage(currentPage - 1)}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-600 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
 
-            <div className="flex items-center gap-1 mx-1">
+            <div className="flex items-center gap-1.5 mx-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
                 .map((p, idx, arr) => {
                   const showGap = idx > 0 && p - arr[idx - 1] > 1
                   return (
-                    <span key={p} className="flex items-center gap-1">
+                    <span key={p} className="flex items-center gap-1.5">
                       {showGap && <span className="text-gray-400 px-0.5">...</span>}
                       <button
                         type="button"
                         onClick={() => props.setAccountsPage(p)}
-                        className={`w-7 h-7 rounded text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                        className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
                           p === currentPage
                             ? 'bg-gray-900 text-white shadow-2xs'
                             : 'text-gray-700 hover:bg-gray-100'
@@ -843,7 +844,7 @@ export function AccountsView(props: {
               type="button"
               disabled={currentPage >= totalPages}
               onClick={() => props.setAccountsPage(currentPage + 1)}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-600 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -851,7 +852,7 @@ export function AccountsView(props: {
               type="button"
               disabled={currentPage >= totalPages}
               onClick={() => props.setAccountsPage(totalPages)}
-              className="w-7 h-7 flex items-center justify-center rounded text-gray-600 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
             >
               <ChevronsRight className="h-4 w-4" />
             </button>
