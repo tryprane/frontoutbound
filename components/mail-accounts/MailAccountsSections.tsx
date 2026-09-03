@@ -46,7 +46,7 @@ import {
   surfaceCardStyle,
 } from '@/components/mail-accounts/MailAccountsPrimitives'
 import { ZohoAccountForm } from '@/components/mail-accounts/ZohoAccountForm'
-import { MailboxAvatar } from '@/components/mail-accounts/MailboxAvatar'
+import { MailboxAvatar, GmailLogo, ZohoLogo, OutlookLogo } from '@/components/mail-accounts/MailboxAvatar'
 import { MailboxSettingsDrawer } from '@/components/mail-accounts/MailboxSettingsDrawer'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PaginationControls } from '@/components/ui/pagination-controls'
@@ -272,21 +272,28 @@ export function AccountsView(props: {
   const [drawerAccountId, setDrawerAccountId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showTrulyInboxModal, setShowTrulyInboxModal] = useState(false)
-  const [showFabMenu, setShowFabMenu] = useState(false)
+  const [showAddMenu, setShowAddMenu] = useState(false)
   const [providerFilter, setProviderFilter] = useState<'all' | 'zoho' | 'gmail' | 'outlook' | 'smtp'>('all')
 
-  // Escape key listener for Drawer, TrulyInbox modal & FAB menu
+  // Escape key and click-outside listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (drawerAccountId) setDrawerAccountId(null)
         if (showTrulyInboxModal) setShowTrulyInboxModal(false)
-        if (showFabMenu) setShowFabMenu(false)
+        if (showAddMenu) setShowAddMenu(false)
       }
     }
+    const handleClickOutside = () => {
+      setShowAddMenu(false)
+    }
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [drawerAccountId, showTrulyInboxModal, showFabMenu])
+    window.addEventListener('click', handleClickOutside)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('click', handleClickOutside)
+    }
+  }, [drawerAccountId, showTrulyInboxModal, showAddMenu])
 
   type StatusFilter = 'all' | 'connected' | 'disconnected' | 'error'
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
@@ -398,14 +405,32 @@ export function AccountsView(props: {
           </div>
 
           <div className="relative flex-1 sm:w-56">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             <input
               type="text"
+              name="mail_accounts_search_query"
+              id="mail_accounts_search_query"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-lpignore="true"
+              data-1p-ignore="true"
               placeholder="Search accounts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] transition-colors shadow-2xs placeholder-gray-400 text-gray-900 focus:outline-hidden"
+              className="w-full pl-9 pr-8 py-1.5 text-sm border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] transition-colors shadow-2xs placeholder-gray-400 text-gray-900 focus:outline-hidden"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
           <button
@@ -515,41 +540,99 @@ export function AccountsView(props: {
           </button>
         </div>
 
-        {/* Right: Quick Connect / Add Mailbox Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide shrink-0">
-          <span className="text-xs font-semibold text-gray-400 mr-1 hidden sm:inline">Add:</span>
+        {/* Right: Add Mailbox Dropdown Button */}
+        <div className="relative shrink-0">
           <button
             type="button"
-            onClick={() => props.setActiveTab?.('add-zoho')}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowAddMenu((prev) => !prev)
+            }}
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-all shadow-xs cursor-pointer active:scale-95"
+            aria-label="Add Mail Account"
           >
-            <span className="text-orange-500 font-bold">+</span>
-            <span>Zoho</span>
+            <Plus
+              className={`h-4 w-4 transition-transform duration-200 ${
+                showAddMenu ? 'rotate-45' : ''
+              }`}
+            />
+            <span>Add Mailbox</span>
           </button>
-          <button
-            type="button"
-            onClick={() => props.setActiveTab?.('add-gmail')}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <span className="text-red-500 font-bold">+</span>
-            <span>Gmail</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => props.setActiveTab?.('add-outlook')}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <span className="text-blue-500 font-bold">+</span>
-            <span>Outlook</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => props.setActiveTab?.('add-smtp-imap')}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <span className="text-gray-500 font-bold">+</span>
-            <span>Custom SMTP</span>
-          </button>
+
+          {showAddMenu && (
+            <div
+              className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 flex flex-col gap-1 min-w-[210px] z-30 animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddMenu(false)
+                  props.setActiveTab?.('add-zoho')
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left cursor-pointer group"
+              >
+                <div className="w-6 h-6 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                  <ZohoLogo className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block font-bold text-gray-900 group-hover:text-orange-700">Zoho Mail</span>
+                  <span className="text-[10px] text-gray-400 font-normal">OAuth or IMAP/SMTP</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddMenu(false)
+                  props.setActiveTab?.('add-gmail')
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left cursor-pointer group"
+              >
+                <div className="w-6 h-6 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                  <GmailLogo className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <span className="block font-bold text-gray-900 group-hover:text-red-700">Google / Gmail</span>
+                  <span className="text-[10px] text-gray-400 font-normal">App password setup</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddMenu(false)
+                  props.setActiveTab?.('add-outlook')
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left cursor-pointer group"
+              >
+                <div className="w-6 h-6 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                  <OutlookLogo className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <span className="block font-bold text-gray-900 group-hover:text-blue-700">Microsoft Outlook</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Office 365 / Exchange</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddMenu(false)
+                  props.setActiveTab?.('add-smtp-imap')
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors text-left cursor-pointer group"
+              >
+                <div className="w-6 h-6 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-bold text-gray-600">SMTP</span>
+                </div>
+                <div>
+                  <span className="block font-bold text-gray-900 group-hover:text-gray-900">Custom SMTP / IMAP</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Any mail server</span>
+                </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -813,80 +896,6 @@ export function AccountsView(props: {
         mailboxMessages={props.mailboxMessages}
         mailboxLoading={props.mailboxLoading}
       />
-
-      {/* Floating Action Button (Bottom Right) */}
-      <div className="fixed bottom-8 right-8 z-30 flex flex-col items-end gap-2">
-        {showFabMenu && (
-          <div
-            className="mb-2 bg-white rounded-2xl shadow-xl border border-gray-100 p-2 flex flex-col gap-1 min-w-[190px] animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setShowFabMenu(false)
-                props.setActiveTab?.('add-zoho')
-              }}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left cursor-pointer"
-            >
-              <span className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs">
-                Z
-              </span>
-              <span>Add Zoho Mail</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowFabMenu(false)
-                props.setActiveTab?.('add-gmail')
-              }}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors text-left cursor-pointer"
-            >
-              <span className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs">
-                G
-              </span>
-              <span>Add Gmail</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowFabMenu(false)
-                props.setActiveTab?.('add-outlook')
-              }}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left cursor-pointer"
-            >
-              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
-                O
-              </span>
-              <span>Add Outlook</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowFabMenu(false)
-                props.setActiveTab?.('add-smtp-imap')
-              }}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors text-left cursor-pointer"
-            >
-              <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-bold text-xs">
-                S
-              </span>
-              <span>Custom SMTP</span>
-            </button>
-          </div>
-        )}
-
-        <button
-          type="button"
-          aria-label="Add Mail Account"
-          onClick={() => setShowFabMenu((prev) => !prev)}
-          className="w-14 h-14 bg-red-500 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-red-600 transition-all hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-red-500/30 cursor-pointer active:scale-95"
-        >
-          <Plus
-            className={`h-6 w-6 transition-transform duration-200 ${showFabMenu ? 'rotate-45' : ''}`}
-          />
-        </button>
-      </div>
 
       {/* TrulyInbox Deliverability Partner Overview Modal */}
       {showTrulyInboxModal && (
