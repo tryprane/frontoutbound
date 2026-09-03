@@ -467,12 +467,15 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
     campaign.sendFormat !== 'text_only' &&
     campaign.openTrackingEnabled === true
 
-  const activeSenders = campaign.stats.senderPoolCount || 0
-  const totalSent = campaign.stats.sent || 0
+  const activeSenders = campaign.stats?.senderPoolCount || 0
+  const totalSent = campaign.stats?.sent || 0
   const rowCount = campaign.csvFile?.rowCount || 0
-  const failedCount = (campaign.stats?.failed || 0) + (campaign.stats?.bounced || 0)
+  const bouncedCount = campaign.stats?.bounced || 0
+  const failedOnlyCount = campaign.stats?.failed || 0
+  const failedCount = failedOnlyCount + bouncedCount
   const deliveredCount = Math.max(0, totalSent - failedCount)
   const deliveryRate = totalSent > 0 ? Math.min(100, Math.round((deliveredCount / totalSent) * 100)) : 100
+  const bounceRate = totalSent > 0 ? Math.round((bouncedCount / totalSent) * 100) : 0
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
@@ -558,7 +561,7 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
         )}
 
         {/* ── KPI Summary Ribbon ─────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 border-t border-[#121316]/08">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 pt-4 border-t border-[#121316]/08">
           {/* 1. Progress */}
           <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780]">Completion</div>
@@ -618,7 +621,18 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
             </div>
           </div>
 
-          {/* 6. Active Senders */}
+          {/* 6. Bounced (Restored Stat!) */}
+          <div className="p-3.5 rounded-[16px] bg-[#c2414c]/08 border border-[#c2414c]/15">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#c2414c]">Bounced</div>
+            <div className="font-mono text-xl sm:text-2xl font-bold text-[#c2414c] mt-0.5 tabular-nums">
+              {bouncedCount}
+            </div>
+            <div className="text-[10px] text-[#c2414c] mt-0.5 truncate">
+              {bounceRate}% bounce · {failedCount} undelivered
+            </div>
+          </div>
+
+          {/* 7. Active Senders */}
           <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780]">Active Senders</div>
             <div className="font-mono text-xl sm:text-2xl font-bold text-[#121316] mt-0.5 tabular-nums">
