@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import { ZohoLogo } from '@/components/mail-accounts/MailboxAvatar'
 
 export function ZohoOAuthButton() {
   const [connecting, setConnecting] = useState(false)
@@ -14,8 +15,8 @@ export function ZohoOAuthButton() {
   return (
     <div className="flex items-center justify-between gap-5 p-5 rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/04 flex-wrap">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white font-bold text-xl flex items-center justify-center shrink-0 shadow-xs">
-          Z
+        <div className="w-12 h-12 rounded-xl bg-white border border-gray-200/90 flex items-center justify-center shrink-0 shadow-xs">
+          <ZohoLogo className="w-7 h-7" />
         </div>
         <div>
           <div className="font-bold text-sm text-[#121316]">

@@ -46,6 +46,8 @@ import {
   surfaceCardStyle,
 } from '@/components/mail-accounts/MailAccountsPrimitives'
 import { ZohoAccountForm } from '@/components/mail-accounts/ZohoAccountForm'
+import { MailboxAvatar } from '@/components/mail-accounts/MailboxAvatar'
+import { MailboxSettingsDrawer } from '@/components/mail-accounts/MailboxSettingsDrawer'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import type {
@@ -267,26 +269,53 @@ export function AccountsView(props: {
   activeTab?: ActiveTab
   setActiveTab?: (tab: ActiveTab) => void
 }) {
-  const [expandedAccountId, setExpandedAccountId] = useState<string | null>(null)
+  const [drawerAccountId, setDrawerAccountId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showTrulyInboxModal, setShowTrulyInboxModal] = useState(false)
   const [showFabMenu, setShowFabMenu] = useState(false)
   const [providerFilter, setProviderFilter] = useState<'all' | 'zoho' | 'gmail' | 'outlook' | 'smtp'>('all')
 
-  // Escape key listener for TrulyInbox modal & FAB menu
+  // Escape key listener for Drawer, TrulyInbox modal & FAB menu
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (drawerAccountId) setDrawerAccountId(null)
         if (showTrulyInboxModal) setShowTrulyInboxModal(false)
         if (showFabMenu) setShowFabMenu(false)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [showTrulyInboxModal, showFabMenu])
+  }, [drawerAccountId, showTrulyInboxModal, showFabMenu])
+
+  type StatusFilter = 'all' | 'connected' | 'disconnected' | 'error'
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+
+  const erroredCount = props.accounts.filter(
+    (a) => a.mailboxSyncStatus === 'error' || a.connectionReady === false
+  ).length
+  const disconnectedCount = props.accounts.filter(
+    (a) => a.isActive === false || a.connectionReady === false
+  ).length
+  const connectedCount = props.accounts.filter(
+    (a) => a.isActive !== false && a.connectionReady !== false && a.mailboxSyncStatus !== 'error'
+  ).length
 
   const filteredAccounts = useMemo(() => {
     return props.accounts.filter((a) => {
+      // Status Filter
+      if (statusFilter === 'connected') {
+        const isConnected =
+          a.isActive !== false && a.connectionReady !== false && a.mailboxSyncStatus !== 'error'
+        if (!isConnected) return false
+      } else if (statusFilter === 'disconnected') {
+        const isDisconnected = a.isActive === false || a.connectionReady === false
+        if (!isDisconnected) return false
+      } else if (statusFilter === 'error') {
+        const isError = a.mailboxSyncStatus === 'error' || a.connectionReady === false
+        if (!isError) return false
+      }
+
       if (providerFilter !== 'all' && a.type !== providerFilter) return false
       if (!searchQuery.trim()) return true
       const q = searchQuery.toLowerCase()
@@ -296,7 +325,7 @@ export function AccountsView(props: {
         a.type.toLowerCase().includes(q)
       )
     })
-  }, [props.accounts, searchQuery, providerFilter])
+  }, [props.accounts, searchQuery, providerFilter, statusFilter])
 
   const totalConnected = props.accounts.filter((a) => a.connectionReady !== false).length
   const totalWarmed = props.accounts.filter((a) => a.warmupStatus === 'WARMED').length
@@ -311,21 +340,64 @@ export function AccountsView(props: {
     <div className="space-y-6">
       {/* Top Header: Stats & Search/Actions */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Header Left: Global Stats */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-2 bg-gray-50 px-3.5 py-1.5 rounded-full border border-gray-100 shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-            <span className="text-sm font-medium text-gray-700">{totalConnected} Connected</span>
-          </div>
+        {/* Header Left: Global Stats / Clickable Quick Filters */}
+        <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'connected' ? 'all' : 'connected')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border shadow-2xs transition-all cursor-pointer ${
+              statusFilter === 'connected'
+                ? 'bg-emerald-700 text-white border-emerald-700'
+                : 'bg-gray-50 hover:bg-emerald-50/50 border-gray-100 text-gray-700'
+            }`}
+            title="Click to filter connected accounts"
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                statusFilter === 'connected' ? 'bg-white' : 'bg-[#10B981]'
+              }`}
+            />
+            <span className="text-sm font-medium">{connectedCount} Connected</span>
+          </button>
           <div className="flex items-center gap-2 bg-orange-50 px-3.5 py-1.5 rounded-full border border-orange-100 text-orange-700 shadow-2xs">
             <Flame className="h-3.5 w-3.5 text-orange-500" />
             <span className="text-sm font-medium">{totalWarmed} Warmed</span>
           </div>
+          {erroredCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setStatusFilter(statusFilter === 'error' ? 'all' : 'error')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-2xs transition-all cursor-pointer ${
+                statusFilter === 'error'
+                  ? 'bg-red-600 text-white border-red-600'
+                  : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+              }`}
+              title="Click to filter errored accounts"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span>{erroredCount} Errored</span>
+            </button>
+          )}
         </div>
 
-        {/* Header Right: Search & TrulyInbox Action */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
+        {/* Header Right: Status Filter Dropdown, Search & TrulyInbox Action */}
+        <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
+          {/* Status Filter Dropdown */}
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className="px-3.5 py-1.5 text-xs font-semibold rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-[#10B981] focus:outline-hidden shadow-2xs cursor-pointer appearance-none pr-8 transition-colors"
+            >
+              <option value="all">Show: All Mails ({totalCount})</option>
+              <option value="connected">Show: Connected ({connectedCount})</option>
+              <option value="disconnected">Show: Disconnected ({disconnectedCount})</option>
+              <option value="error">Show: Errored ({erroredCount})</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+          </div>
+
+          <div className="relative flex-1 sm:w-56">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
@@ -335,6 +407,7 @@ export function AccountsView(props: {
               className="w-full pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] transition-colors shadow-2xs placeholder-gray-400 text-gray-900 focus:outline-hidden"
             />
           </div>
+
           <button
             type="button"
             onClick={() => setShowTrulyInboxModal(true)}
@@ -346,58 +419,138 @@ export function AccountsView(props: {
         </div>
       </div>
 
-      {/* Account Filters / Connect Pills */}
-      <div className="max-w-[1400px] mx-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        <button
-          type="button"
-          onClick={() => {
-            setProviderFilter('all')
-            props.setActiveTab?.('accounts')
-          }}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium shadow-2xs shrink-0 transition-colors cursor-pointer ${
-            providerFilter === 'all' && (!props.activeTab || props.activeTab === 'accounts')
-              ? 'bg-gray-900 text-white hover:bg-gray-800'
-              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-          }`}
-        >
-          All Accounts
-        </button>
+      {/* Account Filters & Status Pills */}
+      <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Left: Status Filter Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('all')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === 'all'
+                ? 'bg-gray-900 text-white shadow-xs'
+                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <span>All Mails</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                statusFilter === 'all' ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {totalCount}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => props.setActiveTab?.('add-zoho')}
-          className="px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-2 transition-colors cursor-pointer"
-        >
-          <span className="text-orange-500 font-bold text-xs">+</span>
-          <span>Zoho</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('connected')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === 'connected'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'bg-white border border-gray-200 text-gray-700 hover:bg-emerald-50/50 hover:border-emerald-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>Connected</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                statusFilter === 'connected'
+                  ? 'bg-emerald-800 text-emerald-100'
+                  : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+              }`}
+            >
+              {connectedCount}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => props.setActiveTab?.('add-gmail')}
-          className="px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-2 transition-colors cursor-pointer"
-        >
-          <span className="text-red-500 font-bold text-xs">+</span>
-          <span>Gmail</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('disconnected')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === 'disconnected'
+                ? 'bg-gray-700 text-white shadow-xs'
+                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-gray-400" />
+            <span>Disconnected</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                statusFilter === 'disconnected'
+                  ? 'bg-gray-800 text-gray-200'
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {disconnectedCount}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => props.setActiveTab?.('add-outlook')}
-          className="px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-2 transition-colors cursor-pointer"
-        >
-          <span className="text-blue-500 font-bold text-xs">+</span>
-          <span>Outlook</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('error')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === 'error'
+                ? 'bg-red-600 text-white shadow-xs'
+                : erroredCount > 0
+                ? 'bg-red-50/70 border border-red-200 text-red-700 hover:bg-red-100'
+                : 'bg-white border border-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-700'
+            }`}
+          >
+            <AlertTriangle
+              className={`h-3.5 w-3.5 ${statusFilter === 'error' ? 'text-white' : 'text-red-500'}`}
+            />
+            <span>Errored</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                statusFilter === 'error'
+                  ? 'bg-red-800 text-red-100'
+                  : erroredCount > 0
+                  ? 'bg-red-100 text-red-800 border border-red-200'
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {erroredCount}
+            </span>
+          </button>
+        </div>
 
-        <button
-          type="button"
-          onClick={() => props.setActiveTab?.('add-smtp-imap')}
-          className="px-4 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-2 transition-colors cursor-pointer"
-        >
-          <span className="text-gray-500 font-bold text-xs">+</span>
-          <span>Custom SMTP</span>
-        </button>
+        {/* Right: Quick Connect / Add Mailbox Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide shrink-0">
+          <span className="text-xs font-semibold text-gray-400 mr-1 hidden sm:inline">Add:</span>
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('add-zoho')}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <span className="text-orange-500 font-bold">+</span>
+            <span>Zoho</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('add-gmail')}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <span className="text-red-500 font-bold">+</span>
+            <span>Gmail</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('add-outlook')}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <span className="text-blue-500 font-bold">+</span>
+            <span>Outlook</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => props.setActiveTab?.('add-smtp-imap')}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-2xs shrink-0 flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <span className="text-gray-500 font-bold">+</span>
+            <span>Custom SMTP</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Table Container */}
@@ -421,12 +574,18 @@ export function AccountsView(props: {
             </div>
           ) : filteredAccounts.length === 0 ? (
             <div className="px-6 py-12 text-center text-xs text-gray-400 italic">
-              {searchQuery ? 'No accounts match your search filter.' : 'No email accounts connected.'}
+              {searchQuery
+                ? 'No accounts match your search query.'
+                : statusFilter === 'error'
+                ? 'No errored mail accounts found.'
+                : statusFilter === 'disconnected'
+                ? 'No disconnected mail accounts found.'
+                : statusFilter === 'connected'
+                ? 'No connected mail accounts found.'
+                : 'No email accounts connected.'}
             </div>
           ) : (
             filteredAccounts.map((account) => {
-              const isExpanded = expandedAccountId === account.id
-              const isDetailLoading = props.accountDetailsLoading[account.id] === true
               const provider =
                 account.type === 'gmail'
                   ? { label: 'Gmail', color: '#ee382b', bg: 'bg-red-100 text-red-600' }
@@ -436,29 +595,19 @@ export function AccountsView(props: {
                   ? { label: 'Outlook', color: '#004ac6', bg: 'bg-blue-100 text-blue-600' }
                   : { label: 'Custom SMTP', color: '#475569', bg: 'bg-gray-100 text-gray-700' }
 
-              const connectionReady = account.connectionReady !== false
-              const initialLetter = (account.displayName || account.email || 'M').charAt(0).toUpperCase()
+              const isSelected = drawerAccountId === account.id
 
               return (
                 <div
                   key={account.id}
-                  className={`flex flex-col transition-colors ${
-                    isExpanded ? 'bg-gray-50/50 relative' : 'bg-white'
+                  className={`flex flex-col transition-colors border-b border-gray-100 last:border-b-0 ${
+                    isSelected ? 'bg-emerald-50/20' : 'bg-white'
                   }`}
                 >
-                  {/* Active Row Highlight Bar */}
-                  {isExpanded && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#10B981] rounded-r z-10" />
-                  )}
-
                   {/* Row Summary Header */}
                   <div
                     onClick={() => {
-                      if (isExpanded) {
-                        setExpandedAccountId(null)
-                        return
-                      }
-                      setExpandedAccountId(account.id)
+                      setDrawerAccountId(account.id)
                       if (!account.detailsLoaded) {
                         props.loadMailAccountDetail(account.id)
                       }
@@ -467,14 +616,10 @@ export function AccountsView(props: {
                   >
                     {/* Account Info */}
                     <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${provider.bg}`}
-                      >
-                        {initialLetter}
-                      </div>
+                      <MailboxAvatar account={account} />
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm font-semibold text-gray-900 truncate">
+                          <span className="text-sm font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
                             {account.email}
                           </span>
                           {account.trulyInboxConnected && (
@@ -526,516 +671,22 @@ export function AccountsView(props: {
                     {/* Health Badge */}
                     <HealthBadge score={account.mailboxHealthScore} />
 
-                    {/* Actions */}
+                    {/* Actions / Settings Button */}
                     <div className="w-8 flex justify-end">
                       <button
                         type="button"
-                        className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors focus:outline-hidden"
+                        className="text-gray-400 hover:text-gray-900 p-1.5 rounded-lg hover:bg-gray-100 transition-colors focus:outline-hidden cursor-pointer"
+                        title="Manage mailbox settings"
                         onClick={(e) => {
                           e.stopPropagation()
-                          if (isExpanded) {
-                            setExpandedAccountId(null)
-                          } else {
-                            setExpandedAccountId(account.id)
-                            if (!account.detailsLoaded) props.loadMailAccountDetail(account.id)
-                          }
+                          setDrawerAccountId(account.id)
+                          if (!account.detailsLoaded) props.loadMailAccountDetail(account.id)
                         }}
                       >
-                        <MoreVertical className="h-4 w-4" />
+                        <Settings2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-
-                  {/* Detail Panel */}
-                  {isExpanded && (
-                    <div className="px-6 pb-6 pt-2 border-t border-gray-100 animate-fade-in">
-                      {!account.detailsLoaded ? (
-                        <div className="py-8 text-center text-xs text-gray-400">
-                          {isDetailLoading ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin text-[#10B981]" />
-                              <span>Loading diagnostics and mailbox controls...</span>
-                            </div>
-                          ) : (
-                            'Click to load full controls...'
-                          )}
-                        </div>
-                      ) : (
-                        <>
-                          {/* TrulyInbox Integration Banner */}
-                          <div className="mb-8 p-4 rounded-xl border border-gray-100 bg-white shadow-xs flex items-start gap-4">
-                            <div className="w-8 h-8 rounded-lg bg-[#10B981] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                              <Sparkles className="h-4 w-4" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="text-sm font-semibold text-gray-900 tracking-wide uppercase">
-                                    TRULYINBOX DELIVERABILITY ENGINE
-                                  </h4>
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
-                                    AI Warmup & Spam Rescue
-                                  </span>
-                                </div>
-                                <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded font-medium border border-gray-100">
-                                  {account.trulyInboxConnected
-                                    ? `Connected ${account.trulyInboxEmailAccountId ? `(#${account.trulyInboxEmailAccountId})` : ''}`
-                                    : 'Not Connected'}
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 mb-3">
-                                Autonomous inbox rotation, spam folder rescue, and email reputation warming.
-                              </p>
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                <div className="relative flex-1">
-                                  <input
-                                    className="w-full pl-3 pr-16 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-gray-900 font-mono focus:outline-hidden"
-                                    placeholder={
-                                      account.trulyInboxHasApiKey
-                                        ? '•••••••••••••••• (Key Saved)'
-                                        : 'Enter TrulyInbox API Key (e.g. ti_...)'
-                                    }
-                                    type={props.showTrulyInboxApiKeys[account.id] ? 'text' : 'password'}
-                                    value={props.pendingTrulyInboxApiKeys[account.id] ?? ''}
-                                    onChange={(e) =>
-                                      props.setPendingTrulyInboxApiKeys((prev) => ({
-                                        ...prev,
-                                        [account.id]: e.target.value,
-                                      }))
-                                    }
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      props.setShowTrulyInboxApiKeys((prev) => ({
-                                        ...prev,
-                                        [account.id]: !prev[account.id],
-                                      }))
-                                    }
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#10B981] hover:text-emerald-700 cursor-pointer"
-                                  >
-                                    {props.showTrulyInboxApiKeys[account.id] ? 'HIDE' : 'SHOW'}
-                                  </button>
-                                </div>
-                                <button
-                                  type="button"
-                                  disabled={!!props.trulyInboxConnecting[account.id]}
-                                  onClick={() => props.handleConnectTrulyInbox(account.id)}
-                                  className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors shrink-0 cursor-pointer flex items-center justify-center gap-1.5"
-                                >
-                                  {props.trulyInboxConnecting[account.id] ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                      <span>Connecting...</span>
-                                    </>
-                                  ) : (
-                                    <span>{account.trulyInboxConnected ? 'Update API Key' : 'Connect API Key'}</span>
-                                  )}
-                                </button>
-                                {account.trulyInboxConnected && (
-                                  <button
-                                    type="button"
-                                    disabled={!!props.trulyInboxStarting[account.id]}
-                                    onClick={() => props.handleStartTrulyInboxWarmup(account.id)}
-                                    className="px-4 py-2 bg-[#10B981] text-white text-sm font-medium rounded-lg hover:bg-emerald-600 disabled:opacity-50 transition-colors shrink-0 cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
-                                  >
-                                    {props.trulyInboxStarting[account.id] ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        <span>Starting...</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Flame className="h-4 w-4" />
-                                        <span>Start Truly Warmup</span>
-                                      </>
-                                    )}
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Main Diagnostic Area */}
-                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                            {/* Left/Center: Performance Stats */}
-                            <div className="lg:col-span-2">
-                              <h5 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-                                <Activity className="h-3.5 w-3.5" /> Performance & Health Diagnostics
-                              </h5>
-                              {/* Clean 3-column grid without boxes */}
-                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-8 gap-x-6">
-                                <div className="flex flex-col gap-1">
-                                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                                    Warmup 7D
-                                  </p>
-                                  <p className="text-xl font-bold text-gray-900">
-                                    {account.warmupStats7d?.successRate ?? 0}%{' '}
-                                    <span className="text-sm font-medium text-gray-400">
-                                      ({account.warmupStats7d?.sent ?? 0}/{account.warmupStats7d?.total ?? 0})
-                                    </span>
-                                  </p>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                                    Campaign Sending
-                                  </p>
-                                  <p className="text-xl font-bold text-gray-900">
-                                    {account.sentToday}/{account.dailyLimit}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                                    Warmup Sending
-                                  </p>
-                                  <p className="text-xl font-bold text-gray-900">
-                                    {account.warmupSentToday}/{account.warmupDailyLimit}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                                    Warmup Replies
-                                  </p>
-                                  <p className="text-xl font-bold text-gray-900">
-                                    {account.warmupRepliesToday}/{account.warmupReplyDailyLimit}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                  <p
-                                    className={`text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1 ${
-                                      account.mailboxSyncStatus === 'error' ? 'text-red-500' : 'text-gray-400'
-                                    }`}
-                                  >
-                                    {account.mailboxSyncStatus === 'error' && (
-                                      <AlertTriangle className="h-3 w-3 text-red-500" />
-                                    )}
-                                    Mailbox Sync
-                                  </p>
-                                  <p
-                                    className={`text-xl font-bold capitalize ${
-                                      account.mailboxSyncStatus === 'error' ? 'text-red-600' : 'text-gray-900'
-                                    }`}
-                                  >
-                                    {account.mailboxSyncStatus}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                  <p className="text-[10px] font-semibold text-[#10B981] uppercase tracking-wider">
-                                    Health Score
-                                  </p>
-                                  <p className="text-xl font-bold text-[#10B981]">
-                                    {account.mailboxHealthScore}/100{' '}
-                                    <span className="text-xs font-medium text-emerald-600/80">
-                                      ({account.mailboxHealthStatus})
-                                    </span>
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Right: Limits & Operations */}
-                            <div>
-                              <h5 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-                                <Settings2 className="h-3.5 w-3.5" /> Limits & Operations
-                              </h5>
-                              <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                  <input
-                                    className="w-16 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#10B981] text-center text-gray-900 font-mono focus:outline-hidden"
-                                    type="number"
-                                    min={1}
-                                    max={500}
-                                    value={props.pendingDailyLimits[account.id] ?? String(account.dailyLimit)}
-                                    onChange={(e) =>
-                                      props.setPendingDailyLimits((prev) => ({ ...prev, [account.id]: e.target.value }))
-                                    }
-                                  />
-                                  <div
-                                    onClick={() => props.handleUpdateMailDailyLimit(account.id)}
-                                    className="flex-1 text-sm text-gray-500 hover:text-gray-800 cursor-pointer transition-colors select-none"
-                                  >
-                                    Save Daily Send Limit
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <input
-                                    className="w-16 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#10B981] text-center text-gray-900 font-mono focus:outline-hidden"
-                                    type="number"
-                                    min={1}
-                                    max={500}
-                                    value={props.pendingWarmupLimits[account.id] ?? String(account.warmupDailyLimit)}
-                                    onChange={(e) =>
-                                      props.setPendingWarmupLimits((prev) => ({ ...prev, [account.id]: e.target.value }))
-                                    }
-                                  />
-                                  <div
-                                    onClick={() => props.handleUpdateMailWarmupLimit(account.id)}
-                                    className="flex-1 text-sm text-gray-500 hover:text-gray-800 cursor-pointer transition-colors select-none"
-                                  >
-                                    Save Warmup Limit
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <input
-                                    className="w-16 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#10B981] text-center text-gray-900 font-mono focus:outline-hidden"
-                                    type="number"
-                                    min={1}
-                                    max={500}
-                                    value={
-                                      props.pendingWarmupReplyLimits[account.id] ??
-                                      String(account.warmupReplyDailyLimit)
-                                    }
-                                    onChange={(e) =>
-                                      props.setPendingWarmupReplyLimits((prev) => ({
-                                        ...prev,
-                                        [account.id]: e.target.value,
-                                      }))
-                                    }
-                                  />
-                                  <div
-                                    onClick={() => props.handleUpdateMailWarmupReplyLimit(account.id)}
-                                    className="flex-1 text-sm text-gray-500 hover:text-gray-800 cursor-pointer transition-colors select-none"
-                                  >
-                                    Save Reply Limit
-                                  </div>
-                                </div>
-
-                                <hr className="border-gray-100 my-4" />
-
-                                <select
-                                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#10B981] text-gray-700 bg-white focus:outline-hidden"
-                                  value={account.warmupStatus}
-                                  onChange={(e) =>
-                                    props.handleWarmupStatusChange(
-                                      account.id,
-                                      e.target.value as MailAccount['warmupStatus']
-                                    )
-                                  }
-                                >
-                                  <option value="COLD">Status: COLD</option>
-                                  <option value="WARMING">Status: WARMING</option>
-                                  <option value="PAUSED">Status: PAUSED</option>
-                                  <option value="WARMED">Status: WARMED</option>
-                                </select>
-
-                                <select
-                                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#10B981] text-gray-700 bg-white mt-3 focus:outline-hidden"
-                                  value={account.warmupProviderPreference}
-                                  onChange={(e) =>
-                                    props.handleWarmupProviderPreferenceChange(
-                                      account.id,
-                                      e.target.value as MailAccount['warmupProviderPreference']
-                                    )
-                                  }
-                                >
-                                  <option value="random">Warmup partner: Random</option>
-                                  <option value="gmail">Warmup partner: Gmail</option>
-                                  <option value="zoho">Warmup partner: Zoho</option>
-                                  <option value="outlook">Warmup partner: Outlook</option>
-                                </select>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons Grouping */}
-                          <div className="mt-8 pt-6 border-t border-gray-100 grid grid-cols-1 md:grid-cols-3 items-center gap-4">
-                            {/* Left: Primary Actions */}
-                            <div className="flex items-center gap-3 justify-start flex-wrap">
-                              <label
-                                onClick={() =>
-                                  props.handleWarmupAutoToggle(account.id, account.warmupAutoEnabled)
-                                }
-                                className="flex items-center cursor-pointer gap-2 bg-white border border-gray-200 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-2xs select-none"
-                              >
-                                <div className="relative">
-                                  <div
-                                    className={`w-8 h-4 rounded-full transition-colors ${
-                                      account.warmupAutoEnabled ? 'bg-[#10B981]' : 'bg-gray-300'
-                                    }`}
-                                  />
-                                  <div
-                                    className={`dot absolute top-0.5 bg-white w-3 h-3 rounded-full transition-all ${
-                                      account.warmupAutoEnabled ? 'left-4.5' : 'left-0.5'
-                                    }`}
-                                  />
-                                </div>
-                                <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                                  <Flame
-                                    className={`h-3.5 w-3.5 ${
-                                      account.warmupAutoEnabled ? 'text-orange-500' : 'text-gray-400'
-                                    }`}
-                                  />
-                                  <span>Warmup {account.warmupAutoEnabled ? 'ON' : 'OFF'}</span>
-                                </span>
-                              </label>
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  props.handleToggleMailActive(account.id, account.isActive, account.warmupStatus)
-                                }
-                                className="px-4 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer shadow-2xs"
-                              >
-                                <Power className="h-3.5 w-3.5" />
-                                <span>{account.isActive ? 'Disable' : 'Enable'}</span>
-                              </button>
-                            </div>
-
-                            {/* Center: Segmented Tabs */}
-                            <div className="flex items-center justify-center">
-                              <div className="flex items-center bg-gray-50 p-1 rounded-lg border border-gray-200 shadow-2xs">
-                                <button
-                                  type="button"
-                                  onClick={() => props.handleOpenMailboxFolder(account.id, 'INBOX')}
-                                  disabled={!account.mailboxSyncAvailable}
-                                  className={`px-4 py-1.5 text-sm font-medium rounded flex items-center gap-2 transition-all cursor-pointer ${
-                                    props.activeMailboxAccountId === account.id &&
-                                    props.activeMailboxFolder === 'INBOX'
-                                      ? 'text-gray-900 bg-white shadow-sm border border-gray-100 font-semibold'
-                                      : 'text-gray-500 hover:text-gray-900'
-                                  }`}
-                                >
-                                  <Inbox
-                                    className={`h-3.5 w-3.5 ${
-                                      props.activeMailboxAccountId === account.id &&
-                                      props.activeMailboxFolder === 'INBOX'
-                                        ? 'text-[#10B981]'
-                                        : 'text-gray-400'
-                                    }`}
-                                  />
-                                  <span>Inbox</span>
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => props.handleOpenMailboxFolder(account.id, 'SPAM')}
-                                  disabled={!account.mailboxSyncAvailable}
-                                  className={`px-4 py-1.5 text-sm font-medium rounded flex items-center gap-2 transition-all cursor-pointer ${
-                                    props.activeMailboxAccountId === account.id &&
-                                    props.activeMailboxFolder === 'SPAM'
-                                      ? 'text-gray-900 bg-white shadow-sm border border-gray-100 font-semibold'
-                                      : 'text-gray-500 hover:text-gray-900'
-                                  }`}
-                                >
-                                  <ShieldAlert
-                                    className={`h-3.5 w-3.5 ${
-                                      props.activeMailboxAccountId === account.id &&
-                                      props.activeMailboxFolder === 'SPAM'
-                                        ? 'text-amber-500'
-                                        : 'text-gray-400'
-                                    }`}
-                                  />
-                                  <span>Spam</span>
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => props.handleOpenMailboxFolder(account.id, 'SENT')}
-                                  disabled={!account.mailboxSyncAvailable}
-                                  className={`px-4 py-1.5 text-sm font-medium rounded flex items-center gap-2 transition-all cursor-pointer ${
-                                    props.activeMailboxAccountId === account.id &&
-                                    props.activeMailboxFolder === 'SENT'
-                                      ? 'text-gray-900 bg-white shadow-sm border border-gray-100 font-semibold'
-                                      : 'text-gray-500 hover:text-gray-900'
-                                  }`}
-                                >
-                                  <Send
-                                    className={`h-3.5 w-3.5 ${
-                                      props.activeMailboxAccountId === account.id &&
-                                      props.activeMailboxFolder === 'SENT'
-                                        ? 'text-blue-500'
-                                        : 'text-gray-400'
-                                    }`}
-                                  />
-                                  <span>Sent</span>
-                                </button>
-
-                                <div className="w-px h-4 bg-gray-300 mx-1" />
-
-                                <button
-                                  type="button"
-                                  onClick={() => props.handleRunMailboxSyncNow(account.id)}
-                                  disabled={!account.mailboxSyncAvailable}
-                                  className="px-4 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 rounded flex items-center gap-2 transition-colors cursor-pointer"
-                                >
-                                  <RefreshCw className="h-3.5 w-3.5 text-gray-400" />
-                                  <span>Sync Mailbox</span>
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Right: Destructive Action */}
-                            <div className="flex justify-end">
-                              <button
-                                type="button"
-                                onClick={() => props.handleDeleteMail(account.id, account.email)}
-                                className="text-sm font-medium text-gray-400 hover:text-red-600 transition-colors flex items-center gap-2 focus:outline-hidden cursor-pointer"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span>Remove</span>
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Synced Mailbox Preview if open */}
-                          {props.activeMailboxAccountId === account.id && (
-                            <div className="mt-6 pt-5 border-t border-gray-100 space-y-3">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="font-bold uppercase tracking-wider text-gray-900">
-                                  {props.activeMailboxFolder} Folder
-                                </span>
-                                <span className="text-gray-500">
-                                  {props.mailboxLoading
-                                    ? 'Loading messages...'
-                                    : `${props.mailboxMessages.length} messages`}
-                                </span>
-                              </div>
-
-                              <div className="space-y-2">
-                                {props.mailboxMessages.length === 0 && !props.mailboxLoading ? (
-                                  <div className="text-xs text-gray-400 italic py-2">
-                                    No synced messages in this folder.
-                                  </div>
-                                ) : (
-                                  props.mailboxMessages.map((message) => (
-                                    <div
-                                      key={message.id}
-                                      className="p-3.5 rounded-xl bg-white border border-gray-100 shadow-2xs text-xs flex items-center justify-between gap-3"
-                                    >
-                                      <div className="min-w-0 flex-1">
-                                        <div className="font-semibold text-gray-900 truncate">
-                                          {message.subject || '(no subject)'}
-                                        </div>
-                                        <div className="text-[11px] text-gray-500 mt-0.5 truncate">
-                                          From {message.fromEmail} •{' '}
-                                          {message.receivedAt ? new Date(message.receivedAt).toLocaleDateString() : ''}
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-2 shrink-0">
-                                        {!message.isRead && (
-                                          <button
-                                            type="button"
-                                            className="px-2.5 py-1 rounded-md border border-gray-200 text-[11px] font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer"
-                                            onClick={() =>
-                                              props.handleMailboxAction(account.id, message.id, 'mark-read')
-                                            }
-                                          >
-                                            Mark read
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
               )
             })
@@ -1124,6 +775,44 @@ export function AccountsView(props: {
           </div>
         </div>
       </div>
+
+      {/* Mailbox Settings Slide-Over Drawer */}
+      <MailboxSettingsDrawer
+        account={props.accounts.find((a) => a.id === drawerAccountId) || null}
+        isOpen={Boolean(drawerAccountId)}
+        onClose={() => setDrawerAccountId(null)}
+        isLoadingDetail={drawerAccountId ? Boolean(props.accountDetailsLoading[drawerAccountId]) : false}
+        loadMailAccountDetail={props.loadMailAccountDetail}
+        pendingDailyLimits={props.pendingDailyLimits}
+        setPendingDailyLimits={props.setPendingDailyLimits}
+        pendingWarmupLimits={props.pendingWarmupLimits}
+        setPendingWarmupLimits={props.setPendingWarmupLimits}
+        pendingWarmupReplyLimits={props.pendingWarmupReplyLimits}
+        setPendingWarmupReplyLimits={props.setPendingWarmupReplyLimits}
+        pendingTrulyInboxApiKeys={props.pendingTrulyInboxApiKeys}
+        setPendingTrulyInboxApiKeys={props.setPendingTrulyInboxApiKeys}
+        showTrulyInboxApiKeys={props.showTrulyInboxApiKeys}
+        setShowTrulyInboxApiKeys={props.setShowTrulyInboxApiKeys}
+        trulyInboxConnecting={props.trulyInboxConnecting}
+        trulyInboxStarting={props.trulyInboxStarting}
+        handleUpdateMailDailyLimit={props.handleUpdateMailDailyLimit}
+        handleUpdateMailWarmupLimit={props.handleUpdateMailWarmupLimit}
+        handleUpdateMailWarmupReplyLimit={props.handleUpdateMailWarmupReplyLimit}
+        handleWarmupStatusChange={props.handleWarmupStatusChange}
+        handleWarmupProviderPreferenceChange={props.handleWarmupProviderPreferenceChange}
+        handleWarmupAutoToggle={props.handleWarmupAutoToggle}
+        handleToggleMailActive={props.handleToggleMailActive}
+        handleConnectTrulyInbox={props.handleConnectTrulyInbox}
+        handleStartTrulyInboxWarmup={props.handleStartTrulyInboxWarmup}
+        handleOpenMailboxFolder={props.handleOpenMailboxFolder}
+        handleRunMailboxSyncNow={props.handleRunMailboxSyncNow}
+        handleDeleteMail={props.handleDeleteMail}
+        handleMailboxAction={props.handleMailboxAction}
+        activeMailboxAccountId={props.activeMailboxAccountId}
+        activeMailboxFolder={props.activeMailboxFolder}
+        mailboxMessages={props.mailboxMessages}
+        mailboxLoading={props.mailboxLoading}
+      />
 
       {/* Floating Action Button (Bottom Right) */}
       <div className="fixed bottom-8 right-8 z-30 flex flex-col items-end gap-2">
