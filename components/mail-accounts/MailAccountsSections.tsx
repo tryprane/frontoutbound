@@ -398,14 +398,32 @@ export function AccountsView(props: {
           </div>
 
           <div className="relative flex-1 sm:w-56">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             <input
               type="text"
+              name="mail_accounts_search_query"
+              id="mail_accounts_search_query"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-lpignore="true"
+              data-1p-ignore="true"
               placeholder="Search accounts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] transition-colors shadow-2xs placeholder-gray-400 text-gray-900 focus:outline-hidden"
+              className="w-full pl-9 pr-8 py-1.5 text-sm border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] transition-colors shadow-2xs placeholder-gray-400 text-gray-900 focus:outline-hidden"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
           <button

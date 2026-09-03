@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Activity,
   AlertTriangle,
@@ -112,6 +113,11 @@ export function MailboxSettingsDrawer({
   const [activeTab, setActiveTab] = useState<DrawerTab>('all')
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Listen for Escape key
   useEffect(() => {
@@ -138,7 +144,7 @@ export function MailboxSettingsDrawer({
     }
   }, [isOpen])
 
-  if (!isOpen || !account) return null
+  if (!isOpen || !account || !mounted) return null
 
   const providerType = getMailboxProvider(account)
   const providerLabel =
@@ -157,8 +163,8 @@ export function MailboxSettingsDrawer({
     setTimeout(() => setCopiedEmail(false), 2000)
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex justify-end">
       {/* Semi-transparent blur backdrop */}
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300"
@@ -326,6 +332,11 @@ export function MailboxSettingsDrawer({
                       <div className="flex flex-col sm:flex-row gap-2">
                         <div className="relative flex-1">
                           <input
+                            name="trulyinbox_api_key"
+                            id={`ti_api_key_${account.id}`}
+                            autoComplete="new-password"
+                            data-lpignore="true"
+                            data-1p-ignore="true"
                             className="w-full pl-3 pr-16 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] text-gray-900 font-mono focus:outline-hidden bg-white"
                             placeholder={
                               account.trulyInboxHasApiKey
@@ -876,6 +887,7 @@ export function MailboxSettingsDrawer({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
