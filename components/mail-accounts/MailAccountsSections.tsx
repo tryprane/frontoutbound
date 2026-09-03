@@ -46,6 +46,7 @@ import {
   surfaceCardStyle,
 } from '@/components/mail-accounts/MailAccountsPrimitives'
 import { ZohoAccountForm } from '@/components/mail-accounts/ZohoAccountForm'
+import { MailboxAvatar } from '@/components/mail-accounts/MailboxAvatar'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import type {
@@ -467,11 +468,7 @@ export function AccountsView(props: {
                   >
                     {/* Account Info */}
                     <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${provider.bg}`}
-                      >
-                        {initialLetter}
-                      </div>
+                      <MailboxAvatar account={account} />
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
                           <span className="text-sm font-semibold text-gray-900 truncate">
