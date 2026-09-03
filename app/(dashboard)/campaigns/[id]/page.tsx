@@ -257,11 +257,18 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
         return r.json()
       })
       .then((data) => {
+        if (!data || data.error) return
         setCampaign((current) => {
           if (!current || view === 'full') return data
           return {
             ...current,
             ...data,
+            stats: {
+              ...current.stats,
+              ...data.stats,
+              replies: data.stats?.replies ?? current.stats?.replies ?? 0,
+            },
+            emailOpenStats: data.emailOpenStats ?? current.emailOpenStats ?? null,
             sequenceEnabled: current.sequenceEnabled,
             sequenceSteps: current.sequenceSteps,
             subjectTemplate: current.subjectTemplate,
@@ -567,10 +574,10 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
           <div className="p-3.5 rounded-[16px] bg-[#faf8f4] border border-[#121316]/06">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a8780]">Sent Today</div>
             <div className="font-mono text-xl sm:text-2xl font-bold text-[#121316] mt-0.5 tabular-nums">
-              {isDrive ? campaign.stats.sent : campaign.stats.todaySent}
+              {isDrive ? (campaign.stats?.sent ?? 0) : (campaign.stats?.todaySent ?? 0)}
             </div>
             <div className="text-[10px] text-[#62605c] mt-0.5 truncate">
-              Cap: {campaign.stats.todayAllowance}/day
+              Cap: {campaign.stats?.todayAllowance ?? 0}/day
             </div>
           </div>
 
@@ -604,7 +611,7 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
           <div className="p-3.5 rounded-[16px] bg-[#0f8a5f]/08 border border-[#0f8a5f]/15">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#0f8a5f]">Replies</div>
             <div className="font-mono text-xl sm:text-2xl font-bold text-[#0f8a5f] mt-0.5 tabular-nums">
-              {campaign.stats.replies}
+              {campaign.stats?.replies ?? 0}
             </div>
             <div className="text-[10px] text-[#0f8a5f] mt-0.5 truncate">
               {campaign.emailOpenStats?.replyRate ?? 0}% reply rate
@@ -618,7 +625,7 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
               {activeSenders}
             </div>
             <div className="text-[10px] text-[#62605c] mt-0.5 truncate">
-              {campaign.stats.rampPercent}% ramp pace
+              {campaign.stats?.rampPercent ?? 0}% ramp pace
             </div>
           </div>
         </div>
