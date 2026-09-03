@@ -182,7 +182,7 @@ export function MailboxSettingsDrawer({
               <MailboxAvatar account={account} size="lg" />
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-bold text-gray-900 truncate">
+                  <h3 className="text-lg font-bold text-gray-900 truncate">
                     {account.email}
                   </h3>
                   <button
@@ -192,13 +192,13 @@ export function MailboxSettingsDrawer({
                     title="Copy Email"
                   >
                     {copiedEmail ? (
-                      <Check className="h-3.5 w-3.5 text-green-600" />
+                      <Check className="h-4 w-4 text-green-600" />
                     ) : (
-                      <Copy className="h-3.5 w-3.5" />
+                      <Copy className="h-4 w-4" />
                     )}
                   </button>
                 </div>
-                <div className="flex items-center gap-2 mt-1 flex-wrap text-xs text-gray-500">
+                <div className="flex items-center gap-2 mt-1 flex-wrap text-sm text-gray-500">
                   <span className="font-semibold text-gray-700">{providerLabel}</span>
                   {account.displayName && (
                     <>
@@ -208,22 +208,22 @@ export function MailboxSettingsDrawer({
                   )}
                   <span>•</span>
                   <span
-                    className={`inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full text-[10px] ${
+                    className={`inline-flex items-center gap-1.5 font-semibold px-2.5 py-0.5 rounded-full text-xs ${
                       account.isActive
                         ? 'bg-green-50 text-green-700 border border-green-200'
                         : 'bg-gray-100 text-gray-600 border border-gray-200'
                     }`}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
+                      className={`w-2 h-2 rounded-full ${
                         account.isActive ? 'bg-green-500' : 'bg-gray-400'
                       }`}
                     />
                     {account.isActive ? 'Active' : 'Disabled'}
                   </span>
                   {account.trulyInboxConnected && (
-                    <span className="inline-flex items-center gap-1 font-medium px-2 py-0.5 rounded-full text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <Sparkles className="h-2.5 w-2.5 text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 font-semibold px-2.5 py-0.5 rounded-full text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <Sparkles className="h-3 w-3 text-emerald-600" />
                       TrulyInbox
                     </span>
                   )}
@@ -238,14 +238,14 @@ export function MailboxSettingsDrawer({
                 onClick={() =>
                   handleToggleMailActive(account.id, account.isActive, account.warmupStatus)
                 }
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+                className={`px-3.5 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
                   account.isActive
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
                 }`}
                 title={account.isActive ? 'Disable mailbox' : 'Enable mailbox'}
               >
-                <Power className="h-3.5 w-3.5" />
+                <Power className="h-4 w-4" />
                 <span>{account.isActive ? 'Disable' : 'Enable'}</span>
               </button>
 
@@ -275,7 +275,7 @@ export function MailboxSettingsDrawer({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-sm font-semibold shrink-0 transition-colors cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-gray-900 text-white shadow-2xs'
                     : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200/80'
