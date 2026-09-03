@@ -182,39 +182,22 @@ export function MailboxAvatar({
 }: {
   account: MailboxAccountLike
   className?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'md' | 'lg'
 }) {
   const provider = getMailboxProvider(account)
   const initialLetter = (account.displayName || account.email || 'M').charAt(0).toUpperCase()
 
-  const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-13 h-13',
-    xl: 'w-16 h-16',
-  }[size]
-
-  const iconSizes = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6.5 h-6.5',
-    xl: 'w-8 h-8',
-  }[size]
-
-  const fontSizes = {
-    sm: 'text-xs',
-    md: 'text-base',
-    lg: 'text-lg',
-    xl: 'text-xl',
-  }[size]
+  const sizeClass = size === 'sm' ? 'w-8 h-8' : size === 'lg' ? 'w-10 h-10' : 'w-9 h-9'
+  const iconClass = size === 'sm' ? 'w-4 h-4' : size === 'lg' ? 'w-5 h-5' : 'w-4.5 h-4.5'
+  const fontSize = size === 'sm' ? 'text-xs' : size === 'lg' ? 'text-sm' : 'text-xs'
 
   if (provider === 'gmail') {
     return (
       <div
         title={`Gmail (${account.email || ''})`}
-        className={`${sizeClasses} rounded-full bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${className}`}
+        className={`${sizeClass} rounded-full bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${className}`}
       >
-        <GmailLogo className={`${iconSizes} shrink-0`} />
+        <GmailLogo className={`${iconClass} shrink-0`} />
       </div>
     )
   }
@@ -223,9 +206,9 @@ export function MailboxAvatar({
     return (
       <div
         title={`Zoho Mail (${account.email || ''})`}
-        className={`${sizeClasses} rounded-full bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${className}`}
+        className={`${sizeClass} rounded-full bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${className}`}
       >
-        <ZohoLogo className={`${iconSizes} shrink-0`} />
+        <ZohoLogo className={`${iconClass} shrink-0`} />
       </div>
     )
   }
@@ -234,9 +217,9 @@ export function MailboxAvatar({
     return (
       <div
         title={`Outlook (${account.email || ''})`}
-        className={`${sizeClasses} rounded-full bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${className}`}
+        className={`${sizeClass} rounded-full bg-white border border-gray-200/90 shadow-2xs flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${className}`}
       >
-        <OutlookLogo className={`${iconSizes} shrink-0`} />
+        <OutlookLogo className={`${iconClass} shrink-0`} />
       </div>
     )
   }
@@ -244,7 +227,7 @@ export function MailboxAvatar({
   return (
     <div
       title={`Custom SMTP (${account.email || ''})`}
-      className={`${sizeClasses} rounded-full bg-gray-100 border border-gray-200 text-gray-700 font-bold ${fontSizes} flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${className}`}
+      className={`${sizeClass} rounded-full bg-gray-100 border border-gray-200 text-gray-700 font-bold ${fontSize} flex items-center justify-center shrink-0 shadow-2xs transition-transform group-hover:scale-105 ${className}`}
     >
       {initialLetter}
     </div>
