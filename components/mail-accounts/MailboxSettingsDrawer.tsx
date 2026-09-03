@@ -37,6 +37,20 @@ export interface MailboxSettingsDrawerProps {
   pendingWarmupReplyLimits: Record<string, string>
   setPendingWarmupReplyLimits: React.Dispatch<React.SetStateAction<Record<string, string>>>
 
+  // Tracking domain
+  pendingTrackingDomains: Record<string, string>
+  setPendingTrackingDomains: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  handleUpdateTrackingDomain: (id: string) => void
+
+  // Warmup schedule
+  pendingWarmupTimezones: Record<string, string>
+  setPendingWarmupTimezones: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  pendingWarmupBusinessHoursStart: Record<string, string>
+  setPendingWarmupBusinessHoursStart: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  pendingWarmupBusinessHoursEnd: Record<string, string>
+  setPendingWarmupBusinessHoursEnd: React.Dispatch<React.SetStateAction<Record<string, string>>>
+  handleUpdateMailWarmupSchedule: (id: string) => void
+
   pendingTrulyInboxApiKeys: Record<string, string>
   setPendingTrulyInboxApiKeys: React.Dispatch<React.SetStateAction<Record<string, string>>>
   showTrulyInboxApiKeys: Record<string, boolean>
@@ -54,6 +68,7 @@ export interface MailboxSettingsDrawerProps {
     preference: MailAccount['warmupProviderPreference']
   ) => void
   handleWarmupAutoToggle: (id: string, current: boolean) => void
+  handleRunWarmupNow: (id: string) => void
   handleToggleMailActive: (id: string, current: boolean, warmupStatus: MailAccount['warmupStatus']) => void
   handleConnectTrulyInbox: (id: string) => void
   handleStartTrulyInboxWarmup: (id: string) => void
@@ -66,13 +81,21 @@ export interface MailboxSettingsDrawerProps {
     action: 'mark-read' | 'rescue-to-inbox' | 'reply'
   ) => void
 
+  // Zoho specific controls
+  handleUseZohoApi: (id: string) => void
+  handleZohoImapToggle: (id: string, current: boolean) => void
+
+  // OAuth reconnect actions
+  handleReconnectGmail: () => void
+  handleReconnectZohoApi: () => void
+
   activeMailboxAccountId: string | null
   activeMailboxFolder: 'INBOX' | 'SPAM' | 'SENT'
   mailboxMessages: MailboxMessage[]
   mailboxLoading: boolean
 }
 
-type DrawerTab = 'all' | 'limits' | 'trulyinbox' | 'diagnostics' | 'folders'
+type DrawerTab = 'all' | 'limits' | 'delivery' | 'trulyinbox' | 'diagnostics' | 'folders'
 
 export function MailboxSettingsDrawer({
   account,
@@ -86,6 +109,16 @@ export function MailboxSettingsDrawer({
   setPendingWarmupLimits,
   pendingWarmupReplyLimits,
   setPendingWarmupReplyLimits,
+  pendingTrackingDomains,
+  setPendingTrackingDomains,
+  handleUpdateTrackingDomain,
+  pendingWarmupTimezones,
+  setPendingWarmupTimezones,
+  pendingWarmupBusinessHoursStart,
+  setPendingWarmupBusinessHoursStart,
+  pendingWarmupBusinessHoursEnd,
+  setPendingWarmupBusinessHoursEnd,
+  handleUpdateMailWarmupSchedule,
   pendingTrulyInboxApiKeys,
   setPendingTrulyInboxApiKeys,
   showTrulyInboxApiKeys,
@@ -98,6 +131,7 @@ export function MailboxSettingsDrawer({
   handleWarmupStatusChange,
   handleWarmupProviderPreferenceChange,
   handleWarmupAutoToggle,
+  handleRunWarmupNow,
   handleToggleMailActive,
   handleConnectTrulyInbox,
   handleStartTrulyInboxWarmup,
@@ -105,11 +139,16 @@ export function MailboxSettingsDrawer({
   handleRunMailboxSyncNow,
   handleDeleteMail,
   handleMailboxAction,
+  handleUseZohoApi,
+  handleZohoImapToggle,
+  handleReconnectGmail,
+  handleReconnectZohoApi,
   activeMailboxAccountId,
   activeMailboxFolder,
   mailboxMessages,
   mailboxLoading,
 }: MailboxSettingsDrawerProps) {
+  const [runningWarmupNow, setRunningWarmupNow] = React.useState(false)
   const [activeTab, setActiveTab] = useState<DrawerTab>('all')
   const [copiedEmail, setCopiedEmail] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -266,6 +305,7 @@ export function MailboxSettingsDrawer({
               [
                 { id: 'all', label: 'All Settings' },
                 { id: 'limits', label: 'Limits & Warmup' },
+                { id: 'delivery', label: 'Delivery & Tracking' },
                 { id: 'trulyinbox', label: 'TrulyInbox AI' },
                 { id: 'folders', label: 'Mailbox Sync' },
                 { id: 'diagnostics', label: 'Health' },
@@ -298,6 +338,48 @@ export function MailboxSettingsDrawer({
             </div>
           ) : (
             <>
+              {/* ── SECTION: OAuth Reconnect Banners ──────────────────────────── */}
+              {account.type === 'gmail' && account.mailboxConnectionMethod !== 'imap' && account.mailboxConnectionMethod !== 'oauth' && (
+                <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50 flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-amber-900">Gmail OAuth disconnected</p>
+                    <p className="text-xs text-amber-700 mt-0.5">Reconnect your Gmail OAuth to restore warmup and mailbox sync.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleReconnectGmail}
+                    className="px-3 py-1.5 text-xs font-bold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors shrink-0 cursor-pointer"
+                  >
+                    Reconnect Gmail
+                  </button>
+                </div>
+              )}
+              {account.type === 'zoho' && account.zohoAuthError && (
+                <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50 flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-amber-900">Zoho OAuth error</p>
+                    <p className="text-xs text-amber-700 mt-0.5 truncate">{account.zohoAuthError}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleReconnectZohoApi}
+                    className="px-3 py-1.5 text-xs font-bold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors shrink-0 cursor-pointer"
+                  >
+                    Reconnect Zoho
+                  </button>
+                </div>
+              )}
+              {account.type === 'outlook' && account.microsoftConnectionStatus && account.microsoftConnectionStatus !== 'connected' && (
+                <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50 flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-amber-900">Microsoft OAuth requires attention</p>
+                    <p className="text-xs text-amber-700 mt-0.5">Status: {account.microsoftConnectionStatus}. Re-authorise to restore sending & sync.</p>
+                  </div>
+                </div>
+              )}
               {/* SECTION: TrulyInbox Integration Banner */}
               {(activeTab === 'all' || activeTab === 'trulyinbox') && (
                 <div className="p-5 rounded-2xl border border-emerald-100 bg-linear-to-br from-emerald-50/50 via-white to-white shadow-xs">
@@ -407,6 +489,162 @@ export function MailboxSettingsDrawer({
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* ── SECTION: Delivery & Tracking ─────────────────────────────── */}
+              {(activeTab === 'all' || activeTab === 'delivery') && (
+                <div className="p-5 rounded-2xl border border-gray-200/80 bg-white shadow-xs space-y-5">
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                    <Send className="h-4 w-4 text-gray-500" />
+                    Delivery & Tracking
+                  </h4>
+
+                  {/* Sender Display Name */}
+                  <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-gray-50/70 border border-gray-100">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">Sender Display Name</div>
+                      <div className="text-xs text-gray-500">Shown as the "From" name in recipient inboxes</div>
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium truncate max-w-[200px]">
+                      {account.displayName || '—'}
+                    </div>
+                  </div>
+
+                  {/* Custom Tracking Domain */}
+                  <div className="flex items-start justify-between gap-4 p-3 rounded-xl bg-gray-50/70 border border-gray-100">
+                    <div className="shrink-0">
+                      <div className="text-sm font-semibold text-gray-900">Custom Tracking Domain</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Override click & open tracking hostname</div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <input
+                        className="w-44 px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] text-gray-900 font-mono bg-white focus:outline-hidden"
+                        type="text"
+                        placeholder="track.yourdomain.com"
+                        value={pendingTrackingDomains[account.id] ?? (account.trackingDomain || '')}
+                        onChange={(e) =>
+                          setPendingTrackingDomains((prev) => ({
+                            ...prev,
+                            [account.id]: e.target.value,
+                          }))
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateTrackingDomain(account.id)}
+                        className="px-3 py-1.5 bg-white border border-gray-200 text-xs font-semibold text-gray-700 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer shadow-2xs"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Warmup Schedule: Timezone + Business Hours */}
+                  <div className="p-3 rounded-xl bg-gray-50/70 border border-gray-100 space-y-3">
+                    <div className="text-sm font-semibold text-gray-900">Warmup Send Window</div>
+                    <div className="text-xs text-gray-500">Restrict warmup dispatches to a specific timezone and time window (HH:MM format, e.g. 09:00 – 18:00)</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Timezone</label>
+                        <input
+                          className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] text-gray-900 bg-white focus:outline-hidden"
+                          type="text"
+                          placeholder="e.g. America/New_York"
+                          value={pendingWarmupTimezones[account.id] ?? (account.warmupTimezone || '')}
+                          onChange={(e) =>
+                            setPendingWarmupTimezones((prev) => ({ ...prev, [account.id]: e.target.value }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Start Time</label>
+                        <input
+                          className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] text-gray-900 font-mono bg-white focus:outline-hidden"
+                          type="text"
+                          placeholder="09:00"
+                          value={pendingWarmupBusinessHoursStart[account.id] ?? (account.warmupBusinessHoursStart || '')}
+                          onChange={(e) =>
+                            setPendingWarmupBusinessHoursStart((prev) => ({ ...prev, [account.id]: e.target.value }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">End Time</label>
+                        <input
+                          className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#10B981] text-gray-900 font-mono bg-white focus:outline-hidden"
+                          type="text"
+                          placeholder="18:00"
+                          value={pendingWarmupBusinessHoursEnd[account.id] ?? (account.warmupBusinessHoursEnd || '')}
+                          onChange={(e) =>
+                            setPendingWarmupBusinessHoursEnd((prev) => ({ ...prev, [account.id]: e.target.value }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateMailWarmupSchedule(account.id)}
+                      className="px-4 py-1.5 bg-white border border-gray-200 text-xs font-semibold text-gray-700 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      Save Schedule
+                    </button>
+                  </div>
+
+                  {/* Zoho API / IMAP Switcher */}
+                  {account.type === 'zoho' && (
+                    <div className="p-3 rounded-xl bg-orange-50/50 border border-orange-100 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">Zoho Mailbox Mode</div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            Current: <span className="font-semibold text-orange-700">{account.zohoMailboxMode === 'api' ? 'Zoho Mail API' : 'Zoho IMAP'}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {account.zohoMailboxMode === 'imap' && (
+                            <button
+                              type="button"
+                              onClick={() => handleUseZohoApi(account.id)}
+                              className="px-3 py-1.5 text-xs font-semibold bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors cursor-pointer"
+                            >
+                              Switch to Zoho API
+                            </button>
+                          )}
+                          {account.zohoMailboxMode !== 'api' && (
+                            <button
+                              type="button"
+                              onClick={() => handleZohoImapToggle(account.id, account.zohoImapEnabled !== false)}
+                              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                                account.zohoImapEnabled !== false
+                                  ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
+                                  : 'bg-gray-900 text-white hover:bg-gray-800'
+                              }`}
+                            >
+                              IMAP {account.zohoImapEnabled !== false ? 'ON — Disable' : 'OFF — Enable'}
+                            </button>
+                          )}
+                          {!account.zohoApiConnected ? (
+                            <button
+                              type="button"
+                              onClick={handleReconnectZohoApi}
+                              className="px-3 py-1.5 text-xs font-semibold bg-white border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer"
+                            >
+                              Connect Zoho API
+                            </button>
+                          ) : account.zohoMailboxMode === 'api' ? (
+                            <button
+                              type="button"
+                              onClick={handleReconnectZohoApi}
+                              className="px-3 py-1.5 text-xs font-semibold bg-white border border-orange-200 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer"
+                            >
+                              Reconnect Zoho API
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -571,8 +809,8 @@ export function MailboxSettingsDrawer({
                       </div>
                     </div>
 
-                    {/* Master Warmup Toggle Switch */}
-                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                    {/* Master Warmup Toggle Switch + Run Warmup Now */}
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3 flex-wrap">
                       <div className="flex items-center gap-2">
                         <Flame
                           className={`h-4 w-4 ${
@@ -583,28 +821,46 @@ export function MailboxSettingsDrawer({
                           Automated Warmup System
                         </span>
                       </div>
-                      <label
-                        onClick={() =>
-                          handleWarmupAutoToggle(account.id, account.warmupAutoEnabled)
-                        }
-                        className="flex items-center cursor-pointer gap-2 bg-white border border-gray-200 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-2xs select-none"
-                      >
-                        <div className="relative">
-                          <div
-                            className={`w-8 h-4 rounded-full transition-colors ${
-                              account.warmupAutoEnabled ? 'bg-[#10B981]' : 'bg-gray-300'
-                            }`}
-                          />
-                          <div
-                            className={`dot absolute top-0.5 bg-white w-3 h-3 rounded-full transition-all ${
-                              account.warmupAutoEnabled ? 'left-4.5' : 'left-0.5'
-                            }`}
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-gray-700">
-                          {account.warmupAutoEnabled ? 'RUNNING' : 'PAUSED'}
-                        </span>
-                      </label>
+                      <div className="flex items-center gap-2">
+                        {/* Run Warmup Now */}
+                        <button
+                          type="button"
+                          disabled={runningWarmupNow || !['WARMING', 'WARMED'].includes(account.warmupStatus) || !account.warmupAutoEnabled}
+                          onClick={async () => {
+                            setRunningWarmupNow(true)
+                            await handleRunWarmupNow(account.id)
+                            setRunningWarmupNow(false)
+                          }}
+                          title={!['WARMING', 'WARMED'].includes(account.warmupStatus) ? 'Only available while WARMING or WARMED' : !account.warmupAutoEnabled ? 'Turn Auto ON first' : 'Trigger a warmup tick now'}
+                          className="px-3 py-1.5 bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold rounded-full hover:bg-orange-100 transition-colors cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shadow-2xs"
+                        >
+                          {runningWarmupNow ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Flame className="h-3.5 w-3.5" />}
+                          <span>{runningWarmupNow ? 'Queuing...' : 'Run Now'}</span>
+                        </button>
+
+                        <label
+                          onClick={() =>
+                            handleWarmupAutoToggle(account.id, account.warmupAutoEnabled)
+                          }
+                          className="flex items-center cursor-pointer gap-2 bg-white border border-gray-200 pl-2 pr-3 py-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-2xs select-none"
+                        >
+                          <div className="relative">
+                            <div
+                              className={`w-8 h-4 rounded-full transition-colors ${
+                                account.warmupAutoEnabled ? 'bg-[#10B981]' : 'bg-gray-300'
+                              }`}
+                            />
+                            <div
+                              className={`dot absolute top-0.5 bg-white w-3 h-3 rounded-full transition-all ${
+                                account.warmupAutoEnabled ? 'left-4.5' : 'left-0.5'
+                              }`}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700">
+                            {account.warmupAutoEnabled ? 'RUNNING' : 'PAUSED'}
+                          </span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>

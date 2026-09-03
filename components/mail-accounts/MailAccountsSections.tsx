@@ -873,6 +873,16 @@ export function AccountsView(props: {
         setPendingWarmupLimits={props.setPendingWarmupLimits}
         pendingWarmupReplyLimits={props.pendingWarmupReplyLimits}
         setPendingWarmupReplyLimits={props.setPendingWarmupReplyLimits}
+        pendingTrackingDomains={props.pendingTrackingDomains}
+        setPendingTrackingDomains={props.setPendingTrackingDomains}
+        handleUpdateTrackingDomain={props.handleUpdateTrackingDomain}
+        pendingWarmupTimezones={props.pendingWarmupTimezones}
+        setPendingWarmupTimezones={props.setPendingWarmupTimezones}
+        pendingWarmupBusinessHoursStart={props.pendingWarmupBusinessHoursStart}
+        setPendingWarmupBusinessHoursStart={props.setPendingWarmupBusinessHoursStart}
+        pendingWarmupBusinessHoursEnd={props.pendingWarmupBusinessHoursEnd}
+        setPendingWarmupBusinessHoursEnd={props.setPendingWarmupBusinessHoursEnd}
+        handleUpdateMailWarmupSchedule={props.handleUpdateMailWarmupSchedule}
         pendingTrulyInboxApiKeys={props.pendingTrulyInboxApiKeys}
         setPendingTrulyInboxApiKeys={props.setPendingTrulyInboxApiKeys}
         showTrulyInboxApiKeys={props.showTrulyInboxApiKeys}
@@ -885,6 +895,7 @@ export function AccountsView(props: {
         handleWarmupStatusChange={props.handleWarmupStatusChange}
         handleWarmupProviderPreferenceChange={props.handleWarmupProviderPreferenceChange}
         handleWarmupAutoToggle={props.handleWarmupAutoToggle}
+        handleRunWarmupNow={props.handleRunWarmupNow}
         handleToggleMailActive={props.handleToggleMailActive}
         handleConnectTrulyInbox={props.handleConnectTrulyInbox}
         handleStartTrulyInboxWarmup={props.handleStartTrulyInboxWarmup}
@@ -892,6 +903,10 @@ export function AccountsView(props: {
         handleRunMailboxSyncNow={props.handleRunMailboxSyncNow}
         handleDeleteMail={props.handleDeleteMail}
         handleMailboxAction={props.handleMailboxAction}
+        handleUseZohoApi={props.handleUseZohoApi}
+        handleZohoImapToggle={props.handleZohoImapToggle}
+        handleReconnectGmail={props.handleReconnectGmail}
+        handleReconnectZohoApi={props.handleReconnectZohoApi}
         activeMailboxAccountId={props.activeMailboxAccountId}
         activeMailboxFolder={props.activeMailboxFolder}
         mailboxMessages={props.mailboxMessages}
