@@ -97,9 +97,9 @@ export function CampaignSenderFleet({
   const isWhatsApp = channel === 'WHATSAPP'
   const isDrive = channel === 'GDRIVE'
 
-  const emailSenders = mailAccounts.map((a) => a.mailAccount)
-  const whatsAppSenders = whatsappAccounts.map((a) => a.whatsappAccount)
-  const driveSenders = driveAccounts
+  const emailSenders = (mailAccounts || []).map((a) => a?.mailAccount).filter(Boolean)
+  const whatsAppSenders = (whatsappAccounts || []).map((a) => a?.whatsappAccount).filter(Boolean)
+  const driveSenders = (driveAccounts || []).filter(Boolean)
 
   const totalCount = isEmail
     ? totalAvailable || emailSenders.length
@@ -109,8 +109,8 @@ export function CampaignSenderFleet({
 
   const filteredEmailSenders = emailSenders.filter(
     (s) =>
-      s.email.toLowerCase().includes(filterQuery.toLowerCase()) ||
-      s.displayName.toLowerCase().includes(filterQuery.toLowerCase())
+      (s?.email || '').toLowerCase().includes(filterQuery.toLowerCase()) ||
+      (s?.displayName || '').toLowerCase().includes(filterQuery.toLowerCase())
   )
 
   return (
@@ -183,7 +183,7 @@ export function CampaignSenderFleet({
                           {mailbox.email}
                         </div>
                         <div className="text-[11px] text-[#62605c] truncate">
-                          {mailbox.displayName} · <span className="uppercase font-mono">{mailbox.type}</span>
+                          {mailbox.displayName || mailbox.email} · <span className="uppercase font-mono">{mailbox.type}</span>
                         </div>
                       </div>
                     </div>

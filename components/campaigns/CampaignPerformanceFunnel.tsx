@@ -33,23 +33,24 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
   const isWhatsApp = stats.channel === 'WHATSAPP'
   const isDrive = stats.channel === 'GDRIVE'
 
-  const total = Math.max(stats.totalLeads, 1)
-  const sent = stats.sent
-  const failed = stats.failed + (stats.bounced || 0)
+  const total = Math.max(stats?.totalLeads || 0, 1)
+  const sent = stats?.sent || 0
+  const failed = (stats?.failed || 0) + (stats?.bounced || 0)
   const delivered = Math.max(0, sent - failed)
-  const opened = stats.opened ?? 0
-  const replies = stats.replies
+  const opened = stats?.opened ?? 0
+  const replies = stats?.replies ?? 0
 
   const dispatchedRate = Math.min(100, Math.round((sent / total) * 100))
   const deliveryRate = sent > 0 ? Math.min(100, Math.round((delivered / sent) * 100)) : 100
-  const openRate = stats.openRate ?? (sent > 0 && stats.isTracked ? Math.round((opened / sent) * 100) : null)
-  const replyRate = stats.replyRate ?? (sent > 0 ? Math.round((replies / sent) * 100) : 0)
+  const openRate = stats?.openRate ?? (sent > 0 && stats?.isTracked ? Math.round((opened / sent) * 100) : null)
+  const rawReplyRate = stats?.replyRate ?? (sent > 0 ? Math.round((replies / sent) * 100) : 0)
+  const replyRate = Number.isFinite(rawReplyRate) ? rawReplyRate : 0
 
   const stages = [
     {
       id: 'total',
       label: 'Prospect List',
-      count: stats.totalLeads,
+      count: stats?.totalLeads || 0,
       rateText: '100% of list',
       percentOfTotal: 100,
       icon: Users,
@@ -68,7 +69,7 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
       color: 'bg-[#121316] text-white',
       badgeBg: 'bg-[#121316]/08 text-[#121316]',
       border: 'border-[#121316]/12',
-      description: `${sent.toLocaleString()} out of ${total.toLocaleString()} leads sent through pooled senders.`,
+      description: `${(sent ?? 0).toLocaleString()} out of ${(total ?? 0).toLocaleString()} leads sent through pooled senders.`,
     },
     {
       id: 'delivered',
@@ -80,9 +81,9 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
       color: 'bg-[#0f8a5f] text-white',
       badgeBg: 'bg-[#0f8a5f]/10 text-[#0f8a5f]',
       border: 'border-[#0f8a5f]/20',
-      description: `${delivered.toLocaleString()} delivered with zero bounce or SMTP reject errors.`,
+      description: `${(delivered ?? 0).toLocaleString()} delivered with zero bounce or SMTP reject errors.`,
     },
-    ...(isEmail && stats.isTracked
+    ...(isEmail && stats?.isTracked
       ? [
           {
             id: 'opened',
@@ -181,7 +182,7 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
               </div>
 
               <div className="font-mono text-2xl sm:text-3xl font-extrabold text-[#121316] tabular-nums">
-                {stage.count.toLocaleString()}
+                {(stage.count ?? 0).toLocaleString()}
               </div>
 
               {/* Progress bar representing ratio */}
@@ -194,7 +195,7 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
                       ? 'bg-[#ee382b]'
                       : 'bg-[#121316]'
                   }`}
-                  style={{ width: `${Math.max(4, Math.min(100, stage.percentOfTotal))}%` }}
+                  style={{ width: `${Math.max(4, Math.min(100, Number.isFinite(stage.percentOfTotal) ? stage.percentOfTotal : 0))}%` }}
                 />
               </div>
 
@@ -214,7 +215,7 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
             <span>Campaign Progression Ratio</span>
           </div>
           <span className="font-mono text-[#62605c]">
-            {stats.remaining.toLocaleString()} remaining in queue
+            {(stats?.remaining ?? 0).toLocaleString()} remaining in queue
           </span>
         </div>
 
@@ -229,22 +230,22 @@ export function CampaignPerformanceFunnel({ stats }: { stats: FunnelStats }) {
           <div
             className="h-full rounded-r-full bg-[#121316]/15 transition-all duration-500"
             style={{ width: `${100 - dispatchedRate}%` }}
-            title={`${stats.remaining} Remaining`}
+            title={`${stats?.remaining ?? 0} Remaining`}
           />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 mt-3 text-[11px] text-[#62605c] font-medium">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[#121316]" />
-            <span>{sent.toLocaleString()} Dispatched ({dispatchedRate}%)</span>
+            <span>{(sent ?? 0).toLocaleString()} Dispatched ({dispatchedRate}%)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[#0f8a5f]" />
-            <span>{replies} Replies ({replyRate}%)</span>
+            <span>{replies ?? 0} Replies ({replyRate}%)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[#121316]/25" />
-            <span>{stats.remaining.toLocaleString()} Pending in Queue</span>
+            <span>{(stats?.remaining ?? 0).toLocaleString()} Pending in Queue</span>
           </div>
         </div>
       </div>
