@@ -45,3 +45,6 @@ yarn-error.log*
 .dev.vars
 .dev.vars.*
 cloudflare-env.d.ts
+
+# Local browser QA artifacts
+output/playwright/

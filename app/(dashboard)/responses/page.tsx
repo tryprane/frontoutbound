@@ -25,6 +25,7 @@ import {
   Check,
   CheckCheck,
 } from 'lucide-react'
+import { ConversationTimeline } from '@/components/responses/ConversationTimeline'
 import type { MailAccountOption, ResponseListItem, ResponseThreadDetail, ResponseThreadMessage } from '@/components/responses/types'
 
 type ListPayload = {
@@ -49,62 +50,16 @@ function formatDate(value?: string | null) {
   try {
     const date = new Date(value)
     return date.toLocaleString('en-US', {
-      month: 'numeric',
+      month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
-      second: '2-digit',
       hour12: true,
     })
   } catch {
     return String(value)
   }
-}
-
-function sanitizeHtml(html: string) {
-  if (typeof window === 'undefined') return html
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  doc.querySelectorAll('script,style,iframe,object,embed,link,meta,form,input,button,textarea,select,video,audio,source,picture,svg,canvas').forEach((node) => node.remove())
-  doc.body.querySelectorAll('*').forEach((node) => {
-    for (const attribute of Array.from(node.attributes)) {
-      const name = attribute.name.toLowerCase()
-      const value = attribute.value.trim()
-      const normalizedValue = value.toLowerCase()
-      const isUrlAttribute = ['href', 'src', 'srcset', 'poster', 'action', 'formaction'].includes(name)
-      const isUnsafeUrl =
-        normalizedValue.startsWith('javascript:') ||
-        normalizedValue.startsWith('data:') ||
-        normalizedValue.startsWith('vbscript:') ||
-        /^https?:\/\//i.test(value) ||
-        value.startsWith('//')
-      const isStyleAttribute = name === 'style'
-      if (name.startsWith('on') || (isUrlAttribute && isUnsafeUrl) || isStyleAttribute) {
-        node.removeAttribute(attribute.name)
-      }
-    }
-    if (node.tagName.toLowerCase() === 'a') {
-      node.setAttribute('rel', 'noreferrer noopener nofollow')
-      node.setAttribute('target', '_blank')
-    }
-  })
-  return doc.body.innerHTML
-}
-
-function MessageBody({ message }: { message: ResponseThreadMessage }) {
-  if (message.bodyHtml) {
-    return (
-      <div
-        className="prose prose-sm max-w-none text-gray-800 leading-relaxed font-sans"
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(message.bodyHtml) }}
-      />
-    )
-  }
-  return (
-    <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-800 font-sans">
-      {message.bodyText || 'No message content available.'}
-    </div>
-  )
 }
 
 function SentimentBadge({ classification }: { classification: string }) {
@@ -143,6 +98,10 @@ function SentimentBadge({ classification }: { classification: string }) {
 }
 
 export default function ResponsesPage() {
+  const detailRequest = useRef(0)
+  const listRequest = useRef(0)
+  const selectedRef = useRef<string | null>(null)
+  const drafts = useRef<Record<string, { subject: string; body: string }>>({})
   const [items, setItems] = useState<ResponseListItem[]>([])
   const [accounts, setAccounts] = useState<MailAccountOption[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -188,6 +147,7 @@ export default function ResponsesPage() {
 
   const loadResponses = useCallback(
     async (options?: { refresh?: boolean }) => {
+      const request = ++listRequest.current
       setLoadingList(true)
       const params = new URLSearchParams({ page: String(page), limit: String(limit) })
       if (deferredSearch.trim()) params.set('search', deferredSearch.trim())
@@ -201,41 +161,50 @@ export default function ResponsesPage() {
         const data = (await response.json()) as ListPayload & { error?: string }
         if (!response.ok) throw new Error(data.error || 'Failed to load responses')
 
+        if (request !== listRequest.current) return
         setItems(data.items || [])
         setAccounts(data.filters?.accounts || [])
         setTotal(data.total || 0)
         setPage(data.page || 1)
         setPages(data.pages || 1)
         setLimit(data.limit || 20)
-        setSelectedId((current) =>
-          data.items?.some((item) => item.id === current) ? current : data.items?.[0]?.id || null
-        )
-      } catch (err: any) {
-        setToast({ type: 'error', message: err.message || 'Failed to load response threads' })
+        setSelectedId((current) => {
+          const next = data.items?.some((item) => item.id === current) ? current : data.items?.[0]?.id || null
+          selectedRef.current = next
+          return next
+        })
+      } catch (err: unknown) {
+        if (request !== listRequest.current) return
+        setToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to load response threads' })
       } finally {
-        setLoadingList(false)
+        if (request === listRequest.current) setLoadingList(false)
       }
     },
     [classification, deferredSearch, limit, mailAccountId, page, status]
   )
 
   const loadDetail = useCallback(async (id: string) => {
+    const request = ++detailRequest.current
     setLoadingDetail(true)
     try {
       const response = await fetch(`/api/responses/${id}`)
       const data = (await response.json()) as ResponseThreadDetail & { error?: string }
       if (!response.ok) throw new Error(data.error || 'Failed to load response thread')
+      if (request !== detailRequest.current || selectedRef.current !== id) return
       setDetail(data)
+      setItems(current => current.map(item => item.id === id ? { ...item, unread: false } : item))
       const defSubject =
         data.response.subject && /^re:/i.test(data.response.subject)
           ? data.response.subject
           : `Re: ${data.response.subject || ''}`.trim()
-      setReplySubject(defSubject)
-      setReplyBody(`Hi,\n\nThank you for getting back to us.\n\nBest regards,`)
-    } catch (err: any) {
-      setToast({ type: 'error', message: err.message || 'Failed to load thread detail' })
+      setReplySubject(drafts.current[id]?.subject ?? defSubject)
+      setReplyBody(drafts.current[id]?.body ?? '')
+    } catch (err: unknown) {
+      if (request !== detailRequest.current || selectedRef.current !== id) return
+      setDetail(null)
+      setToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to load thread detail' })
     } finally {
-      setLoadingDetail(false)
+      if (request === detailRequest.current) setLoadingDetail(false)
     }
   }, [])
 
@@ -244,7 +213,10 @@ export default function ResponsesPage() {
   }, [loadResponses])
 
   useEffect(() => {
+    selectedRef.current = selectedId
     if (!selectedId) {
+      detailRequest.current += 1
+      setLoadingDetail(false)
       setDetail(null)
       return
     }
@@ -252,25 +224,43 @@ export default function ResponsesPage() {
   }, [loadDetail, selectedId])
 
   function selectResponse(id: string) {
+    if (selectedRef.current !== id) {
+      detailRequest.current += 1
+      setDetail(null)
+    }
+    selectedRef.current = id
     setSelectedId(id)
     setItems((current) => current.map((item) => (item.id === id ? { ...item, unread: false } : item)))
     setShowDetailMobile(true)
   }
 
+  function updateDraft(subject: string, body: string) {
+    setReplySubject(subject)
+    setReplyBody(body)
+    if (selectedRef.current) drafts.current[selectedRef.current] = { subject, body }
+  }
+
+  async function refreshThreads() {
+    await loadResponses({ refresh: true })
+    if (selectedRef.current) await loadDetail(selectedRef.current)
+  }
+
   async function handleSendReply() {
-    if (!selectedId || !replyBody.trim()) {
+    if (sendingReply) return
+    if (!selectedId || detail?.response.id !== selectedId || !replyBody.trim()) {
       setToast({ type: 'error', message: 'Please type a reply message before sending.' })
       return
     }
 
+    const targetId = selectedId
     setSendingReply(true)
     try {
-      const response = await fetch(`/api/responses/${selectedId}/reply`, {
+      const response = await fetch(`/api/responses/${targetId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject: replySubject,
-          html: `<p>${replyBody.replace(/\n/g, '<br/>')}</p>`,
+          html: `<p>${replyBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')}</p>`,
         }),
       })
 
@@ -278,11 +268,14 @@ export default function ResponsesPage() {
       if (!response.ok) throw new Error(data.error || 'Failed to send reply')
 
       setToast({ type: 'success', message: 'Reply sent successfully!' })
-      setReplyBody('')
-      await loadDetail(selectedId)
+      delete drafts.current[targetId]
+      if (selectedRef.current === targetId) {
+        setReplyBody('')
+        await loadDetail(targetId)
+      }
       await loadResponses()
-    } catch (err: any) {
-      setToast({ type: 'error', message: err.message || 'Failed to send reply' })
+    } catch (err: unknown) {
+      setToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to send reply' })
     } finally {
       setSendingReply(false)
     }
@@ -290,7 +283,7 @@ export default function ResponsesPage() {
 
   async function handleDeleteThread() {
     if (!selectedId) return
-    if (!window.confirm('Are you sure you want to delete / archive this response thread?')) return
+    if (!window.confirm('Archive this conversation? You can find it under Archived.')) return
 
     setIsDeleting(true)
     try {
@@ -306,8 +299,8 @@ export default function ResponsesPage() {
       setDetail(null)
       setShowDetailMobile(false)
       await loadResponses()
-    } catch (err: any) {
-      setToast({ type: 'error', message: err.message || 'Failed to archive thread' })
+    } catch (err: unknown) {
+      setToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to archive thread' })
     } finally {
       setIsDeleting(false)
     }
@@ -349,8 +342,8 @@ export default function ResponsesPage() {
       setComposeSubject('')
       setComposeBody('')
       await loadResponses()
-    } catch (err: any) {
-      setToast({ type: 'error', message: err.message || 'Failed to send email' })
+    } catch (err: unknown) {
+      setToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to send email' })
     } finally {
       setIsSendingCompose(false)
     }
@@ -403,19 +396,27 @@ export default function ResponsesPage() {
             <Inbox className="h-3.5 w-3.5" />
             <span>Prospect Conversations</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Replies &amp; Lead Sentiment</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Responses</h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-            Review inbound replies, classify prospect intent, and trigger quick responses.
+            Every conversation, from your first email to your next reply.
           </p>
         </div>
         <button
           type="button"
-          onClick={() => void loadResponses({ refresh: true })}
+          onClick={() => void refreshThreads()}
           disabled={loadingList}
           className="flex items-center gap-2 px-4 py-2 border border-gray-200 bg-white rounded-full text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
         >
           <RefreshCw className={`w-4 h-4 text-gray-600 ${loadingList ? 'animate-spin' : ''}`} />
-          <span>Refresh Threads</span>
+          <span>Refresh conversations</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setComposeOpen(true)}
+          className="flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 sm:text-sm"
+        >
+          <PenSquare className="h-4 w-4" />
+          Compose
         </button>
       </header>
 
@@ -423,7 +424,7 @@ export default function ResponsesPage() {
       <main className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8 overflow-hidden max-w-[1600px] w-full mx-auto min-h-[calc(100vh-180px)]">
         {/* LEFT PANE: Thread List */}
         <aside
-          className={`w-full lg:w-[400px] flex flex-col shrink-0 lg:border-r border-gray-200/80 lg:pr-6 space-y-4 ${
+          className={`w-full lg:w-[280px] xl:w-[320px] flex flex-col shrink-0 lg:border-r border-gray-200/80 lg:pr-6 space-y-4 ${
             showDetailMobile ? 'hidden lg:flex' : 'flex'
           }`}
         >
@@ -562,6 +563,10 @@ export default function ResponsesPage() {
                   <article
                     key={item.id}
                     onClick={() => selectResponse(item.id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
+                    onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); selectResponse(item.id) } }}
                     className={`p-4 rounded-xl border transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-blue-50/40 border-blue-300 shadow-xs ring-1 ring-blue-500/20'
@@ -597,7 +602,7 @@ export default function ResponsesPage() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] px-2 py-0.5 rounded-md border border-gray-200 bg-gray-50 text-gray-600 font-medium">
-                          {item.status === 'replied' ? 'Replied' : 'Needs reply'}
+                          {item.status === 'archived' ? 'Archived' : item.status === 'replied' ? 'Replied' : 'Needs reply'}
                         </span>
                         <SentimentBadge classification={item.classification} />
                       </div>
@@ -644,7 +649,7 @@ export default function ResponsesPage() {
 
         {/* RIGHT PANE: Thread Workspace (Continuous Flow) */}
         <section
-          className={`flex-1 flex flex-col h-full overflow-hidden bg-white rounded-2xl border border-gray-100 card-shadow p-5 sm:p-8 ${
+          className={`min-w-0 flex-1 flex flex-col h-full overflow-hidden bg-white rounded-2xl border border-gray-200 card-shadow p-3 sm:p-6 ${
             !showDetailMobile ? 'hidden lg:flex' : 'flex'
           }`}
         >
@@ -678,7 +683,7 @@ export default function ResponsesPage() {
                   </button>
 
                   <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1">
-                    THREAD WORKSPACE
+                    CONVERSATION
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 leading-tight">
                     {detail.response.subject || '(No Subject)'}
@@ -698,75 +703,25 @@ export default function ResponsesPage() {
                     disabled={isDeleting}
                     className="px-4 py-2 border border-gray-200 rounded-full text-xs font-semibold hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors text-gray-600 cursor-pointer disabled:opacity-50"
                   >
-                    {isDeleting ? 'Archiving...' : 'Delete'}
+                    {isDeleting ? 'Archiving...' : 'Archive'}
                   </button>
                 </div>
               </header>
 
               {/* Message Flow */}
               <div className="flex-1 overflow-y-auto py-6 space-y-6 pr-2">
-                {detail.thread.length === 0 ? (
-                  <div className="p-6 text-sm text-gray-400">No messages found in this thread history.</div>
-                ) : (
-                  detail.thread.map((message) => {
-                    const isOutbound = message.direction === 'outbound'
-                    const borderColor = isOutbound
-                      ? 'bg-gray-300'
-                      : detail.response.classification === 'not_interested'
-                      ? 'bg-rose-500'
-                      : detail.response.classification === 'interested'
-                      ? 'bg-emerald-500'
-                      : 'bg-blue-600'
-
-                    return (
-                      <div key={`${message.sourceType}-${message.id}`} className="relative pl-5">
-                        {/* Subtle left border accent */}
-                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${borderColor} rounded-full`} />
-
-                        <div className="flex justify-between items-baseline mb-3 gap-3">
-                          <div>
-                            <div
-                              className={`text-[10px] font-bold tracking-wider uppercase mb-0.5 ${
-                                isOutbound ? 'text-gray-400' : 'text-rose-600'
-                              }`}
-                            >
-                              {isOutbound ? 'Outbound' : 'Inbound'}
-                            </div>
-                            <div className="text-xs sm:text-sm font-bold text-gray-900">
-                              {message.fromEmail || message.mailAccount?.email || 'Unknown'} to{' '}
-                              {message.toEmail || 'Unknown'}
-                            </div>
-                            <div className="text-xs text-gray-400 mt-0.5 truncate max-w-xl">
-                              {message.subject || '(No Subject)'}
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-400 font-medium tracking-wide font-mono shrink-0">
-                            {formatDate(message.sentAt || message.receivedAt || message.createdAt)}
-                          </div>
-                        </div>
-
-                        {/* Message Content */}
-                        <div className="text-sm text-gray-800 leading-relaxed max-w-3xl bg-gray-50/60 p-4 rounded-xl border border-gray-100">
-                          <MessageBody message={message} />
-                        </div>
-
-                        {/* Mailbox / Campaign footer */}
-                        <div className="mt-2.5 pt-2 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-3">
-                          {message.mailAccount ? <span>Mailbox: {message.mailAccount.email}</span> : null}
-                          {message.campaign ? <span>• Campaign: {message.campaign.name}</span> : null}
-                          {message.sequenceStepNumber ? <span>• Step {message.sequenceStepNumber}</span> : null}
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+                  <span>{detail.thread.length} messages · Oldest first</span>
+                  <span>Times in {Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
+                </div>
+                <ConversationTimeline messages={detail.thread} />
 
                 {/* Reply Composer at bottom of continuous thread */}
                 <div className="mt-8 pt-6 border-t border-gray-100 space-y-3 bg-gray-50/70 p-5 rounded-2xl border">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
                       <Reply className="h-3.5 w-3.5 text-blue-600" />
-                      <span>Send a Reply to {detail.response.counterpartEmail || 'Prospect'}</span>
+                      <span className="break-all">Reply to {detail.response.counterpartEmail || 'prospect'}</span>
                     </div>
                   </div>
 
@@ -777,7 +732,7 @@ export default function ResponsesPage() {
                         key={idx}
                         type="button"
                         className="text-[11px] bg-white border border-gray-200 text-gray-700 hover:text-blue-600 hover:border-blue-300 px-2.5 py-1 rounded-md transition-colors text-left shadow-2xs cursor-pointer"
-                        onClick={() => setReplyBody(tmpl)}
+                        onClick={() => updateDraft(replySubject, tmpl)}
                       >
                         💡 {tmpl.slice(0, 42)}...
                       </button>
@@ -787,23 +742,27 @@ export default function ResponsesPage() {
                   <input
                     className="w-full h-9 px-3 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={replySubject}
-                    onChange={(e) => setReplySubject(e.target.value)}
-                    placeholder="Reply Subject"
+                    onChange={(e) => updateDraft(e.target.value, replyBody)}
+                    placeholder="Reply subject"
+                    aria-label="Reply subject"
                   />
 
                   <textarea
                     className="w-full p-3.5 bg-white border border-gray-200 rounded-lg text-xs text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[110px] leading-relaxed shadow-2xs"
                     value={replyBody}
-                    onChange={(e) => setReplyBody(e.target.value)}
-                    placeholder="Write your reply to the prospect..."
+                    onChange={(e) => updateDraft(replySubject, e.target.value)}
+                    placeholder="Write your reply…"
+                    aria-label="Reply message"
+                    disabled={sendingReply || loadingDetail}
                   />
 
-                  <div className="flex items-center justify-end gap-2 pt-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <span className="break-all text-[11px] text-slate-500">From {detail.thread.find(message => message.mailAccount)?.mailAccount?.email || 'original mailbox'}</span>
                     <button
                       type="button"
                       className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
                       onClick={() => void handleSendReply()}
-                      disabled={sendingReply}
+                      disabled={sendingReply || loadingDetail || !replyBody.trim()}
                     >
                       <Send className="h-3.5 w-3.5" />
                       <span>{sendingReply ? 'Sending Reply...' : 'Send Reply'}</span>
@@ -816,29 +775,6 @@ export default function ResponsesPage() {
         </section>
       </main>
       {/* END: MainContainer */}
-
-      {/* Floating Action Button (Compose) */}
-      <button
-        type="button"
-        aria-label="Compose"
-        onClick={() => setComposeOpen(true)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer z-40"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-          />
-        </svg>
-      </button>
 
       {/* Compose Email Modal */}
       {isClient && composeOpen
