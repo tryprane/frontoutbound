@@ -45,6 +45,41 @@ const SEND_EMAIL_CURL = `curl -X POST "$BASE_URL/api/v1/email/send" \\
     "html": "<p>Hello there</p>"
   }'`
 
+const SEND_ATTACHMENT_CURL = `FILE_BASE64=$(base64 < proposal.pdf | tr -d '\\n')
+
+curl -X POST "$BASE_URL/api/v1/email/send" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: proposal-123" \\
+  -d "{
+    \\"to\\": \\"lead@example.com\\",
+    \\"subject\\": \\"Your proposal\\",
+    \\"html\\": \\"<p>Your proposal is attached.</p>\\",
+    \\"attachments\\": [{
+      \\"filename\\": \\"proposal.pdf\\",
+      \\"contentType\\": \\"application/pdf\\",
+      \\"contentBase64\\": \\"$FILE_BASE64\\"
+    }]
+  }"`
+
+const SEND_INLINE_IMAGE_CURL = `IMAGE_BASE64=$(base64 < logo.png | tr -d '\\n')
+
+curl -X POST "$BASE_URL/api/v1/email/send" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d "{
+    \\"to\\": \\"lead@example.com\\",
+    \\"subject\\": \\"Welcome\\",
+    \\"html\\": \\"<p>Hello!</p><img src='cid:company-logo' alt='Company logo'>\\",
+    \\"attachments\\": [{
+      \\"filename\\": \\"logo.png\\",
+      \\"contentType\\": \\"image/png\\",
+      \\"contentBase64\\": \\"$IMAGE_BASE64\\",
+      \\"disposition\\": \\"inline\\",
+      \\"contentId\\": \\"company-logo\\"
+    }]
+  }"`
+
 const GET_REQUEST_CURL = `curl "$BASE_URL/api/v1/requests/REQUEST_ID" \\
   -H "Authorization: Bearer YOUR_API_KEY"`
 
@@ -295,8 +330,19 @@ export default function ApiManagementPage() {
             QUICKSTART ENDPOINTS
           </span>
           <h2 className="zoho-puvi-headline text-lg font-bold text-[#121316] mb-4">
-            cURL Request Examples
+            Email API guide
           </h2>
+
+          <div className="mb-4 grid gap-2 text-xs text-[#62605c] sm:grid-cols-2">
+            <div className="rounded-xl border border-[#121316]/08 bg-[#faf8f4] p-3">
+              <strong className="block text-[#121316]">Attachments</strong>
+              Up to 10 files, 8 MB each and 10 MB total after base64 decoding.
+            </div>
+            <div className="rounded-xl border border-[#121316]/08 bg-[#faf8f4] p-3">
+              <strong className="block text-[#121316]">Inline images</strong>
+              Use disposition <code>inline</code>, a unique <code>contentId</code>, and <code>cid:contentId</code> in HTML.
+            </div>
+          </div>
 
           <div className="space-y-4">
             {/* POST /api/v1/email/send Example */}
@@ -321,6 +367,32 @@ export default function ApiManagementPage() {
                 </button>
               </div>
               <pre className="font-mono text-xs text-[#faf8f4] overflow-x-auto leading-relaxed whitespace-pre-wrap selection:bg-[#ee382b]/30">{SEND_EMAIL_CURL}</pre>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#121316] text-white space-y-2.5">
+              <div className="flex items-center justify-between gap-2 text-xs font-mono">
+                <div className="flex items-center gap-2 text-[#8a8780]">
+                  <Layers className="h-3.5 w-3.5 text-[#ee382b]" />
+                  <span className="text-white font-bold">Send a file attachment</span>
+                </div>
+                <button type="button" onClick={() => copySnippet(SEND_ATTACHMENT_CURL, 'send-attachment')} className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer" aria-label="Copy attachment example">
+                  {copiedSnippet === 'send-attachment' ? <Check className="h-4 w-4 text-[#0f8a5f]" /> : <Copy className="h-4 w-4 text-[#8a8780]" />}
+                </button>
+              </div>
+              <pre className="font-mono text-xs text-[#faf8f4] overflow-x-auto leading-relaxed whitespace-pre-wrap selection:bg-[#ee382b]/30">{SEND_ATTACHMENT_CURL}</pre>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#121316] text-white space-y-2.5">
+              <div className="flex items-center justify-between gap-2 text-xs font-mono">
+                <div className="flex items-center gap-2 text-[#8a8780]">
+                  <Code className="h-3.5 w-3.5 text-[#ee382b]" />
+                  <span className="text-white font-bold">Embed an image in HTML</span>
+                </div>
+                <button type="button" onClick={() => copySnippet(SEND_INLINE_IMAGE_CURL, 'send-inline')} className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 cursor-pointer" aria-label="Copy inline image example">
+                  {copiedSnippet === 'send-inline' ? <Check className="h-4 w-4 text-[#0f8a5f]" /> : <Copy className="h-4 w-4 text-[#8a8780]" />}
+                </button>
+              </div>
+              <pre className="font-mono text-xs text-[#faf8f4] overflow-x-auto leading-relaxed whitespace-pre-wrap selection:bg-[#ee382b]/30">{SEND_INLINE_IMAGE_CURL}</pre>
             </div>
 
             {/* GET /api/v1/requests/:id Example */}
