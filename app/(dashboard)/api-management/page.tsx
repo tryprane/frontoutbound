@@ -70,6 +70,7 @@ curl -X POST "$BASE_URL/api/v1/email/send" \\
   -d "{
     \\"to\\": \\"lead@example.com\\",
     \\"subject\\": \\"Welcome\\",
+    \\"sendFormat\\": \\"html\\",
     \\"html\\": \\"<p>Hello!</p><img src='cid:company-logo' alt='Company logo'>\\",
     \\"attachments\\": [{
       \\"filename\\": \\"logo.png\\",
@@ -340,7 +341,7 @@ export default function ApiManagementPage() {
             </div>
             <div className="rounded-xl border border-[#121316]/08 bg-[#faf8f4] p-3">
               <strong className="block text-[#121316]">Inline images</strong>
-              Use disposition <code>inline</code>, a unique <code>contentId</code>, and <code>cid:contentId</code> in HTML.
+              Set <code>sendFormat</code> to <code>html</code>, use a unique <code>contentId</code>, and reference <code>cid:contentId</code> in HTML.
             </div>
           </div>
 
