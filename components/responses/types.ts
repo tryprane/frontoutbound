@@ -33,6 +33,7 @@ export type ResponseThreadMessage = {
   sentAt: string | null
   receivedAt: string | null
   createdAt: string
+  occurredAt?: string
   mailAccount?: MailAccountOption
   campaign?: { id: string; name: string } | null
   sequenceStepNumber?: number | null
