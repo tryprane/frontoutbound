@@ -159,7 +159,7 @@ export function MailboxWarmupFleet({
               const isWarmed = account.warmupStatus === 'WARMED'
               const isWarming = account.warmupStatus === 'WARMING'
               const isPaused = account.warmupStatus === 'PAUSED'
-              const healthScore = account.mailboxHealthScore > 0 ? account.mailboxHealthScore : 100
+              const healthScore = account.mailboxHealthScore
 
               return (
                 <div

@@ -66,8 +66,8 @@ import type {
 // ── Health Badge Component (inline badge matching template) ─────────────────
 function HealthBadge({ score }: { score: number }) {
   const safeScore = Math.max(0, Math.min(100, score || 0))
-  const isHealthy = safeScore >= 70
-  const isWarming = safeScore >= 40 && safeScore < 70
+  const isHealthy = safeScore >= 80
+  const isWarming = safeScore >= 55 && safeScore < 80
 
   return (
     <div className="flex justify-center">
@@ -753,7 +753,14 @@ export function AccountsView(props: {
                     </div>
 
                     {/* Health Badge */}
-                    <HealthBadge score={account.mailboxHealthScore} />
+                    <button type="button" title="View health score explanation" aria-label={`Explain health score for ${account.email}`} onClick={(event) => {
+                      event.stopPropagation()
+                      setDrawerAccountId(account.id)
+                      if (!account.detailsLoaded) props.loadMailAccountDetail(account.id)
+                    }}>
+                      <HealthBadge score={account.mailboxHealthScore} />
+                      <span className="text-[10px] text-gray-500 underline">Why this score?</span>
+                    </button>
 
                     {/* Actions / Settings Button */}
                     <div className="w-8 flex justify-end">

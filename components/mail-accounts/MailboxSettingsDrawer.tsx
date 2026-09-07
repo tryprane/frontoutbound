@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { MailboxAvatar, getMailboxProvider } from '@/components/mail-accounts/MailboxAvatar'
 import type { MailAccount, MailboxMessage } from '@/components/mail-accounts/types'
+import { MailboxHealthExplanation } from './MailboxHealthExplanation'
 
 export interface MailboxSettingsDrawerProps {
   account: MailAccount | null
@@ -954,6 +955,8 @@ export function MailboxSettingsDrawer({
                   </div>
                 </div>
               )}
+
+              {(activeTab === 'all' || activeTab === 'diagnostics') && <MailboxHealthExplanation account={account} />}
 
               {/* SECTION: Synced Mailbox Folders & Messages */}
               {(activeTab === 'all' || activeTab === 'folders') && (
