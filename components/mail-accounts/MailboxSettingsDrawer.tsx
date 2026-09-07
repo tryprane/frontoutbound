@@ -735,7 +735,7 @@ export function MailboxSettingsDrawer({
                           Warmup Reply Daily Limit
                         </div>
                         <div className="text-xs text-gray-500">
-                          Maximum automated replies generated for peer warming threads
+                          Hard maximum for automated replies; the reply-rate setting may produce fewer
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

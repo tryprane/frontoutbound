@@ -577,6 +577,9 @@ export function WarmupWorkspace() {
                 <span>0%</span>
                 <span>100%</span>
               </div>
+              <p className="text-xs leading-relaxed text-[#62605c]">
+                Each eligible message gets an independent, stable randomized chance of reply. The mailbox daily reply limit remains a maximum and does not force that many replies.
+              </p>
             </div>
 
             {/* Continue Existing Threads */}
