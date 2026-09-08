@@ -84,6 +84,15 @@ curl -X POST "$BASE_URL/api/v1/email/send" \\
 const GET_REQUEST_CURL = `curl "$BASE_URL/api/v1/requests/REQUEST_ID" \\
   -H "Authorization: Bearer YOUR_API_KEY"`
 
+const REPLY_EMAIL_CURL = `curl -X POST "$BASE_URL/api/v1/email/reply" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: reply-DELIVERY_ID" \\
+  -d '{
+    "mailboxMessageId": "WEBHOOK_REPLY_MAILBOX_MESSAGE_ID",
+    "html": "<p>Thanks for replying. Here are the details.</p>"
+  }'`
+
 export default function ApiManagementPage() {
   const [overview, setOverview] = useState<ApiManagementOverview | null>(null)
   const [keys, setKeys] = useState<ApiKeyRecord[]>([])
@@ -394,6 +403,19 @@ export default function ApiManagementPage() {
                 </button>
               </div>
               <pre className="font-mono text-xs text-[#faf8f4] overflow-x-auto leading-relaxed whitespace-pre-wrap selection:bg-[#ee382b]/30">{SEND_INLINE_IMAGE_CURL}</pre>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#121316] text-white space-y-2.5">
+              <div className="flex items-center justify-between gap-2 text-xs font-mono">
+                <span className="font-bold">POST /api/v1/email/reply</span>
+                <button type="button" onClick={() => copySnippet(REPLY_EMAIL_CURL, 'reply-email')}
+                  className="rounded-lg bg-white/10 px-2 py-1" aria-label="Copy reply API example">
+                  {copiedSnippet === 'reply-email' ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-xs text-white/70">Use reply.mailboxMessageId from the email.reply.received webhook. The reply uses that message’s mailbox and thread. Supply html or text; subject is optional.</p>
+              <pre className="font-mono text-xs overflow-x-auto whitespace-pre-wrap">{REPLY_EMAIL_CURL}</pre>
+              <p className="text-xs text-white/70">Keep the same idempotency key and payload when retrying. If omitted, one automatic reply per inbound message is allowed per API key. A changed payload returns 409. A successful call returns requestId and status: replied; poll the request endpoint if processing.</p>
             </div>
 
             {/* GET /api/v1/requests/:id Example */}
