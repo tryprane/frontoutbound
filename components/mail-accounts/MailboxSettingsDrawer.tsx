@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { MailboxAvatar, getMailboxProvider } from '@/components/mail-accounts/MailboxAvatar'
 import type { MailAccount, MailboxMessage } from '@/components/mail-accounts/types'
+import { MailboxHealthExplanation } from './MailboxHealthExplanation'
 
 export interface MailboxSettingsDrawerProps {
   account: MailAccount | null
@@ -734,7 +735,7 @@ export function MailboxSettingsDrawer({
                           Warmup Reply Daily Limit
                         </div>
                         <div className="text-xs text-gray-500">
-                          Maximum automated replies generated for peer warming threads
+                          Hard maximum for automated replies; the reply-rate setting may produce fewer
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -954,6 +955,8 @@ export function MailboxSettingsDrawer({
                   </div>
                 </div>
               )}
+
+              {(activeTab === 'all' || activeTab === 'diagnostics') && <MailboxHealthExplanation account={account} />}
 
               {/* SECTION: Synced Mailbox Folders & Messages */}
               {(activeTab === 'all' || activeTab === 'folders') && (
