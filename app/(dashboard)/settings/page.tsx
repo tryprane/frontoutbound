@@ -1017,7 +1017,7 @@ function SettingsContent() {
               </div>
             ))}
           </div>
-          <p className="text-[11px] text-[#8a8780]">Each reply includes prospect, mailbox, subject, timestamps, campaign/API IDs, message IDs, the latest reply, and available conversation history. Long notifications are split safely across messages.</p>
+          <p className="text-[11px] text-[#8a8780]">Notifications begin from the time each chat is connected; earlier replies are never backfilled. Each new reply includes prospect, mailbox, subject, timestamps, campaign/API IDs, message IDs, the latest reply, and available conversation history.</p>
         </div>
       </div>
     )
