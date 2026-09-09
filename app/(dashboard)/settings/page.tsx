@@ -31,6 +31,23 @@ interface UnsubscribeEntry {
   createdAt: string
 }
 
+interface TelegramConnection {
+  id: string
+  chatType: string
+  displayName: string | null
+  username: string | null
+  connectedAt: string
+  lastDeliveryAt: string | null
+  lastError: string | null
+}
+
+interface TelegramState {
+  configured: boolean
+  botUsername: string | null
+  maxConnections: number
+  connections: TelegramConnection[]
+}
+
 interface SettingsPayload {
   profile: {
     id: string
@@ -65,6 +82,7 @@ type SettingCategory =
   | 'email-defaults'
   | 'scheduler'
   | 'webhooks'
+  | 'telegram'
   | 'unsubscribe'
 
 function clampPercent(value: string | number, fallback = 0) {
@@ -85,6 +103,9 @@ function SettingsContent() {
   const [removeId, setRemoveId] = useState<string | null>(null)
   const [savingSettings, setSavingSettings] = useState(false)
   const [testingWebhook, setTestingWebhook] = useState(false)
+  const [telegram, setTelegram] = useState<TelegramState>({ configured: false, botUsername: null, maxConnections: 3, connections: [] })
+  const [telegramCode, setTelegramCode] = useState('')
+  const [telegramBusy, setTelegramBusy] = useState<string | null>(null)
   const [settings, setSettings] = useState<SettingsPayload>({
     profile: null,
     organizationRole: null,
@@ -179,7 +200,49 @@ function SettingsContent() {
         }
       })
       .catch(() => {})
+    void loadTelegram()
   }, [])
+
+  async function loadTelegram() {
+    const res = await fetch('/api/settings/telegram')
+    const data = await res.json().catch(() => ({}))
+    if (res.ok) setTelegram(data)
+  }
+
+  const connectTelegram = async () => {
+    try {
+      setTelegramBusy('connect')
+      const res = await fetch('/api/settings/telegram', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: telegramCode }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Unable to connect Telegram')
+      setTelegramCode('')
+      await loadTelegram()
+      if (data.warning) toast.warning(data.warning)
+      else toast.success('Telegram connected')
+    } catch (err: any) { toast.error(err.message) } finally { setTelegramBusy(null) }
+  }
+
+  const disconnectTelegram = async (id: string) => {
+    try {
+      setTelegramBusy(id)
+      const res = await fetch('/api/settings/telegram', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Unable to disconnect Telegram')
+      await loadTelegram()
+      toast.success('Telegram disconnected')
+    } catch (err: any) { toast.error(err.message) } finally { setTelegramBusy(null) }
+  }
+
+  const testTelegram = async (id: string) => {
+    try {
+      setTelegramBusy(`test:${id}`)
+      const res = await fetch('/api/settings/telegram/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Telegram test failed')
+      await loadTelegram()
+      toast.success('Test notification sent')
+    } catch (err: any) { toast.error(err.message) } finally { setTelegramBusy(null) }
+  }
 
   const handleSaveSettings = async (includeScheduler = false) => {
     try {
@@ -359,6 +422,15 @@ function SettingsContent() {
       icon: <Webhook className="h-6 w-6 text-[#121316]" />,
       iconBg: 'bg-[#faf8f4] border-[#121316]/10 group-hover:border-[#121316]/25 group-hover:bg-[#121316]/05',
       badge: settings.workspace.emailReplyWebhookUrl ? 'Connected' : 'Not configured',
+    },
+    {
+      id: 'telegram' as SettingCategory,
+      title: 'Telegram Notifications',
+      eyebrow: 'INTEGRATIONS',
+      desc: 'Broadcast detailed prospect replies to up to three Telegram chats.',
+      icon: <Send className="h-6 w-6 text-[#229ED9]" />,
+      iconBg: 'bg-[#229ED9]/08 border-[#229ED9]/15 group-hover:border-[#229ED9]/35 group-hover:bg-[#229ED9]/12',
+      badge: telegram.connections.length ? `${telegram.connections.length} connected` : 'Not connected',
     },
     {
       id: 'unsubscribe' as SettingCategory,
@@ -913,7 +985,45 @@ function SettingsContent() {
     )
   }
 
-  // 6. Webhooks Subpage
+  if (activeCategory === 'telegram') {
+    return (
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 md:py-8 space-y-6 animate-fade-in">
+        {renderCategoryHeader('Telegram Notifications', 'INTEGRATIONS', 'Receive detailed prospect reply notifications in every connected Telegram chat.')}
+        <div className="uneevo-card p-6 md:p-8 rounded-[24px] border border-[#121316]/08 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6">
+          <div className="rounded-[16px] bg-[#229ED9]/06 border border-[#229ED9]/15 p-4 text-sm text-[#121316] space-y-2">
+            <p className="font-bold">Connect a Telegram chat</p>
+            <ol className="list-decimal pl-5 space-y-1 text-xs text-[#62605c]">
+              <li>{telegram.botUsername ? <a className="font-bold text-[#168AC0] underline" href={`https://t.me/${telegram.botUsername}`} target="_blank" rel="noreferrer">Open @{telegram.botUsername}</a> : 'Open the configured Outbound OS Telegram bot'} and send <span className="font-mono">/start</span>.</li>
+              <li>Copy the 8-character code the bot sends. It expires after 10 minutes.</li>
+              <li>Enter it below. Each organization can connect {telegram.maxConnections} chats.</li>
+            </ol>
+          </div>
+          {!telegram.configured && <p className="rounded-xl border border-[#d97706]/20 bg-[#d97706]/08 p-3 text-xs text-[#b45309]">Telegram is not configured on the server yet.</p>}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input value={telegramCode} onChange={(event) => setTelegramCode(event.target.value.toUpperCase().replace(/[^A-Z2-9]/g, '').slice(0, 8))}
+              placeholder="8-character code" className="flex-1 rounded-[14px] border border-[#121316]/12 bg-[#faf8f4] px-4 py-3 text-sm font-mono tracking-[0.18em] uppercase focus:border-[#229ED9] focus:bg-white focus:outline-hidden" />
+            <button type="button" onClick={connectTelegram} disabled={!telegram.configured || telegramCode.length !== 8 || telegramBusy !== null || telegram.connections.length >= telegram.maxConnections}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#229ED9] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-40">
+              {telegramBusy === 'connect' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Connect
+            </button>
+          </div>
+          <div className="space-y-3 pt-4 border-t border-[#121316]/08">
+            <div className="flex items-center justify-between"><h2 className="font-bold text-[#121316]">Connected chats</h2><span className="text-xs font-mono text-[#8a8780]">{telegram.connections.length}/{telegram.maxConnections}</span></div>
+            {!telegram.connections.length && <p className="text-sm text-[#8a8780]">No Telegram chats connected.</p>}
+            {telegram.connections.map((connection) => (
+              <div key={connection.id} className="rounded-[16px] border border-[#121316]/08 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="min-w-0"><p className="font-semibold text-sm truncate">{connection.displayName || connection.username || 'Telegram chat'}</p><p className="text-xs text-[#8a8780]">{connection.chatType}{connection.username ? ` · @${connection.username}` : ''} · Connected {new Date(connection.connectedAt).toLocaleDateString()}</p>{connection.lastError && <p className="text-xs text-[#c2414c] mt-1 truncate">Last error: {connection.lastError}</p>}</div>
+                <div className="flex gap-2"><button type="button" onClick={() => testTelegram(connection.id)} disabled={telegramBusy !== null} className="rounded-full border px-4 py-2 text-xs font-semibold">{telegramBusy === `test:${connection.id}` ? 'Sending…' : 'Test'}</button><button type="button" onClick={() => disconnectTelegram(connection.id)} disabled={telegramBusy !== null} className="rounded-full border border-[#ee382b]/20 px-4 py-2 text-xs font-semibold text-[#ee382b]">{telegramBusy === connection.id ? 'Removing…' : 'Disconnect'}</button></div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-[#8a8780]">Each reply includes prospect, mailbox, subject, timestamps, campaign/API IDs, message IDs, the latest reply, and available conversation history. Long notifications are split safely across messages.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Webhooks Subpage
   if (activeCategory === 'webhooks') {
     return (
       <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 md:py-8 space-y-6 animate-fade-in">
