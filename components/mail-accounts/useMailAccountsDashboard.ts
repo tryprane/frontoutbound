@@ -520,6 +520,19 @@ export function useMailAccountsDashboard() {
       }
       if (data.started) {
         showToast('success', `TrulyInbox warmup started — status: ${data.status || 'active'}`)
+        setAccountsData((prev) => ({
+          ...prev,
+          items: prev.items.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  trulyInboxStatus: data.status || 'active',
+                  warmupStatus: a.warmupStatus === 'WARMED' ? 'WARMED' : 'WARMING',
+                  warmupAutoEnabled: true,
+                }
+              : a
+          ),
+        }))
       } else {
         showToast('error', `Start request sent but warmup not yet active. Status: ${data.status || 'paused'}. Try again in a moment.`)
       }
