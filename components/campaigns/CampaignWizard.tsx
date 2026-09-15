@@ -1178,6 +1178,7 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
                       <TemplateEditor
                         mode="email"
                         isFollowUp={index > 0}
+                        parentSubjectTemplate={sequenceSteps[0]?.subjectTemplate || ''}
                         csvFileId={csvFileId}
                         subjectTemplate={stepItem.subjectTemplate}
                         bodyTemplate={stepItem.bodyTemplate}

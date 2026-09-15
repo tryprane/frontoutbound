@@ -196,6 +196,12 @@ export function MailboxSettingsDrawer({
       ? 'Outlook'
       : 'Custom SMTP'
 
+  const isTrulyWarming =
+    account.trulyInboxStatus === 'active' ||
+    account.trulyInboxStatus === 'warming' ||
+    account.trulyInboxStatus === 'enabled' ||
+    (Boolean(account.trulyInboxConnected) && account.warmupStatus === 'WARMING')
+
   const copyEmailToClipboard = () => {
     if (!account.email) return
     navigator.clipboard.writeText(account.email)
@@ -262,9 +268,15 @@ export function MailboxSettingsDrawer({
                     {account.isActive ? 'Active' : 'Disabled'}
                   </span>
                   {account.trulyInboxConnected && (
-                    <span className="inline-flex items-center gap-1 font-semibold px-2.5 py-0.5 rounded-full text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span
+                      className={`inline-flex items-center gap-1 font-semibold px-2.5 py-0.5 rounded-full text-xs border ${
+                        isTrulyWarming
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      }`}
+                    >
                       <Sparkles className="h-3 w-3 text-emerald-600" />
-                      TrulyInbox
+                      {isTrulyWarming ? 'TrulyInbox · Warming' : 'TrulyInbox'}
                     </span>
                   )}
                 </div>
@@ -398,15 +410,33 @@ export function MailboxSettingsDrawer({
                             AI Warmup & Spam Rescue
                           </span>
                         </div>
-                        <span className="text-xs text-gray-500 bg-white px-2.5 py-1 rounded-full font-medium border border-gray-200 shadow-2xs">
-                          {account.trulyInboxConnected
-                            ? `Connected ${
-                                account.trulyInboxEmailAccountId
-                                  ? `(#${account.trulyInboxEmailAccountId})`
-                                  : ''
-                              }`
-                            : 'Not Connected'}
-                        </span>
+                        {account.trulyInboxConnected ? (
+                          isTrulyWarming ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                              Warmup Active {account.trulyInboxEmailAccountId ? `(#${account.trulyInboxEmailAccountId})` : ''}
+                            </span>
+                          ) : account.trulyInboxStatus === 'paused' || account.trulyInboxStatus === 'stopped' ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs">
+                              <span className="w-2 h-2 rounded-full bg-amber-500" />
+                              Warmup Paused {account.trulyInboxEmailAccountId ? `(#${account.trulyInboxEmailAccountId})` : ''}
+                            </span>
+                          ) : account.trulyInboxStatus === 'error' ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200 shadow-2xs">
+                              <span className="w-2 h-2 rounded-full bg-red-500" />
+                              Warmup Error {account.trulyInboxEmailAccountId ? `(#${account.trulyInboxEmailAccountId})` : ''}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white text-gray-700 border border-gray-200 shadow-2xs">
+                              <span className="w-2 h-2 rounded-full bg-green-500" />
+                              Connected {account.trulyInboxEmailAccountId ? `(#${account.trulyInboxEmailAccountId})` : ''}
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-xs text-gray-500 bg-white px-2.5 py-1 rounded-full font-medium border border-gray-200 shadow-2xs">
+                            Not Connected
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-gray-600 mb-4 leading-relaxed">
                         Autonomous inbox rotation, spam folder rescue, and email reputation warming to maximize delivery straight to primary inboxes.
@@ -470,14 +500,24 @@ export function MailboxSettingsDrawer({
                         {account.trulyInboxConnected && (
                           <button
                             type="button"
-                            disabled={!!trulyInboxStarting[account.id]}
+                            disabled={!!trulyInboxStarting[account.id] || isTrulyWarming}
                             onClick={() => handleStartTrulyInboxWarmup(account.id)}
-                            className="px-4 py-2 bg-[#10B981] text-white text-sm font-medium rounded-lg hover:bg-emerald-600 disabled:opacity-50 transition-colors shrink-0 cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-2xs ${
+                              isTrulyWarming
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 cursor-default'
+                                : 'bg-[#10B981] text-white hover:bg-emerald-600 disabled:opacity-50 cursor-pointer'
+                            }`}
+                            title={isTrulyWarming ? 'TrulyInbox warmup is currently active and running' : 'Start TrulyInbox warmup'}
                           >
                             {trulyInboxStarting[account.id] ? (
                               <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 <span>Starting...</span>
+                              </>
+                            ) : isTrulyWarming ? (
+                              <>
+                                <Flame className="h-4 w-4 text-emerald-600" />
+                                <span>Warmup Active</span>
                               </>
                             ) : (
                               <>

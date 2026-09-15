@@ -167,24 +167,25 @@ export default function LandingPage() {
       {/* Transparent Floating Pill Navigation Bar */}
       <div className="landing-nav-pill-wrapper">
         <nav className="landing-nav-pill">
-          <BrandLogo href="/" size="md" />
+          <BrandLogo href="/" size="md" className="scale-90 origin-left sm:scale-100" />
 
-          <div className="flex items-center gap-6 sm:gap-8">
-            <div className="landing-nav-links">
+          <div className="flex items-center gap-3 sm:gap-8">
+            <div className="landing-nav-links hidden md:flex">
               <a href="#how-it-works">How It Works</a>
               <a href="#pricing">Pricing</a>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href={status === 'authenticated' ? '/dashboard' : '/login'}
-                className="text-sm font-semibold text-[#62605c] hover:text-[#121316] transition-colors hidden sm:inline-block"
+                className="text-xs sm:text-sm font-semibold text-[#62605c] hover:text-[#121316] transition-colors hidden sm:inline-block"
               >
                 {status === 'authenticated' ? 'Dashboard' : 'Log in'}
               </Link>
-              <Link href="#pricing" className="uneevo-btn-red">
-                <span>Claim Batch Seat</span>
-                <ArrowRight className="w-4 h-4" />
+              <Link href="#pricing" className="uneevo-btn-red !py-2 !px-3.5 sm:!py-2.5 sm:!px-5 text-xs sm:text-sm whitespace-nowrap">
+                <span className="hidden sm:inline">Claim Batch Seat</span>
+                <span className="sm:hidden">Claim Seat</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
@@ -192,65 +193,66 @@ export default function LandingPage() {
       </div>
 
       {/* Editorial Hero Section */}
-      <section className="relative pt-16 pb-10 px-4 md:px-8 max-w-6xl mx-auto text-center z-10">
+      <section className="relative pt-12 sm:pt-16 pb-8 sm:pb-10 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto text-center z-10">
         <div className="hero-gradient-glow" />
 
         {/* Platform Status Badge */}
-        <div className="inline-flex items-center mb-4">
-          <div className="batch-pill">
-            <span className="batch-pill-dot" />
-            <span>High Deliverability Outbound Infrastructure • Active Platform</span>
+        <div className="inline-flex items-center mb-4 max-w-full">
+          <div className="batch-pill text-xs py-1 px-3 max-w-full truncate">
+            <span className="batch-pill-dot shrink-0" />
+            <span className="hidden sm:inline">High Deliverability Outbound Infrastructure • </span>
+            <span>Active Platform</span>
           </div>
         </div>
 
         {/* Headline stating concrete outcome (Point 1) */}
-        <h1 className="zoho-puvi-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#121316] max-w-5xl mx-auto mb-4 tracking-tight">
+        <h1 className="zoho-puvi-headline text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[#121316] max-w-5xl mx-auto mb-4 tracking-tight break-words">
           Book 15+ Meetings Monthly — Qualified Meetings, Zero Spam Risk.
         </h1>
 
         {/* Humanized Subheadline (Point 4) */}
-        <p className="text-lg md:text-xl text-[#52504b] max-w-3xl mx-auto mb-7 leading-relaxed font-normal">
+        <p className="text-base sm:text-lg md:text-xl text-[#52504b] max-w-3xl mx-auto mb-7 leading-relaxed font-normal px-2">
           Outreach OS replaces your disconnected stack of Smartlead, separate warmup tools, domain health monitors, and CSV scrubbers into a single, high-deliverability platform.
         </p>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-          <Link href="#pricing" className="uneevo-btn-red text-base px-8 py-3.5 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 mb-8 w-full sm:w-auto px-2 sm:px-0">
+          <Link href="#pricing" className="uneevo-btn-red text-sm sm:text-base px-6 sm:px-8 py-3.5 w-full sm:w-auto">
             <span>Get Started for ₹999/mo</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
-          <a href="#comparison" className="uneevo-btn-secondary text-base px-8 py-3.5 w-full sm:w-auto">
+          <a href="#comparison" className="uneevo-btn-secondary text-sm sm:text-base px-6 sm:px-8 py-3.5 w-full sm:w-auto">
             <span>See Stack Cost Breakdown</span>
           </a>
         </div>
 
         {/* Live Beta Proof Ticker (Point 2) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-4 border-t border-[#121316]/10 text-left">
-          <div className="p-3">
-            <div className="text-2xl md:text-3xl font-extrabold text-[#121316]">142,800+</div>
-            <div className="text-xs text-[#62605c] font-medium mt-1">Emails Sent in Beta</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 max-w-4xl mx-auto pt-4 border-t border-[#121316]/10 text-left">
+          <div className="p-2.5 sm:p-3">
+            <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#121316]">142,800+</div>
+            <div className="text-[11px] sm:text-xs text-[#62605c] font-medium mt-1">Emails Sent in Beta</div>
           </div>
-          <div className="p-3">
-            <div className="text-2xl md:text-3xl font-extrabold text-[#ee382b]">4.8%</div>
-            <div className="text-xs text-[#62605c] font-medium mt-1">Average Reply Rate</div>
+          <div className="p-2.5 sm:p-3">
+            <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#ee382b]">4.8%</div>
+            <div className="text-[11px] sm:text-xs text-[#62605c] font-medium mt-1">Average Reply Rate</div>
           </div>
-          <div className="p-3">
-            <div className="text-2xl md:text-3xl font-extrabold text-[#121316]">99.1%</div>
-            <div className="text-xs text-[#62605c] font-medium mt-1">Primary Inbox Placement</div>
+          <div className="p-2.5 sm:p-3">
+            <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#121316]">99.1%</div>
+            <div className="text-[11px] sm:text-xs text-[#62605c] font-medium mt-1">Primary Inbox Placement</div>
           </div>
-          <div className="p-3">
-            <div className="text-2xl md:text-3xl font-extrabold text-[#121316]">32</div>
-            <div className="text-xs text-[#62605c] font-medium mt-1">Active Agency Partners</div>
+          <div className="p-2.5 sm:p-3">
+            <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#121316]">32</div>
+            <div className="text-[11px] sm:text-xs text-[#62605c] font-medium mt-1">Active Agency Partners</div>
           </div>
         </div>
 
         {/* Interactive Hero Tab Mockup Showcase */}
-        <div className="mt-8 uneevo-card p-3 md:p-5 text-left">
+        <div className="mt-8 uneevo-card p-3 sm:p-4 md:p-5 text-left">
           {/* Tab Selector */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 border-b border-[#121316]/10">
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 border-b border-[#121316]/10 no-scrollbar">
             <button
               onClick={() => setActiveHeroTab('campaigns')}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
+              className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
                 activeHeroTab === 'campaigns' ? 'bg-[#121316] text-white shadow-sm' : 'bg-transparent text-[#62605c] hover:bg-[#f2efe9]'
               }`}
             >
@@ -259,7 +261,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => setActiveHeroTab('mailboxes')}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
+              className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
                 activeHeroTab === 'mailboxes' ? 'bg-[#121316] text-white shadow-sm' : 'bg-transparent text-[#62605c] hover:bg-[#f2efe9]'
               }`}
             >
@@ -268,7 +270,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => setActiveHeroTab('warmup')}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
+              className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
                 activeHeroTab === 'warmup' ? 'bg-[#121316] text-white shadow-sm' : 'bg-transparent text-[#62605c] hover:bg-[#f2efe9]'
               }`}
             >
@@ -277,7 +279,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => setActiveHeroTab('replies')}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
+              className={`shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all flex items-center gap-2 ${
                 activeHeroTab === 'replies' ? 'bg-[#121316] text-white shadow-sm' : 'bg-transparent text-[#62605c] hover:bg-[#f2efe9]'
               }`}
             >
@@ -287,70 +289,70 @@ export default function LandingPage() {
           </div>
 
           {/* Mockup Display Container */}
-          <div className="bg-[#faf8f4] border border-[#121316]/10 rounded-2xl p-4 md:p-6 min-h-[280px]">
+          <div className="bg-[#faf8f4] border border-[#121316]/10 rounded-2xl p-3.5 sm:p-5 md:p-6 min-h-[280px]">
             {activeHeroTab === 'campaigns' && (
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                   <div>
-                    <h4 className="font-bold text-[#121316] text-base">Q3 B2B Outbound Campaign</h4>
+                    <h4 className="font-bold text-[#121316] text-sm sm:text-base">Q3 B2B Outbound Campaign</h4>
                     <p className="text-xs text-[#62605c]">Sequence active across 4 rotated mailboxes • 1,420 leads loaded</p>
                   </div>
-                  <span className="px-3 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] text-xs font-bold rounded-full border border-[#0f8a5f]/20">
+                  <span className="self-start sm:self-auto px-3 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] text-xs font-bold rounded-full border border-[#0f8a5f]/20 shrink-0">
                     Active • Sending
                   </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="bg-white p-3.5 rounded-xl border border-[#121316]/08">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                  <div className="bg-white p-3 sm:p-3.5 rounded-xl border border-[#121316]/08">
                     <span className="text-xs text-[#62605c] font-medium block">Sent Mails</span>
-                    <strong className="text-xl font-bold text-[#121316]">1,420 / 2,000</strong>
+                    <strong className="text-lg sm:text-xl font-bold text-[#121316]">1,420 / 2,000</strong>
                   </div>
-                  <div className="bg-white p-3.5 rounded-xl border border-[#121316]/08">
+                  <div className="bg-white p-3 sm:p-3.5 rounded-xl border border-[#121316]/08">
                     <span className="text-xs text-[#62605c] font-medium block">Unique Opens</span>
-                    <strong className="text-xl font-bold text-[#121316]">64.2%</strong>
+                    <strong className="text-lg sm:text-xl font-bold text-[#121316]">64.2%</strong>
                   </div>
-                  <div className="bg-white p-3.5 rounded-xl border border-[#121316]/08">
+                  <div className="bg-white p-3 sm:p-3.5 rounded-xl border border-[#121316]/08">
                     <span className="text-xs text-[#62605c] font-medium block">Replied Leads</span>
-                    <strong className="text-xl font-bold text-[#ee382b]">9.4% (133 replies)</strong>
+                    <strong className="text-lg sm:text-xl font-bold text-[#ee382b]">9.4% (133 replies)</strong>
                   </div>
                 </div>
-                <div className="bg-white p-3 rounded-xl border border-[#121316]/08 flex items-center justify-between text-xs text-[#52504b]">
+                <div className="bg-white p-3 rounded-xl border border-[#121316]/08 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs text-[#52504b]">
                   <span>Step 1: &ldquo;Quick question regarding outbound stack...&rdquo;</span>
-                  <span className="font-semibold text-[#0f8a5f]">64.2% open • 9.4% reply</span>
+                  <span className="font-semibold text-[#0f8a5f] shrink-0">64.2% open • 9.4% reply</span>
                 </div>
               </div>
             )}
 
             {activeHeroTab === 'mailboxes' && (
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                   <div>
-                    <h4 className="font-bold text-[#121316] text-base">Connected Mailbox Inventory</h4>
+                    <h4 className="font-bold text-[#121316] text-sm sm:text-base">Connected Mailbox Inventory</h4>
                     <p className="text-xs text-[#62605c]">Distributed sending capacity across Google Workspace & Microsoft 365</p>
                   </div>
-                  <span className="px-3 py-1 bg-[#121316] text-white text-xs font-bold rounded-full">
+                  <span className="self-start sm:self-auto px-3 py-1 bg-[#121316] text-white text-xs font-bold rounded-full shrink-0">
                     8 Accounts Connected
                   </span>
                 </div>
                 <div className="space-y-2">
-                  <div className="bg-white p-3 rounded-xl border border-[#121316]/08 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#ee382b] text-white font-bold flex items-center justify-center">G</div>
-                      <div>
-                        <div className="font-bold text-[#121316]">sumit@outreachos.com</div>
-                        <div className="text-[#62605c]">Google Workspace • 38/40 sent today</div>
+                  <div className="bg-white p-3 rounded-xl border border-[#121316]/08 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-[#ee382b] text-white font-bold flex items-center justify-center shrink-0">G</div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-[#121316] truncate">sumit@outreachos.com</div>
+                        <div className="text-[#62605c] text-[11px] sm:text-xs">Google Workspace • 38/40 sent today</div>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] font-semibold rounded-md">99% Health • SPF Pass</span>
+                    <span className="self-start sm:self-auto px-2.5 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] font-semibold rounded-md shrink-0">99% Health • SPF Pass</span>
                   </div>
-                  <div className="bg-white p-3 rounded-xl border border-[#121316]/08 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#0078d4] text-white font-bold flex items-center justify-center">M</div>
-                      <div>
-                        <div className="font-bold text-[#121316]">alex@outreachos.io</div>
-                        <div className="text-[#62605c]">Microsoft 365 • 40/40 sent today</div>
+                  <div className="bg-white p-3 rounded-xl border border-[#121316]/08 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-[#0078d4] text-white font-bold flex items-center justify-center shrink-0">M</div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-[#121316] truncate">alex@outreachos.io</div>
+                        <div className="text-[#62605c] text-[11px] sm:text-xs">Microsoft 365 • 40/40 sent today</div>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] font-semibold rounded-md">98% Health • DKIM Pass</span>
+                    <span className="self-start sm:self-auto px-2.5 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] font-semibold rounded-md shrink-0">98% Health • DKIM Pass</span>
                   </div>
                 </div>
               </div>
@@ -358,27 +360,27 @@ export default function LandingPage() {
 
             {activeHeroTab === 'warmup' && (
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                   <div>
-                    <h4 className="font-bold text-[#121316] text-base">Domain Health & Warmup Engine</h4>
+                    <h4 className="font-bold text-[#121316] text-sm sm:text-base">Domain Health & Warmup Engine</h4>
                     <p className="text-xs text-[#62605c]">Automated peer exchange & deliverability monitor</p>
                   </div>
-                  <span className="px-3 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] text-xs font-bold rounded-full">
+                  <span className="self-start sm:self-auto px-3 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] text-xs font-bold rounded-full shrink-0">
                     98.4% Inbox Placement
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs">
                   <div className="bg-white p-3 rounded-xl border border-[#121316]/08">
                     <span className="text-[#62605c] block">Peer Exchanges</span>
-                    <strong className="text-base text-[#121316]">420 / day</strong>
+                    <strong className="text-sm sm:text-base text-[#121316]">420 / day</strong>
                   </div>
                   <div className="bg-white p-3 rounded-xl border border-[#121316]/08">
                     <span className="text-[#62605c] block">Spam Recovery Rate</span>
-                    <strong className="text-base text-[#0f8a5f]">100% Auto-Saved</strong>
+                    <strong className="text-sm sm:text-base text-[#0f8a5f]">100% Auto-Saved</strong>
                   </div>
                   <div className="bg-white p-3 rounded-xl border border-[#121316]/08">
                     <span className="text-[#62605c] block">DNS Status</span>
-                    <strong className="text-base text-[#121316]">SPF, DKIM, DMARC OK</strong>
+                    <strong className="text-sm sm:text-base text-[#121316]">SPF, DKIM, DMARC OK</strong>
                   </div>
                 </div>
               </div>
@@ -386,19 +388,19 @@ export default function LandingPage() {
 
             {activeHeroTab === 'replies' && (
               <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                   <div>
-                    <h4 className="font-bold text-[#121316] text-base">Unified Master Inbox</h4>
+                    <h4 className="font-bold text-[#121316] text-sm sm:text-base">Unified Master Inbox</h4>
                     <p className="text-xs text-[#62605c]">All responses synced in one thread with sentiment tagging</p>
                   </div>
-                  <span className="px-3 py-1 bg-[#ee382b]/10 text-[#ee382b] text-xs font-bold rounded-full">
+                  <span className="self-start sm:self-auto px-3 py-1 bg-[#ee382b]/10 text-[#ee382b] text-xs font-bold rounded-full shrink-0">
                     14 Leads Replied
                   </span>
                 </div>
                 <div className="bg-white p-3 rounded-xl border border-[#121316]/08 text-xs space-y-2">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#121316]/08">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-[#121316]/08">
                     <span className="font-bold text-[#121316]">John Doe (Stripe)</span>
-                    <span className="px-2 py-0.5 bg-[#0f8a5f]/10 text-[#0f8a5f] font-semibold rounded">Positive Reply</span>
+                    <span className="self-start sm:self-auto px-2 py-0.5 bg-[#0f8a5f]/10 text-[#0f8a5f] font-semibold rounded shrink-0">Positive Reply</span>
                   </div>
                   <p className="text-[#52504b] italic">&ldquo;Hi Sumit, this looks relevant to our team. Are you free for a 15-minute call tomorrow at 2 PM?&rdquo;</p>
                 </div>
@@ -409,17 +411,17 @@ export default function LandingPage() {
       </section>
 
       {/* Founder's Letter & Real Social Proof Section (Point 2) */}
-      <section className="py-10 px-4 md:px-8 max-w-6xl mx-auto">
-        <div className="founder-note-card grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <section className="py-8 sm:py-10 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto">
+        <div className="founder-note-card grid grid-cols-1 lg:grid-cols-12 gap-6 items-start p-4 sm:p-6 md:p-8">
           {/* Text column — the hero of this section */}
           <div className="lg:col-span-8">
             <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">FOUNDER&rsquo;S NOTE</span>
-            <h3 className="uneevo-serif-headline text-2xl sm:text-3xl md:text-4xl text-[#121316] mb-3.5 leading-tight">
+            <h3 className="uneevo-serif-headline text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[#121316] mb-3.5 leading-tight">
               &ldquo;We built Outreach OS because paying $300+/mo across 4 broken tools was killing our agency economics.&rdquo;
             </h3>
 
             {/* Price chips — scannable proof instead of buried prose */}
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4">
               {[
                 { label: 'Smartlead', price: '$94/mo' },
                 { label: 'Warmup', price: '$50/mo' },
@@ -428,7 +430,7 @@ export default function LandingPage() {
               ].map((chip) => (
                 <span
                   key={chip.label}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#121316]/06 border border-[#121316]/10 text-xs font-semibold text-[#52504b]"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-[#121316]/06 border border-[#121316]/10 text-xs font-semibold text-[#52504b]"
                 >
                   <span className="font-extrabold text-[#121316]">{chip.price}</span>
                   <span>{chip.label}</span>
@@ -453,7 +455,7 @@ export default function LandingPage() {
 
           {/* Photo — smaller, supporting role */}
           <div className="lg:col-span-4 flex justify-center">
-            <div className="relative rounded-2xl overflow-hidden shadow-md border border-[#121316]/10 max-w-[240px] w-full bg-[#ffea00]">
+            <div className="relative rounded-2xl overflow-hidden shadow-md border border-[#121316]/10 max-w-[180px] sm:max-w-[240px] w-full bg-[#ffea00]">
               <img
                 src="/founder-pranjal.png"
                 alt="Pranjal Yadav - Creator of Outreach OS"
@@ -476,9 +478,9 @@ export default function LandingPage() {
             <span className="text-xs text-[#62605c] font-medium">average across beta users</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-3.5">
             {/* Card 1 */}
-            <div className="p-4 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
+            <div className="p-3.5 sm:p-4 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
               <p className="text-sm text-[#3b3a36] leading-relaxed mb-3 font-normal">
                 &ldquo;Stack cost down <strong className='text-[#121316] font-bold'>60%</strong>, inbox placement at <strong className='text-[#121316] font-bold'>99%</strong> across 24 mailboxes.&rdquo;
               </p>
@@ -489,7 +491,7 @@ export default function LandingPage() {
             </div>
 
             {/* Card 2 */}
-            <div className="p-4 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
+            <div className="p-3.5 sm:p-4 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
               <p className="text-sm text-[#3b3a36] leading-relaxed mb-3 font-normal">
                 &ldquo;SPF/DKIM diagnostics caught a bad domain before we blasted <strong className='text-[#121316] font-bold'>5,000 leads</strong>.&rdquo;
               </p>
@@ -500,7 +502,7 @@ export default function LandingPage() {
             </div>
 
             {/* Card 3 */}
-            <div className="p-4 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
+            <div className="p-3.5 sm:p-4 rounded-xl border border-[#121316]/10 bg-[#faf8f4]">
               <p className="text-sm text-[#3b3a36] leading-relaxed mb-3 font-normal">
                 &ldquo;<strong className='text-[#121316] font-bold'>19 meetings</strong> booked in the first 3 weeks — unified inbox, zero missed replies.&rdquo;
               </p>
@@ -514,9 +516,9 @@ export default function LandingPage() {
       </section>
 
       {/* Interactive 4-Step Product UI Showcase (Point 3) */}
-      <section id="how-it-works" className="py-10 px-4 md:px-8 max-w-6xl mx-auto">
+      <section id="how-it-works" className="py-8 sm:py-10 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-6">
-          <h2 className="uneevo-serif-headline text-3xl md:text-5xl text-[#121316] mb-2.5">
+          <h2 className="uneevo-serif-headline text-2xl sm:text-4xl md:text-5xl text-[#121316] mb-2.5">
             How Outreach OS Runs Your Cold Email Pipeline
           </h2>
           <p className="text-[#52504b] text-sm md:text-base">
@@ -525,19 +527,19 @@ export default function LandingPage() {
         </div>
 
         {/* Step Tabs Navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-6">
           {stepDetails.map((s) => (
             <button
               key={s.step}
               onClick={() => setActiveStepTab(s.step)}
-              className={`p-3.5 text-left rounded-2xl transition-all border ${
+              className={`p-2.5 sm:p-3.5 text-left rounded-2xl transition-all border ${
                 activeStepTab === s.step
                   ? 'bg-[#121316] text-white border-[#121316] shadow-md'
                   : 'bg-white text-[#121316] border-[#121316]/10 hover:bg-[#f5f3ef]'
               }`}
             >
-              <div className="text-xs font-bold tracking-wider opacity-70 mb-0.5">STEP 0{s.step}</div>
-              <div className="text-sm font-extrabold truncate">{s.tag.split(' — ')[1]}</div>
+              <div className="text-[11px] sm:text-xs font-bold tracking-wider opacity-70 mb-0.5">STEP 0{s.step}</div>
+              <div className="text-xs sm:text-sm font-extrabold truncate">{s.tag.split(' — ')[1]}</div>
             </button>
           ))}
         </div>
@@ -546,12 +548,12 @@ export default function LandingPage() {
         {stepDetails.map((s) => {
           if (s.step !== activeStepTab) return null
           return (
-            <div key={s.step} className="uneevo-card p-5 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div key={s.step} className="uneevo-card p-4 sm:p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               <div className="lg:col-span-5 space-y-4">
                 <span className="px-3 py-1 bg-[#ee382b]/10 text-[#ee382b] text-xs font-bold rounded-full inline-block">
                   {s.tag}
                 </span>
-                <h3 className="uneevo-serif-headline text-2xl md:text-3xl text-[#121316] leading-tight">
+                <h3 className="uneevo-serif-headline text-xl sm:text-2xl md:text-3xl text-[#121316] leading-tight">
                   {s.title}
                 </h3>
                 <p className="text-[#52504b] text-sm md:text-base leading-relaxed">
@@ -568,15 +570,15 @@ export default function LandingPage() {
               </div>
 
               {/* UI Mockup Window */}
-              <div className="lg:col-span-7 bg-[#faf8f4] border border-[#121316]/10 rounded-2xl p-4 md:p-5 shadow-inner">
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#121316]/10">
+              <div className="lg:col-span-7 bg-[#faf8f4] border border-[#121316]/10 rounded-2xl p-3.5 sm:p-5 shadow-inner">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-[#121316]/10">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#ee382b]/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-[#b7791f]/80" />
                     <span className="w-2.5 h-2.5 rounded-full bg-[#0f8a5f]/80" />
                     <span className="ml-1.5 text-xs font-bold text-[#121316]">{s.mockupData.title}</span>
                   </div>
-                  <span className="px-2.5 py-0.5 bg-[#121316] text-white text-[11px] font-bold rounded">
+                  <span className="self-start sm:self-auto px-2.5 py-0.5 bg-[#121316] text-white text-[11px] font-bold rounded shrink-0">
                     {s.mockupData.badge}
                   </span>
                 </div>
@@ -585,14 +587,14 @@ export default function LandingPage() {
 
                 <div className="space-y-2">
                   {s.mockupData.items.map((item: any, i: number) => (
-                    <div key={i} className="bg-white p-3 rounded-xl border border-[#121316]/08 flex items-center justify-between text-xs">
+                    <div key={i} className="bg-white p-3 rounded-xl border border-[#121316]/08 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                       <div>
                         <div className="font-bold text-[#121316]">{item.name}</div>
                         {item.email && <div className="text-[#62605c]">{item.email} • {item.company}</div>}
                         {item.preview && <div className="text-[#52504b] italic mt-0.5">{item.preview}</div>}
                         {item.delay && <div className="text-[#62605c] mt-0.5">{item.delay}</div>}
                       </div>
-                      <div className="text-right">
+                      <div className="self-start sm:self-auto text-left sm:text-right shrink-0">
                         {item.score && <span className="px-2 py-1 bg-[#0f8a5f]/10 text-[#0f8a5f] font-bold rounded">{item.score}</span>}
                         {item.status && !item.score && <span className="px-2 py-1 bg-[#121316]/08 text-[#121316] font-bold rounded">{item.status}</span>}
                         {item.stat && <span className="px-2 py-1 bg-[#ee382b]/10 text-[#ee382b] font-bold rounded">{item.stat}</span>}
@@ -608,11 +610,11 @@ export default function LandingPage() {
       </section>
 
       {/* Stack Comparison Section (Point 6) */}
-      <section id="comparison" className="py-10 px-4 md:px-8 max-w-6xl mx-auto">
+      <section id="comparison" className="py-8 sm:py-10 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto">
         <div className="stack-compare-box">
           <div className="text-center max-w-2xl mx-auto mb-7">
             <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">COST COMPARISON</span>
-            <h2 className="uneevo-serif-headline text-3xl md:text-5xl text-white mb-3">
+            <h2 className="uneevo-serif-headline text-2xl sm:text-4xl md:text-5xl text-white mb-3">
               Stop Paying $228+/mo Across 4 Disconnected Tools
             </h2>
             <p className="text-[#a09e97] text-sm md:text-base">
@@ -620,60 +622,60 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 max-w-4xl mx-auto">
             {/* Old Scattered Stack Column */}
             <div className="old-stack-col">
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 mb-3 border-b border-white/10">
                 <div>
                   <h4 className="font-bold text-white text-base md:text-lg">Traditional Scattered Stack</h4>
                   <p className="text-xs text-[#a09e97]">4 separate subscriptions & broken sync</p>
                 </div>
-                <span className="text-xl font-extrabold text-[#ee382b]">$228/mo</span>
+                <span className="text-xl font-extrabold text-[#ee382b] self-start sm:self-auto">$228/mo</span>
               </div>
               <ul className="space-y-2.5 text-xs text-[#d0ceb8]">
-                <li className="flex items-center justify-between">
+                <li className="flex items-start justify-between gap-2">
                   <span>Smartlead / Instantly Plan</span>
-                  <span className="font-bold text-white">$94/mo</span>
+                  <span className="font-bold text-white shrink-0">$94/mo</span>
                 </li>
-                <li className="flex items-center justify-between">
+                <li className="flex items-start justify-between gap-2">
                   <span>Standalone Warmup Service</span>
-                  <span className="font-bold text-white">$50/mo</span>
+                  <span className="font-bold text-white shrink-0">$50/mo</span>
                 </li>
-                <li className="flex items-center justify-between">
+                <li className="flex items-start justify-between gap-2">
                   <span>Domain Health & SPF Monitor</span>
-                  <span className="font-bold text-white">$49/mo</span>
+                  <span className="font-bold text-white shrink-0">$49/mo</span>
                 </li>
-                <li className="flex items-center justify-between">
+                <li className="flex items-start justify-between gap-2">
                   <span>CSV Lead Scrubbing Utility</span>
-                  <span className="font-bold text-white">$35/mo</span>
+                  <span className="font-bold text-white shrink-0">$35/mo</span>
                 </li>
               </ul>
             </div>
 
             {/* Outreach OS Column */}
             <div className="new-stack-col">
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 mb-3 border-b border-white/10">
                 <div>
                   <h4 className="font-bold text-white text-base md:text-lg">Outreach OS Complete System</h4>
                   <p className="text-xs text-[#ee382b] font-semibold">Everything unified under one flat plan</p>
                 </div>
-                <span className="text-2xl font-extrabold text-white">₹999/mo</span>
+                <span className="text-2xl font-extrabold text-white self-start sm:self-auto">₹999/mo</span>
               </div>
               <ul className="space-y-2.5 text-xs text-white">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#ee382b]" />
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#ee382b] mt-0.5 shrink-0" />
                   <span>30 Mailboxes or Accounts & 9,000 Mails Per Month</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#ee382b]" />
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#ee382b] mt-0.5 shrink-0" />
                   <span>Automated Deliverability Warmup Included</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#ee382b]" />
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#ee382b] mt-0.5 shrink-0" />
                   <span>Live SPF, DKIM & DMARC Health Monitoring</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#ee382b]" />
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#ee382b] mt-0.5 shrink-0" />
                   <span>Built-in Lead Scrubber & Unified Inbox</span>
                 </li>
               </ul>
@@ -683,16 +685,16 @@ export default function LandingPage() {
       </section>
 
       {/* Target Audience Section */}
-      <section className="py-10 px-4 md:px-8 max-w-6xl mx-auto">
+      <section className="py-8 sm:py-10 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-7">
           <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">BUILT FOR OUTBOUND TEAMS</span>
-          <h2 className="uneevo-serif-headline text-3xl md:text-5xl text-[#121316]">
+          <h2 className="uneevo-serif-headline text-2xl sm:text-4xl md:text-5xl text-[#121316]">
             Who Replaces Their Stack With Outreach OS?
           </h2>
         </div>
 
         <div className="uneevo-card grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#121316]/08">
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <Briefcase className="w-5 h-5 text-[#ee382b] mb-2.5" />
             <span className="text-[10px] font-bold text-[#62605c] tracking-widest uppercase block mb-1">AGENCIES</span>
             <h4 className="font-bold text-[#121316] text-base mb-1.5">Outreach Agencies</h4>
@@ -701,7 +703,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <Rocket className="w-5 h-5 text-[#ee382b] mb-2.5" />
             <span className="text-[10px] font-bold text-[#62605c] tracking-widest uppercase block mb-1">FOUNDERS</span>
             <h4 className="font-bold text-[#121316] text-base mb-1.5">B2B Founders</h4>
@@ -710,7 +712,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <Users className="w-5 h-5 text-[#ee382b] mb-2.5" />
             <span className="text-[10px] font-bold text-[#62605c] tracking-widest uppercase block mb-1">SDR TEAMS</span>
             <h4 className="font-bold text-[#121316] text-base mb-1.5">Sales Development</h4>
@@ -719,7 +721,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <Building2 className="w-5 h-5 text-[#ee382b] mb-2.5" />
             <span className="text-[10px] font-bold text-[#62605c] tracking-widest uppercase block mb-1">CONSULTANTS</span>
             <h4 className="font-bold text-[#121316] text-base mb-1.5">Growth Advisors</h4>
@@ -731,10 +733,10 @@ export default function LandingPage() {
       </section>
 
       {/* Main Pricing Section (₹999/mo) (Point 6) */}
-      <section id="pricing" className="py-10 px-4 md:px-8 max-w-6xl mx-auto">
+      <section id="pricing" className="py-8 sm:py-10 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-7">
           <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">TRANSPARENT PRICING</span>
-          <h2 className="uneevo-serif-headline text-3xl md:text-5xl text-[#121316] mb-3">
+          <h2 className="uneevo-serif-headline text-2xl sm:text-4xl md:text-5xl text-[#121316] mb-3">
             One Flat Price. Zero Per-Seat Upcharges.
           </h2>
           <p className="text-[#52504b] text-sm md:text-base">
@@ -742,16 +744,16 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="max-w-xl mx-auto uneevo-card p-6 md:p-8 relative overflow-hidden border-2 border-[#121316]">
-          <div className="flex items-center justify-between mb-5 pb-5 border-b border-[#121316]/10">
+        <div className="max-w-xl mx-auto uneevo-card p-4 sm:p-6 md:p-8 relative overflow-hidden border-2 border-[#121316]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-5 border-b border-[#121316]/10">
             <div>
               <span className="px-2.5 py-0.5 bg-[#0f8a5f]/10 text-[#0f8a5f] text-xs font-bold rounded-full">
                 FULL ACCESS PLAN
               </span>
               <h3 className="font-extrabold text-[#121316] text-xl md:text-2xl mt-1.5">Agency & Growth Plan</h3>
             </div>
-            <div className="text-right">
-              <div className="text-3xl md:text-4xl font-extrabold text-[#121316]">₹999</div>
+            <div className="text-left sm:text-right">
+              <div className="text-3xl sm:text-4xl font-extrabold text-[#121316]">₹999</div>
               <div className="text-xs text-[#62605c] font-medium">/ month flat</div>
             </div>
           </div>
@@ -760,47 +762,47 @@ export default function LandingPage() {
           <div className="mb-5">
             <span className="text-xs font-bold text-[#121316] tracking-wider uppercase block mb-2.5">WHAT’S INCLUDED:</span>
             <ul className="space-y-2.5 text-sm text-[#3b3a36]">
-              <li className="flex items-center gap-2.5 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] flex-shrink-0" />
+              <li className="flex items-start gap-2.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] mt-0.5 shrink-0" />
                 <span>30 Mailboxes or Accounts (9,000 Mails / Month • Google, Outlook, Zoho, SMTP)</span>
               </li>
-              <li className="flex items-center gap-2.5 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] flex-shrink-0" />
+              <li className="flex items-start gap-2.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] mt-0.5 shrink-0" />
                 <span>Automated Deliverability Warmup Included</span>
               </li>
-              <li className="flex items-center gap-2.5 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] flex-shrink-0" />
+              <li className="flex items-start gap-2.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] mt-0.5 shrink-0" />
                 <span>Live SPF, DKIM & DMARC DNS Diagnostic Checks</span>
               </li>
-              <li className="flex items-center gap-2.5 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] flex-shrink-0" />
+              <li className="flex items-start gap-2.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] mt-0.5 shrink-0" />
                 <span>Multi-Step Sequence Engine & Stop-on-Reply</span>
               </li>
-              <li className="flex items-center gap-2.5 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] flex-shrink-0" />
+              <li className="flex items-start gap-2.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] mt-0.5 shrink-0" />
                 <span>Unified Master Inbox with Sentiment Tagging</span>
               </li>
-              <li className="flex items-center gap-2.5 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] flex-shrink-0" />
+              <li className="flex items-start gap-2.5 font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-[#0f8a5f] mt-0.5 shrink-0" />
                 <span>Priority Deliverability Engineering Support</span>
               </li>
             </ul>
           </div>
 
           {/* Explicit What's NOT Included (Point 6) */}
-          <div className="p-3.5 bg-[#faf8f4] rounded-xl border border-[#121316]/10 mb-5">
+          <div className="p-3 sm:p-3.5 bg-[#faf8f4] rounded-xl border border-[#121316]/10 mb-5">
             <span className="text-xs font-bold text-[#121316] tracking-wider uppercase block mb-1.5">WHAT’S NOT INCLUDED (NO SURPRISES):</span>
             <ul className="space-y-1.5 text-xs text-[#62605c]">
-              <li className="flex items-center gap-2">
-                <XCircle className="w-3.5 h-3.5 text-[#ee382b] flex-shrink-0" />
+              <li className="flex items-start gap-2">
+                <XCircle className="w-3.5 h-3.5 text-[#ee382b] mt-0.5 shrink-0" />
                 <span>No per-seat team member upcharges</span>
               </li>
-              <li className="flex items-center gap-2">
-                <XCircle className="w-3.5 h-3.5 text-[#ee382b] flex-shrink-0" />
+              <li className="flex items-start gap-2">
+                <XCircle className="w-3.5 h-3.5 text-[#ee382b] mt-0.5 shrink-0" />
                 <span>No extra fees for adding additional client mailboxes</span>
               </li>
-              <li className="flex items-center gap-2">
-                <XCircle className="w-3.5 h-3.5 text-[#ee382b] flex-shrink-0" />
+              <li className="flex items-start gap-2">
+                <XCircle className="w-3.5 h-3.5 text-[#ee382b] mt-0.5 shrink-0" />
                 <span>No long-term annual contract requirements</span>
               </li>
             </ul>
@@ -808,7 +810,7 @@ export default function LandingPage() {
 
           {/* Guarantee Badge */}
           <div className="flex items-center gap-2.5 p-2.5 bg-[#0f8a5f]/08 border border-[#0f8a5f]/20 rounded-xl mb-5 text-xs text-[#0f8a5f] font-semibold">
-            <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+            <ShieldCheck className="w-4 h-4 shrink-0" />
             <span>14-Day 100% Money-Back Deliverability Guarantee. Zero risk.</span>
           </div>
 
@@ -820,20 +822,20 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Accordion Section (Point 7) */}
-      <section id="faq" className="py-10 px-4 md:px-8 max-w-4xl mx-auto">
+      <section id="faq" className="py-8 sm:py-10 px-4 sm:px-6 md:px-8 max-w-4xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-7">
           <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">FREQUENTLY ASKED QUESTIONS</span>
-          <h2 className="uneevo-serif-headline text-3xl md:text-4xl text-[#121316]">
+          <h2 className="uneevo-serif-headline text-2xl sm:text-4xl md:text-5xl text-[#121316]">
             Technical Details & Answers
           </h2>
         </div>
 
         <div className="space-y-3">
           {faqs.map((faq, index) => (
-            <div key={index} className="faq-card p-4 cursor-pointer" onClick={() => toggleFaq(index)}>
-              <div className="flex items-center justify-between gap-4">
+            <div key={index} className="faq-card p-3.5 sm:p-4 cursor-pointer" onClick={() => toggleFaq(index)}>
+              <div className="flex items-start sm:items-center justify-between gap-3">
                 <h4 className="font-bold text-[#121316] text-sm md:text-base">{faq.q}</h4>
-                <ChevronDown className={`w-4 h-4 text-[#62605c] transition-transform ${activeFaq === index ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-[#62605c] shrink-0 transition-transform mt-0.5 sm:mt-0 ${activeFaq === index ? 'rotate-180' : ''}`} />
               </div>
               {activeFaq === index && (
                 <p className="text-sm text-[#52504b] mt-2.5 pt-2.5 border-t border-[#121316]/08 leading-relaxed">
@@ -846,11 +848,11 @@ export default function LandingPage() {
       </section>
 
       {/* Live Shipping Log / Product Changelog (Point 7) */}
-      <section className="py-10 px-4 md:px-8 max-w-4xl mx-auto">
-        <div className="uneevo-card p-6 md:p-7">
+      <section className="py-8 sm:py-10 px-4 sm:px-6 md:px-8 max-w-4xl mx-auto">
+        <div className="uneevo-card p-4 sm:p-6 md:p-7">
           <div className="flex items-center gap-2 mb-4">
             <History className="w-4 h-4 text-[#ee382b]" />
-            <h3 className="font-bold text-[#121316] text-lg">Recent Product Changelog</h3>
+            <h3 className="font-bold text-[#121316] text-base sm:text-lg">Recent Product Changelog</h3>
           </div>
           <div className="space-y-4">
             {changelogs.map((item, idx) => (
@@ -868,11 +870,11 @@ export default function LandingPage() {
       </section>
 
       {/* Massive Footer with Cropped Wordmark */}
-      <footer className="pt-10 pb-8 px-4 md:px-8 border-t border-[#121316]/10 bg-[#f5f3ef]">
+      <footer className="pt-8 sm:pt-10 pb-6 sm:pb-8 px-4 sm:px-6 md:px-8 border-t border-[#121316]/10 bg-[#f5f3ef] overflow-hidden">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-          <BrandLogo href="/" size="md" showTagline={true} />
+          <BrandLogo href="/" size="md" showTagline={true} className="scale-90 origin-left sm:scale-100" />
 
-          <div className="flex items-center gap-6 text-xs font-semibold text-[#62605c]">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 sm:gap-6 text-xs font-semibold text-[#62605c]">
             <Link href="/privacy" className="hover:text-[#121316]">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-[#121316]">Terms of Service</Link>
             <Link

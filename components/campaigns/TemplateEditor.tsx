@@ -24,6 +24,7 @@ interface TemplateEditorProps {
   onMessageTemplateChange: (value: string) => void
   variables: TemplateVariableOption[]
   isFollowUp?: boolean
+  parentSubjectTemplate?: string
 }
 
 export function TemplateEditor({
@@ -37,6 +38,7 @@ export function TemplateEditor({
   onMessageTemplateChange,
   variables,
   isFollowUp = false,
+  parentSubjectTemplate = '',
 }: TemplateEditorProps) {
   const [previewing, setPreviewing] = useState(false)
   const [previewResult, setPreviewResult] = useState<PreviewResult | null>(null)
@@ -58,6 +60,15 @@ export function TemplateEditor({
     const nextIndex = Math.max(0, previewRowIndex + offset)
     setPreviewRowIndex(nextIndex)
 
+    const effectiveSubject =
+      isFollowUp && !subjectTemplate.trim()
+        ? (parentSubjectTemplate?.trim()
+            ? (parentSubjectTemplate.trim().startsWith('Re:')
+                ? parentSubjectTemplate.trim()
+                : `Re: ${parentSubjectTemplate.trim()}`)
+            : 'Re: <Step 1 Subject>')
+        : subjectTemplate
+
     try {
       const res = await fetch('/api/campaigns/preview', {
         method: 'POST',
@@ -65,10 +76,11 @@ export function TemplateEditor({
         body: JSON.stringify({
           csvFileId,
           channel: mode,
-          subjectTemplate,
+          subjectTemplate: effectiveSubject,
           bodyTemplate,
           messageTemplate,
           rowIndex: nextIndex,
+          isFollowUp,
         }),
       })
       const data = await res.json()
