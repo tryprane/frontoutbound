@@ -498,6 +498,11 @@ function LoginFormContent() {
                 </div>
 
                 {/* Error */}
+                <div className="text-right">
+                  <Link href="/forgot-password" className="text-xs font-semibold text-[#52504b] hover:text-[#ee382b] underline underline-offset-2">
+                    Forgot password?
+                  </Link>
+                </div>
                 {signInError ? (
                   <div className="rounded-xl border border-[#ee382b]/20 bg-[#ee382b]/5 px-4 py-3 text-sm text-[#ee382b] font-medium">
                     {signInError}

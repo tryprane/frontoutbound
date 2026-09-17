@@ -6,6 +6,9 @@
 const standalone = String(process.env.NEXT_STANDALONE || '').toLowerCase() === 'true'
 
 const nextConfig = {
+  async headers() {
+    return [{ source: '/reset-password', headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }, { key: 'Cache-Control', value: 'no-store' }] }]
+  },
   ...(standalone ? { output: 'standalone' } : {}),
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || '',
