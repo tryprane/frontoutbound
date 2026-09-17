@@ -199,8 +199,7 @@ export function MailboxSettingsDrawer({
   const isTrulyWarming =
     account.trulyInboxStatus === 'active' ||
     account.trulyInboxStatus === 'warming' ||
-    account.trulyInboxStatus === 'enabled' ||
-    (Boolean(account.trulyInboxConnected) && account.warmupStatus === 'WARMING')
+    account.trulyInboxStatus === 'enabled'
 
   const copyEmailToClipboard = () => {
     if (!account.email) return
@@ -500,7 +499,7 @@ export function MailboxSettingsDrawer({
                         {account.trulyInboxConnected && (
                           <button
                             type="button"
-                            disabled={!!trulyInboxStarting[account.id] || isTrulyWarming}
+                          disabled={!!trulyInboxStarting[account.id] || !!trulyInboxConnecting[account.id] || isTrulyWarming}
                             onClick={() => handleStartTrulyInboxWarmup(account.id)}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-2xs ${
                               isTrulyWarming
@@ -545,7 +544,7 @@ export function MailboxSettingsDrawer({
                   <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-gray-50/70 border border-gray-100">
                     <div>
                       <div className="text-sm font-semibold text-gray-900">Sender Display Name</div>
-                      <div className="text-xs text-gray-500">Shown as the "From" name in recipient inboxes</div>
+                      <div className="text-xs text-gray-500">Shown as the &ldquo;From&rdquo; name in recipient inboxes</div>
                     </div>
                     <div className="text-sm text-gray-600 font-medium truncate max-w-[200px]">
                       {account.displayName || '—'}

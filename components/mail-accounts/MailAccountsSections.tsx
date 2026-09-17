@@ -710,16 +710,14 @@ export function AccountsView(props: {
                             <span
                               className={`px-2 py-0.5 rounded-full border text-[11px] font-medium flex items-center gap-1 shrink-0 ${
                                 account.trulyInboxStatus === 'active' ||
-                                account.trulyInboxStatus === 'warming' ||
-                                account.warmupStatus === 'WARMING'
+                                account.trulyInboxStatus === 'warming'
                                   ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                                   : 'bg-green-50 text-green-700 border border-green-100'
                               }`}
                             >
                               <Sparkles className="h-3 w-3 text-[#10B981]" />
                               {account.trulyInboxStatus === 'active' ||
-                              account.trulyInboxStatus === 'warming' ||
-                              account.warmupStatus === 'WARMING'
+                              account.trulyInboxStatus === 'warming'
                                 ? 'TrulyInbox Warming'
                                 : 'TrulyInbox'}
                             </span>
@@ -1312,7 +1310,7 @@ export function AddZohoView({
         <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 space-y-1">
           <div className="font-bold flex items-center gap-1.5 text-amber-950">
             <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-            <span>If Zoho says "Cookies are disabled for your browser":</span>
+            <span>If Zoho says &ldquo;Cookies are disabled for your browser&rdquo;:</span>
           </div>
           <ul className="list-disc list-inside space-y-0.5 pl-1 text-amber-800">
             <li>Ensure <strong>third-party cookies</strong> are allowed for Zoho in your browser settings (or disable Brave Shields / tracking blockers for Zoho).</li>
