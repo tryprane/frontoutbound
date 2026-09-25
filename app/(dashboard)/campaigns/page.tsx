@@ -18,6 +18,7 @@ import {
   PauseCircle,
   PlayCircle,
   Layers,
+  Clock,
 } from 'lucide-react'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { PaginationControls } from '@/components/ui/pagination-controls'
@@ -30,11 +31,17 @@ interface Campaign {
   guardrailReason: string | null
   createdAt: string
   senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook'
+  schedulingMode: 'ANYTIME' | 'BUSINESS_HOURS'
+  timezone: string | null
+  businessHoursStart: string | null
+  businessHoursEnd: string | null
   csvFile: { originalName: string; rowCount: number }
   mailAccounts?: { mailAccount: { displayName: string } }[]
   senderPoolCount: number
   stats: {
     sent: number
+    initialSent: number
+    followUpsSent: number
     failed: number
     bounced: number
     replies: number
@@ -289,8 +296,9 @@ export default function CampaignsPage() {
               const rowCount = camp.csvFile?.rowCount || 0
               const sent = camp.stats?.sent || 0
               const senderCount = camp.senderPoolCount || 0
+              const initialSent = camp.stats?.initialSent ?? sent
               const progress =
-                rowCount > 0 ? Math.min(100, Math.round((sent / rowCount) * 100)) : 0
+                rowCount > 0 ? Math.min(100, Math.round((initialSent / rowCount) * 100)) : 0
 
               return (
                 <Link
@@ -346,8 +354,12 @@ export default function CampaignsPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#8a8780] ml-1 mr-0.5" />
-                          <span>Created {formatDate(camp.createdAt)}</span>
+                          <Clock className="h-3.5 w-3.5 text-[#8a8780] shrink-0" />
+                          <span>
+                            {camp.schedulingMode === 'BUSINESS_HOURS'
+                              ? `${camp.businessHoursStart || '09:00'}–${camp.businessHoursEnd || '17:00'} · ${camp.timezone || 'Timezone not set'}`
+                              : 'Anytime (24/7)'}
+                          </span>
                         </div>
                       </div>
 
@@ -389,7 +401,7 @@ export default function CampaignsPage() {
 
                       <div className="flex justify-between items-center text-xs mb-1.5 font-medium">
                         <span className="text-[#62605c]">
-                          {sent.toLocaleString()} / {rowCount.toLocaleString()} sent
+                          {initialSent.toLocaleString()} / {rowCount.toLocaleString()} prospects
                         </span>
                         <span className="font-mono font-bold text-[#121316]">{progress}%</span>
                       </div>
