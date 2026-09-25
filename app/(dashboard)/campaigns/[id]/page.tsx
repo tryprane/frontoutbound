@@ -36,6 +36,7 @@ import { CampaignPerformanceFunnel } from '@/components/campaigns/CampaignPerfor
 import { CampaignVelocityChart } from '@/components/campaigns/CampaignVelocityChart'
 import { CampaignSequenceTree } from '@/components/campaigns/CampaignSequenceTree'
 import { CampaignSenderFleet } from '@/components/campaigns/CampaignSenderFleet'
+import { CAMPAIGN_TIMEZONE_PRESETS } from '@/components/campaigns/timezonePresets'
 
 type CampaignChannel = 'EMAIL' | 'WHATSAPP' | 'GDRIVE'
 
@@ -215,11 +216,12 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [scheduleMode, setScheduleMode] = useState<'ANYTIME' | 'BUSINESS_HOURS'>('ANYTIME')
-  const [scheduleTimezone, setScheduleTimezone] = useState('Asia/Calcutta')
+  const [scheduleTimezone, setScheduleTimezone] = useState('Asia/Kolkata')
   const [scheduleStart, setScheduleStart] = useState('09:00')
   const [scheduleEnd, setScheduleEnd] = useState('17:00')
   const [scheduleSaving, setScheduleSaving] = useState(false)
   const [scheduleMessage, setScheduleMessage] = useState<string | null>(null)
+  const [customScheduleTimezone, setCustomScheduleTimezone] = useState(false)
 
   const syncSequenceDraftFromCampaign = (data: CampaignDetail) => {
     if (data.channel !== 'EMAIL' || sequenceDirty) return
@@ -291,7 +293,9 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
         if (view === 'full') {
           syncSequenceDraftFromCampaign(data)
           setScheduleMode(data.schedulingMode || 'ANYTIME')
-          setScheduleTimezone(data.timezone || 'Asia/Calcutta')
+          const loadedTimezone = data.timezone || 'Asia/Kolkata'
+          setScheduleTimezone(loadedTimezone)
+          setCustomScheduleTimezone(!CAMPAIGN_TIMEZONE_PRESETS.some((preset) => preset.value === loadedTimezone))
           setScheduleStart(data.businessHoursStart || '09:00')
           setScheduleEnd(data.businessHoursEnd || '17:00')
         }
@@ -483,6 +487,21 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
       setScheduleMessage(error instanceof Error ? error.message : 'Failed to update sending schedule')
     } finally {
       setScheduleSaving(false)
+    }
+  }
+
+  const handleScheduleTimezonePreset = (value: string) => {
+    if (value === '__custom__') {
+      setCustomScheduleTimezone(true)
+      return
+    }
+    setCustomScheduleTimezone(false)
+    setScheduleTimezone(value)
+    const preset = CAMPAIGN_TIMEZONE_PRESETS.find((item) => item.value === value)
+    if (preset?.hours) {
+      const [start, end] = preset.hours.split('-')
+      setScheduleStart(start)
+      setScheduleEnd(end)
     }
   }
 
@@ -1127,9 +1146,14 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
                 <option value="BUSINESS_HOURS">Business hours</option>
               </select>
               {scheduleMode === 'BUSINESS_HOURS' && (
-                <input value={scheduleTimezone} onChange={(event) => setScheduleTimezone(event.target.value)} placeholder="Asia/Calcutta" className="rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm" />
+                <select value={customScheduleTimezone ? '__custom__' : scheduleTimezone} onChange={(event) => handleScheduleTimezonePreset(event.target.value)} className="rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm">
+                  {CAMPAIGN_TIMEZONE_PRESETS.map((preset) => <option key={preset.value} value={preset.value}>{preset.label}</option>)}
+                </select>
               )}
             </div>
+            {scheduleMode === 'BUSINESS_HOURS' && customScheduleTimezone && (
+              <input value={scheduleTimezone} onChange={(event) => setScheduleTimezone(event.target.value)} placeholder="e.g. Asia/Kolkata" className="w-full rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm" />
+            )}
             {scheduleMode === 'BUSINESS_HOURS' && (
               <div className="grid grid-cols-2 gap-3">
                 <label className="text-xs text-[#62605c]">Start<input type="time" value={scheduleStart} onChange={(event) => setScheduleStart(event.target.value)} className="mt-1 block w-full rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm" /></label>
