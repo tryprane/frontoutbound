@@ -24,6 +24,7 @@ import {
   Flame,
   Check,
   CheckCheck,
+  CalendarClock,
 } from 'lucide-react'
 import { ConversationTimeline } from '@/components/responses/ConversationTimeline'
 import type { MailAccountOption, ResponseListItem, ResponseThreadDetail, ResponseThreadMessage } from '@/components/responses/types'
@@ -124,6 +125,9 @@ export default function ResponsesPage() {
   const [replySubject, setReplySubject] = useState('')
   const [replyBody, setReplyBody] = useState('')
   const [sendingReply, setSendingReply] = useState(false)
+  const [scheduleAt, setScheduleAt] = useState('')
+  const [schedulingReply, setSchedulingReply] = useState(false)
+  const [cancellingScheduleId, setCancellingScheduleId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
@@ -278,6 +282,60 @@ export default function ResponsesPage() {
       setToast({ type: 'error', message: err instanceof Error ? err.message : 'Failed to send reply' })
     } finally {
       setSendingReply(false)
+    }
+  }
+
+  async function handleScheduleReply() {
+    if (schedulingReply) return
+    if (!selectedId || detail?.response.id !== selectedId || !replyBody.trim() || !scheduleAt) {
+      setToast({ type: 'error', message: 'Write a message and choose a future date and time.' })
+      return
+    }
+    const scheduledFor = new Date(scheduleAt)
+    if (!Number.isFinite(scheduledFor.getTime()) || scheduledFor.getTime() <= Date.now() + 10_000) {
+      setToast({ type: 'error', message: 'Choose a time at least a few seconds in the future.' })
+      return
+    }
+
+    const targetId = selectedId
+    setSchedulingReply(true)
+    try {
+      const response = await fetch(`/api/responses/${targetId}/scheduled-replies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: replySubject,
+          html: `<p>${replyBody.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')}</p>`,
+          scheduledFor: scheduledFor.toISOString(),
+        }),
+      })
+      const data = (await response.json().catch(() => ({}))) as { error?: string }
+      if (!response.ok) throw new Error(data.error || 'Failed to schedule follow-up')
+      setToast({ type: 'success', message: 'Follow-up scheduled. A new prospect reply will cancel it automatically.' })
+      delete drafts.current[targetId]
+      setReplyBody('')
+      setScheduleAt('')
+      await loadDetail(targetId)
+    } catch (error) {
+      setToast({ type: 'error', message: error instanceof Error ? error.message : 'Failed to schedule follow-up' })
+    } finally {
+      setSchedulingReply(false)
+    }
+  }
+
+  async function handleCancelScheduledReply(scheduledId: string) {
+    if (!selectedId || cancellingScheduleId) return
+    setCancellingScheduleId(scheduledId)
+    try {
+      const response = await fetch(`/api/responses/${selectedId}/scheduled-replies/${scheduledId}`, { method: 'DELETE' })
+      const data = (await response.json().catch(() => ({}))) as { error?: string }
+      if (!response.ok) throw new Error(data.error || 'Failed to cancel scheduled follow-up')
+      setToast({ type: 'success', message: 'Scheduled follow-up cancelled.' })
+      await loadDetail(selectedId)
+    } catch (error) {
+      setToast({ type: 'error', message: error instanceof Error ? error.message : 'Failed to cancel scheduled follow-up' })
+    } finally {
+      setCancellingScheduleId(null)
     }
   }
 
@@ -716,6 +774,29 @@ export default function ResponsesPage() {
                 </div>
                 <ConversationTimeline messages={detail.thread} />
 
+                {detail.scheduledReplies?.length > 0 && (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
+                      <CalendarClock className="h-4 w-4" />
+                      Scheduled follow-ups
+                    </div>
+                    {detail.scheduledReplies.map((scheduled) => (
+                      <div key={scheduled.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-white p-3 text-xs">
+                        <div>
+                          <div className="font-semibold text-slate-800">{scheduled.subject || 'Reply follow-up'}</div>
+                          <div className="mt-0.5 text-slate-500">{formatDate(scheduled.scheduledFor)} · {scheduled.status.toLowerCase().replaceAll('_', ' ')}</div>
+                          {scheduled.errorMessage && <div className="mt-1 text-rose-600">{scheduled.errorMessage}</div>}
+                        </div>
+                        {scheduled.status === 'PENDING' && (
+                          <button type="button" onClick={() => void handleCancelScheduledReply(scheduled.id)} disabled={Boolean(cancellingScheduleId)} className="rounded-full border border-rose-200 px-3 py-1.5 font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50">
+                            {cancellingScheduleId === scheduled.id ? 'Cancelling…' : 'Cancel'}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Reply Composer at bottom of continuous thread */}
                 <div className="mt-8 pt-6 border-t border-gray-100 space-y-3 bg-gray-50/70 p-5 rounded-2xl border">
                   <div className="flex items-center justify-between">
@@ -758,15 +839,22 @@ export default function ResponsesPage() {
 
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                     <span className="break-all text-[11px] text-slate-500">From {detail.thread.find(message => message.mailAccount)?.mailAccount?.email || 'original mailbox'}</span>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
-                      onClick={() => void handleSendReply()}
-                      disabled={sendingReply || loadingDetail || !replyBody.trim()}
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                      <span>{sendingReply ? 'Sending Reply...' : 'Send Reply'}</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input type="datetime-local" value={scheduleAt} onChange={(event) => setScheduleAt(event.target.value)} aria-label="Follow-up date and time" className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-slate-700" />
+                      <button type="button" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-blue-200 bg-white text-blue-700 text-xs font-semibold disabled:opacity-50" onClick={() => void handleScheduleReply()} disabled={schedulingReply || sendingReply || loadingDetail || !replyBody.trim() || !scheduleAt}>
+                        <CalendarClock className="h-3.5 w-3.5" />
+                        <span>{schedulingReply ? 'Scheduling…' : 'Schedule Follow-up'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
+                        onClick={() => void handleSendReply()}
+                        disabled={sendingReply || schedulingReply || loadingDetail || !replyBody.trim()}
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        <span>{sendingReply ? 'Sending Reply...' : 'Send Reply Now'}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
