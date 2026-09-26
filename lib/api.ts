@@ -1,5 +1,5 @@
 /**
- * Typed fetch wrapper for the OutreachOS backend.
+ * Typed fetch wrapper for the OutboundOS backend.
  *
  * Requests go to relative `/api/*` paths so the browser treats them as
  * same-origin and sends the next-auth session cookie. `app/api/[...path]/route.ts`

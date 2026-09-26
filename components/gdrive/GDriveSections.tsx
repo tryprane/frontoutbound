@@ -85,7 +85,7 @@ export function GDriveConnectPanel(props: { onConnect: () => void; hasAccounts: 
           {props.hasAccounts ? 'Connect Another Google Account' : 'Connect Your First Google Drive Account'}
         </h3>
         <p className="text-xs sm:text-sm text-[#62605c] mt-1">
-          Grant scoped Drive access so OutreachOS can share selected assets and attach sequence notes.
+          Grant scoped Drive access so OutboundOS can share selected assets and attach sequence notes.
         </p>
       </div>
       <button

@@ -18,8 +18,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: {
-    default: 'OutreachOS | The Operating System for Outbound',
-    template: '%s | OutreachOS',
+    default: 'OutboundOS | The Operating System for Outbound',
+    template: '%s | OutboundOS',
   },
   description: 'Campaigns, connected mailboxes, warmup, sender health, and reply handling for focused cold email outreach.',
   icons: {
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     apple: '/brand/logo-icon.png',
   },
   openGraph: {
-    title: 'OutreachOS | The Operating System for Outbound',
+    title: 'OutboundOS | The Operating System for Outbound',
     description: 'Run campaigns, protect sender health, and work replies from one focused outbound workspace.',
     type: 'website',
     images: ['/brand/logo-full.png'],

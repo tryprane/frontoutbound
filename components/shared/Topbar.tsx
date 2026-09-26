@@ -57,7 +57,7 @@ export function Topbar() {
           </Avatar>
           <div className="hidden text-left sm:block pr-2">
             <div className="text-sm font-bold text-[#121316] leading-tight">
-              {session?.user?.name || 'Outreach Admin'}
+              {session?.user?.name || 'Outbound Admin'}
             </div>
             <div className="text-[11px] text-[#62605c]">
               {session?.user?.email || 'Operations workspace'}

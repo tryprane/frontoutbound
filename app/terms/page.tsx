@@ -5,7 +5,7 @@ import { LegalPage } from '@/components/legal/LegalPage'
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description:
-    'The agreement governing use of the OutreachOS outbound email platform, including acceptable use and customer obligations.',
+    'The agreement governing use of the OutboundOS outbound email platform, including acceptable use and customer obligations.',
 }
 
 export default function TermsOfServicePage() {
@@ -13,14 +13,14 @@ export default function TermsOfServicePage() {
     <LegalPage title="Terms of Service" effectiveDate="6 August 2026">
       <p>
         These terms form a binding agreement between <strong>Femur</strong> (&ldquo;we&rdquo;,
-        &ldquo;us&rdquo;) and the organization that registers for OutreachOS
+        &ldquo;us&rdquo;) and the organization that registers for OutboundOS
         (&ldquo;you&rdquo;). By creating an account or using the Service you accept them. If you
         are accepting on behalf of a company, you confirm you have authority to bind it.
       </p>
 
       <h2>1. The Service</h2>
       <p>
-        OutreachOS is a hosted platform for running outbound email campaigns from mailboxes you
+        OutboundOS is a hosted platform for running outbound email campaigns from mailboxes you
         connect and own. It provides campaign scheduling, sender rotation, mailbox warmup, reply
         and bounce handling, and delivery reporting. We may change, add, or remove features; we
         will not materially degrade a paid feature during a paid term without notice.

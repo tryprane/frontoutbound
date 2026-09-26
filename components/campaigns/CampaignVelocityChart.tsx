@@ -70,7 +70,7 @@ export function CampaignVelocityChart({
               <Send className="h-3 w-3" />
             </div>
             <div>
-              <div className="text-[10px] uppercase font-mono font-bold text-[#62605c]">Today's Cap</div>
+              <div className="text-[10px] uppercase font-mono font-bold text-[#62605c]">Today&apos;s Cap</div>
               <div className="text-xs font-mono font-bold tabular-nums text-[#121316]">
                 {todaySent} / {todayAllowance} limit
               </div>

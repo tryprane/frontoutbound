@@ -164,7 +164,7 @@ export function Sidebar() {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-bold text-[#121316]">
-                    {session?.user?.name || 'Outreach Admin'}
+                    {session?.user?.name || 'Outbound Admin'}
                   </div>
                   <div className="truncate text-[10px] text-[#62605c]">
                     {session?.user?.email || 'Internal workspace'}
@@ -201,27 +201,11 @@ export function Sidebar() {
           <Link
             href="/dashboard"
             className="flex items-center h-10 w-full rounded-2xl transition-colors duration-200 hover:bg-[#121316]/05 overflow-hidden"
-            title="Outreach OS"
+            title="OutboundOS"
           >
-            {/* Outreach OS Brand Logo Badge (40px x 40px centered anchor) */}
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0052FF] text-white shadow-sm shadow-[#0052FF]/25">
-              <svg
-                viewBox="0 0 100 100"
-                className="h-5.5 w-5.5 text-white"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* Outer C shape */}
-                <path
-                  d="M 68 28 C 68 28, 62 14, 44 14 C 24 14, 12 28, 12 50 C 12 72, 24 86, 44 86 C 62 86, 68 72, 68 72 L 54 72 C 54 72, 48 78, 44 78 C 30 78, 22 68, 22 50 C 22 32, 30 22, 44 22 C 48 22, 54 28, 54 28 Z"
-                  fill="currentColor"
-                />
-                {/* Arrow shaft & head */}
-                <path
-                  d="M 36 44 L 60 44 L 60 36 L 86 50 L 60 64 L 60 56 L 36 56 Z"
-                  fill="currentColor"
-                />
-              </svg>
+            {/* OutboundOS Brand Logo Badge (40px x 40px centered anchor) */}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden shadow-xs">
+              <BrandIcon size="md" priority />
             </div>
 
             {/* Brand Text Lockup (Continuous interpolation) */}
@@ -232,12 +216,12 @@ export function Sidebar() {
                   : 'opacity-0 max-w-0 -translate-x-3 pointer-events-none'
               }`}
             >
-              <div className="flex items-center gap-1 leading-none">
-                <span className="font-extrabold tracking-tight uppercase text-base text-[#0B0F19]" style={{ letterSpacing: '-0.03em' }}>
-                  OUTREACH
+              <div className="flex items-center gap-0.5 leading-none">
+                <span className="font-extrabold tracking-tight lowercase text-base text-[#0B0F19]" style={{ letterSpacing: '-0.02em' }}>
+                  outbound
                 </span>
-                <span className="font-extrabold tracking-tight uppercase text-base text-[#0052FF]" style={{ letterSpacing: '-0.03em' }}>
-                  OS
+                <span className="font-extrabold tracking-tight lowercase text-base text-[#0052FF]" style={{ letterSpacing: '-0.02em' }}>
+                  os
                 </span>
               </div>
               <span className="text-[8.5px] font-bold uppercase tracking-[0.2em] text-[#64748B] mt-0.5">
@@ -341,7 +325,7 @@ export function Sidebar() {
                 }`}
               >
                 <div className="truncate text-xs font-bold text-[#121316]">
-                  {session?.user?.name || 'Outreach Admin'}
+                  {session?.user?.name || 'Outbound Admin'}
                 </div>
                 <div className="truncate text-[10px] text-[#62605c]">
                   {session?.user?.email || 'Internal workspace'}

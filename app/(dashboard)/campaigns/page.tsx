@@ -30,7 +30,7 @@ interface Campaign {
   status: 'draft' | 'active' | 'paused' | 'completed' | 'failed'
   guardrailReason: string | null
   createdAt: string
-  senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook'
+  senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook' | 'microsoft' | 'google' | 'smtp' | string
   schedulingMode: 'ANYTIME' | 'BUSINESS_HOURS'
   timezone: string | null
   businessHoursStart: string | null
@@ -349,7 +349,17 @@ export default function CampaignsPage() {
                             {camp.channel === 'GDRIVE' ? 'Drive account' : 'pooled sender'}
                             {senderCount !== 1 ? 's' : ''}
                             {camp.channel === 'EMAIL'
-                              ? ` · ${camp.senderAccountPreference}`
+                              ? ` · ${
+                                  camp.senderAccountPreference === 'smtp'
+                                    ? 'Custom SMTP'
+                                    : camp.senderAccountPreference === 'zoho'
+                                    ? 'ZOHO'
+                                    : camp.senderAccountPreference === 'microsoft' || camp.senderAccountPreference === 'outlook'
+                                    ? 'Microsoft'
+                                    : camp.senderAccountPreference === 'google' || camp.senderAccountPreference === 'gmail'
+                                    ? 'Google'
+                                    : camp.senderAccountPreference
+                                }`
                               : ''}
                           </span>
                         </div>

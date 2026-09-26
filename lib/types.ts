@@ -1,4 +1,4 @@
-/** Response shapes returned by the OutreachOS backend endpoints. */
+/** Response shapes returned by the OutboundOS backend endpoints. */
 
 export type OrgRole = 'VIEWER' | 'MEMBER' | 'ADMIN' | 'OWNER'
 export type PlatformRole = 'SUPER_ADMIN' | 'USER'

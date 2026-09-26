@@ -51,7 +51,7 @@ export default function LandingPage() {
       step: 1,
       tag: 'STEP 01 — SENDER SETUP',
       title: 'Plug in your mailboxes with automated SPF & DKIM health checks',
-      description: 'Connect Google Workspace, Microsoft 365, or SMTP inboxes in under 2 minutes. Outreach OS runs live DNS diagnostics before a single email leaves your account.',
+      description: 'Connect Google Workspace, Microsoft 365, or SMTP inboxes in under 2 minutes. OutboundOS runs live DNS diagnostics before a single email leaves your account.',
       bulletList: [
         'Automatic SPF, DKIM, & DMARC validation',
         'Provider health scoring & bounce guardrails',
@@ -135,12 +135,12 @@ export default function LandingPage() {
 
   const faqs = [
     {
-      q: 'How does Outreach OS prevent domain burnout compared to other cold email tools?',
-      a: 'Outreach OS enforces hard guardrails on daily volume (max 40 emails/day per mailbox) and runs continuous background SPF, DKIM, and DMARC verification. If a mailbox shows rising bounce rates or DNS advisories, the platform automatically throttles its queue and re-routes sends through healthy pool accounts.'
+      q: 'How does OutboundOS prevent domain burnout compared to other cold email tools?',
+      a: 'OutboundOS enforces hard guardrails on daily volume (max 40 emails/day per mailbox) and runs continuous background SPF, DKIM, and DMARC verification. If a mailbox shows rising bounce rates or DNS advisories, the platform automatically throttles its queue and re-routes sends through healthy pool accounts.'
     },
     {
       q: 'Can I connect both Google Workspace and Microsoft 365 accounts?',
-      a: 'Yes. You can mix and match Google Workspace, Outlook / Microsoft 365, Zoho, and custom SMTP/IMAP mailboxes in the same campaign sender pool. Outreach OS smoothly rotates outgoing sends across all connected providers.'
+      a: 'Yes. You can mix and match Google Workspace, Outlook / Microsoft 365, Zoho, and custom SMTP/IMAP mailboxes in the same campaign sender pool. OutboundOS smoothly rotates outgoing sends across all connected providers.'
     },
     {
       q: 'What is included in the ₹999/mo plan?',
@@ -152,7 +152,7 @@ export default function LandingPage() {
     },
     {
       q: 'Is there a money-back guarantee?',
-      a: 'Yes. We offer a 14-day 100% money-back guarantee. If Outreach OS doesn’t improve your email deliverability and streamline your outbound process within 14 days, we will issue a full refund with zero questions asked.'
+      a: 'Yes. We offer a 14-day 100% money-back guarantee. If OutboundOS doesn’t improve your email deliverability and streamline your outbound process within 14 days, we will issue a full refund with zero questions asked.'
     }
   ]
 
@@ -175,10 +175,10 @@ export default function LandingPage() {
               <a href="#pricing">Pricing</a>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <Link
                 href={status === 'authenticated' ? '/dashboard' : '/login'}
-                className="text-xs sm:text-sm font-semibold text-[#62605c] hover:text-[#121316] transition-colors hidden sm:inline-block"
+                className="text-xs sm:text-sm font-semibold text-[#62605c] hover:text-[#121316] transition-colors px-2 py-1 sm:px-0 sm:py-0 whitespace-nowrap"
               >
                 {status === 'authenticated' ? 'Dashboard' : 'Log in'}
               </Link>
@@ -212,7 +212,7 @@ export default function LandingPage() {
 
         {/* Humanized Subheadline (Point 4) */}
         <p className="text-base sm:text-lg md:text-xl text-[#52504b] max-w-3xl mx-auto mb-7 leading-relaxed font-normal px-2">
-          Outreach OS replaces your disconnected stack of Smartlead, separate warmup tools, domain health monitors, and CSV scrubbers into a single, high-deliverability platform.
+          OutboundOS replaces your disconnected stack of Smartlead, separate warmup tools, domain health monitors, and CSV scrubbers into a single, high-deliverability platform.
         </p>
 
         {/* Action Buttons */}
@@ -338,7 +338,7 @@ export default function LandingPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-[#ee382b] text-white font-bold flex items-center justify-center shrink-0">G</div>
                       <div className="min-w-0">
-                        <div className="font-bold text-[#121316] truncate">sumit@outreachos.com</div>
+                        <div className="font-bold text-[#121316] truncate">sumit@outboundos.com</div>
                         <div className="text-[#62605c] text-[11px] sm:text-xs">Google Workspace • 38/40 sent today</div>
                       </div>
                     </div>
@@ -348,7 +348,7 @@ export default function LandingPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-[#0078d4] text-white font-bold flex items-center justify-center shrink-0">M</div>
                       <div className="min-w-0">
-                        <div className="font-bold text-[#121316] truncate">alex@outreachos.io</div>
+                        <div className="font-bold text-[#121316] truncate">alex@outboundos.io</div>
                         <div className="text-[#62605c] text-[11px] sm:text-xs">Microsoft 365 • 40/40 sent today</div>
                       </div>
                     </div>
@@ -417,7 +417,7 @@ export default function LandingPage() {
           <div className="lg:col-span-8">
             <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">FOUNDER&rsquo;S NOTE</span>
             <h3 className="uneevo-serif-headline text-xl sm:text-2xl md:text-3xl lg:text-4xl text-[#121316] mb-3.5 leading-tight">
-              &ldquo;We built Outreach OS because paying $300+/mo across 4 broken tools was killing our agency economics.&rdquo;
+              &ldquo;We built OutboundOS because paying $300+/mo across 4 broken tools was killing our agency economics.&rdquo;
             </h3>
 
             {/* Price chips — scannable proof instead of buried prose */}
@@ -439,7 +439,7 @@ export default function LandingPage() {
             </div>
 
             <p className="text-[#52504b] text-sm sm:text-base leading-relaxed font-normal">
-              Every time a new client joined, our stack cost multiplied while deliverability dropped. So we built Outreach OS — one system for mailbox health, warmup, lead validation, and sequence sending.
+              Every time a new client joined, our stack cost multiplied while deliverability dropped. So we built OutboundOS — one system for mailbox health, warmup, lead validation, and sequence sending.
             </p>
 
             <div className="mt-4 flex items-center gap-3.5 pt-3.5 border-t border-[#121316]/10">
@@ -448,7 +448,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <div className="font-bold text-[#121316] text-sm">Pranjal Yadav • Femur Studio</div>
-                <div className="text-xs text-[#62605c]">Creator of Outreach OS</div>
+                <div className="text-xs text-[#62605c]">Creator of OutboundOS</div>
               </div>
             </div>
           </div>
@@ -458,7 +458,7 @@ export default function LandingPage() {
             <div className="relative rounded-2xl overflow-hidden shadow-md border border-[#121316]/10 max-w-[180px] sm:max-w-[240px] w-full bg-[#ffea00]">
               <img
                 src="/founder-pranjal.png"
-                alt="Pranjal Yadav - Creator of Outreach OS"
+                alt="Pranjal Yadav - Creator of OutboundOS"
                 className="w-full h-auto object-cover block"
               />
             </div>
@@ -519,7 +519,7 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-8 sm:py-10 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-6">
           <h2 className="uneevo-serif-headline text-2xl sm:text-4xl md:text-5xl text-[#121316] mb-2.5">
-            How Outreach OS Runs Your Cold Email Pipeline
+            How OutboundOS Runs Your Cold Email Pipeline
           </h2>
           <p className="text-[#52504b] text-sm md:text-base">
             Click through each step — mailbox setup, lead validation, sequences, reply management.
@@ -618,7 +618,7 @@ export default function LandingPage() {
               Stop Paying $228+/mo Across 4 Disconnected Tools
             </h2>
             <p className="text-[#a09e97] text-sm md:text-base">
-              Here is how Outreach OS stacks up against purchasing separate outreach, warmup, domain diagnostic, and scrubbing tools.
+              Here is how OutboundOS stacks up against purchasing separate outreach, warmup, domain diagnostic, and scrubbing tools.
             </p>
           </div>
 
@@ -652,11 +652,11 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* Outreach OS Column */}
+            {/* OutboundOS Column */}
             <div className="new-stack-col">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 mb-3 border-b border-white/10">
                 <div>
-                  <h4 className="font-bold text-white text-base md:text-lg">Outreach OS Complete System</h4>
+                  <h4 className="font-bold text-white text-base md:text-lg">OutboundOS Complete System</h4>
                   <p className="text-xs text-[#ee382b] font-semibold">Everything unified under one flat plan</p>
                 </div>
                 <span className="text-2xl font-extrabold text-white self-start sm:self-auto">₹999/mo</span>
@@ -689,7 +689,7 @@ export default function LandingPage() {
         <div className="text-center max-w-2xl mx-auto mb-7">
           <span className="text-xs font-bold tracking-widest text-[#ee382b] uppercase block mb-2">BUILT FOR OUTBOUND TEAMS</span>
           <h2 className="uneevo-serif-headline text-2xl sm:text-4xl md:text-5xl text-[#121316]">
-            Who Replaces Their Stack With Outreach OS?
+            Who Replaces Their Stack With OutboundOS?
           </h2>
         </div>
 
@@ -740,7 +740,7 @@ export default function LandingPage() {
             One Flat Price. Zero Per-Seat Upcharges.
           </h2>
           <p className="text-[#52504b] text-sm md:text-base">
-            Get complete access to Outreach OS with 30 mailboxes or accounts, 9,000 mails per month, automated warmup, and 100% deliverability monitoring.
+            Get complete access to OutboundOS with 30 mailboxes or accounts, 9,000 mails per month, automated warmup, and 100% deliverability monitoring.
           </p>
         </div>
 
@@ -886,9 +886,12 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Giant Cropped Wordmark */}
+        {/* ========================================================================= */}
+        {/* [BRAND LOGO PLACEHOLDER] - OUTBOUNDOS FOOTER WORDMARK                     */}
+        {/* Replace or style with updated OutboundOS brand typography / logo asset    */}
+        {/* ========================================================================= */}
         <div className="footer-wordmark">
-          OUTREACH OS
+          OUTBOUNDOS
         </div>
       </footer>
     </div>

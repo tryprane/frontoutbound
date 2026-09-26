@@ -60,7 +60,7 @@ interface CampaignDetail {
   timezone: string | null
   businessHoursStart: string | null
   businessHoursEnd: string | null
-  senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook'
+  senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook' | 'microsoft' | 'google' | 'smtp' | string
   sequenceEnabled?: boolean
   sequenceSteps?: SequenceStepDraft[]
   subjectTemplate: string | null
