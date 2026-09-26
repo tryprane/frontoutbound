@@ -5,6 +5,7 @@ import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Check, KeyRound, ShieldCheck } from 'lucide-react'
 import { FormEvent, MouseEvent, useState, useEffect } from 'react'
+import { BrandLogo } from '@/components/shared/BrandLogo'
 
 type Currency = 'INR' | 'USD'
 
@@ -73,7 +74,7 @@ export default function GetStartedPage() {
   return (
     <main className="access-page">
       <nav className="landing-nav">
-        <Link href="/" className="landing-brand" aria-label="OutboundOS home"><span className="landing-brand-mark">OS</span><span>OutboundOS</span></Link>
+        <BrandLogo href="/" size="sm" priority />
         <Link href="/" className="access-back"><ArrowLeft size={16} /> Back to home</Link>
       </nav>
       <section className="access-shell" aria-labelledby="access-title">
