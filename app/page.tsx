@@ -175,10 +175,10 @@ export default function LandingPage() {
               <a href="#pricing">Pricing</a>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <Link
                 href={status === 'authenticated' ? '/dashboard' : '/login'}
-                className="text-xs sm:text-sm font-semibold text-[#62605c] hover:text-[#121316] transition-colors hidden sm:inline-block"
+                className="text-xs sm:text-sm font-semibold text-[#62605c] hover:text-[#121316] transition-colors px-2 py-1 sm:px-0 sm:py-0 whitespace-nowrap"
               >
                 {status === 'authenticated' ? 'Dashboard' : 'Log in'}
               </Link>
