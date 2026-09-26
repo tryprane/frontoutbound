@@ -26,7 +26,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-[#f5f4ef] px-3 py-3 sm:px-4 sm:py-4 md:px-4 md:py-4 lg:px-6 lg:py-6">
       <CommandPalette />
       <FloatingSearchButton />
-      <div className="mx-auto flex max-w-[1600px] min-w-0 flex-col gap-3 sm:gap-4 md:flex-row md:gap-4 lg:gap-5 xl:gap-6">
+      <div className="mx-auto flex max-w-[1600px] min-w-0 flex-col gap-3 sm:gap-4 md:flex-row md:gap-4 lg:gap-5 xl:gap-6 items-start">
         <Sidebar />
         <main className="min-w-0 flex-1">
           <div className="min-w-0 pt-1">{children}</div>
