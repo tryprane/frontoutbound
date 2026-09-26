@@ -13,6 +13,11 @@ interface BrandLogoProps {
   priority?: boolean
 }
 
+// =========================================================================
+// [BRAND LOGO PLACEHOLDER] - OUTBOUNDOS ICON
+// TODO: Replace this vector SVG or insert your updated OutboundOS icon/logo here.
+// When you have the updated logo SVG/PNG, update BrandIcon or replace with an <Image /> component.
+// =========================================================================
 export function BrandIcon({
   size = 'md',
   className = '',
@@ -38,7 +43,7 @@ export function BrandIcon({
         className="w-full h-full drop-shadow-xs"
       >
         <defs>
-          <linearGradient id="outreachBlueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="outboundBlueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0052FF" />
             <stop offset="100%" stopColor="#0038D1" />
           </linearGradient>
@@ -57,7 +62,7 @@ export function BrandIcon({
              C 22 32, 30 22, 44 22
              C 48 22, 54 28, 54 28
              Z"
-          fill="url(#outreachBlueGrad)"
+          fill="url(#outboundBlueGrad)"
         />
 
         {/* Arrow shaft & head */}
@@ -70,13 +75,18 @@ export function BrandIcon({
              L 60 56
              L 36 56
              Z"
-          fill="url(#outreachBlueGrad)"
+          fill="url(#outboundBlueGrad)"
         />
       </svg>
     </div>
   )
 }
 
+// =========================================================================
+// [BRAND LOGO PLACEHOLDER] - OUTBOUNDOS FULL LOGO LOCKUP
+// TODO: Replace typography lockup with an updated OutboundOS logo image / SVG
+// if preferred over text + vector icon.
+// =========================================================================
 export function BrandLogo({
   variant = 'horizontal',
   theme = 'light',
@@ -107,7 +117,7 @@ export function BrandLogo({
               } ${theme === 'dark' ? 'text-white' : 'text-[#0B0F19]'}`}
               style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.03em' }}
             >
-              OUTREACH
+              OUTBOUND
             </span>
             <span
               className={`font-black tracking-tight uppercase text-[#0052FF] ${

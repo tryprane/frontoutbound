@@ -164,7 +164,7 @@ export function Sidebar() {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-bold text-[#121316]">
-                    {session?.user?.name || 'Outreach Admin'}
+                    {session?.user?.name || 'Outbound Admin'}
                   </div>
                   <div className="truncate text-[10px] text-[#62605c]">
                     {session?.user?.email || 'Internal workspace'}
@@ -201,9 +201,12 @@ export function Sidebar() {
           <Link
             href="/dashboard"
             className="flex items-center h-10 w-full rounded-2xl transition-colors duration-200 hover:bg-[#121316]/05 overflow-hidden"
-            title="Outreach OS"
+            title="OutboundOS"
           >
-            {/* Outreach OS Brand Logo Badge (40px x 40px centered anchor) */}
+            {/* ========================================================================= */}
+            {/* [BRAND LOGO PLACEHOLDER] - OUTBOUNDOS DESKTOP SIDEBAR BADGE               */}
+            {/* TODO: Replace this SVG / badge with the updated OutboundOS brand logo icon */}
+            {/* ========================================================================= */}
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0052FF] text-white shadow-sm shadow-[#0052FF]/25">
               <svg
                 viewBox="0 0 100 100"
@@ -234,7 +237,7 @@ export function Sidebar() {
             >
               <div className="flex items-center gap-1 leading-none">
                 <span className="font-extrabold tracking-tight uppercase text-base text-[#0B0F19]" style={{ letterSpacing: '-0.03em' }}>
-                  OUTREACH
+                  OUTBOUND
                 </span>
                 <span className="font-extrabold tracking-tight uppercase text-base text-[#0052FF]" style={{ letterSpacing: '-0.03em' }}>
                   OS
@@ -341,7 +344,7 @@ export function Sidebar() {
                 }`}
               >
                 <div className="truncate text-xs font-bold text-[#121316]">
-                  {session?.user?.name || 'Outreach Admin'}
+                  {session?.user?.name || 'Outbound Admin'}
                 </div>
                 <div className="truncate text-[10px] text-[#62605c]">
                   {session?.user?.email || 'Internal workspace'}

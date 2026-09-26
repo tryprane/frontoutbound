@@ -1312,7 +1312,7 @@ export function AddZohoView({
         <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 space-y-1">
           <div className="font-bold flex items-center gap-1.5 text-amber-950">
             <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-            <span>If Zoho says "Cookies are disabled for your browser":</span>
+            <span>If Zoho says &ldquo;Cookies are disabled for your browser&rdquo;:</span>
           </div>
           <ul className="list-disc list-inside space-y-0.5 pl-1 text-amber-800">
             <li>Ensure <strong>third-party cookies</strong> are allowed for Zoho in your browser settings (or disable Brave Shields / tracking blockers for Zoho).</li>

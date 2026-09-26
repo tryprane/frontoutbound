@@ -66,7 +66,7 @@ export default function CsvDetailPage() {
   const pageStart = data?.pagination?.pageStart || 0
   const pageEnd = data?.pagination?.pageEnd || 0
 
-  const columnMap = (data?.columnMap || {}) as ColumnMapping
+  const columnMap = useMemo(() => (data?.columnMap || {}) as ColumnMapping, [data?.columnMap])
 
   // Dynamically compute all columns to show in table based on mapped bindings + CSV headers
   const displayColumns = useMemo(() => {
@@ -139,7 +139,7 @@ export default function CsvDetailPage() {
     }
 
     return cols
-  }, [columnMap, data?.mappedColumns, csvFile.rows])
+  }, [data, csvFile.rows])
 
   const visiblePages = useMemo(() => {
     return Array.from({ length: totalPages }, (_, index) => index + 1).filter((pageNumber) => {

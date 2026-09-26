@@ -70,17 +70,6 @@ function LoginFormContent() {
     }
   }, [initialCode])
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      const callbackUrl = getCallbackUrl()
-      if (callbackUrl.startsWith('http')) {
-        window.location.href = callbackUrl
-      } else {
-        router.replace(callbackUrl)
-      }
-    }
-  }, [status, router])
-
   const getCallbackUrl = () => {
     if (typeof window === 'undefined') return '/dashboard'
     const callbackUrl = searchParams.get('callbackUrl')
@@ -102,6 +91,17 @@ function LoginFormContent() {
 
     return `${window.location.origin}/dashboard`
   }
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const callbackUrl = getCallbackUrl()
+      if (callbackUrl.startsWith('http')) {
+        window.location.href = callbackUrl
+      } else {
+        router.replace(callbackUrl)
+      }
+    }
+  }, [status, router])
 
   // Handle Credentials Sign In
   const validateSignIn = (): boolean => {
@@ -418,7 +418,7 @@ function LoginFormContent() {
                       className="text-2xl text-[#121316] leading-tight"
                       style={{ fontFamily: "'Zoho Puvi','ZohoPuvi',-apple-system,sans-serif", fontWeight: 700 }}
                     >
-                      Sign in to Outreach OS
+                      Sign in to OutboundOS
                     </h2>
                     <p className="text-sm text-[#52504b] mt-1 leading-relaxed">
                       Enter your workspace credentials to continue.
@@ -811,7 +811,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="h-screen flex items-center justify-center bg-[#f8f4ed]">
-          <div className="text-sm font-semibold text-[#62605c]">Loading Outreach OS…</div>
+          <div className="text-sm font-semibold text-[#62605c]">Loading OutboundOS…</div>
         </div>
       }
     >

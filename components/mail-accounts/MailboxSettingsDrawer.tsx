@@ -545,7 +545,7 @@ export function MailboxSettingsDrawer({
                   <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-gray-50/70 border border-gray-100">
                     <div>
                       <div className="text-sm font-semibold text-gray-900">Sender Display Name</div>
-                      <div className="text-xs text-gray-500">Shown as the "From" name in recipient inboxes</div>
+                      <div className="text-xs text-gray-500">Shown as the &ldquo;From&rdquo; name in recipient inboxes</div>
                     </div>
                     <div className="text-sm text-gray-600 font-medium truncate max-w-[200px]">
                       {account.displayName || '—'}

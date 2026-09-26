@@ -149,7 +149,7 @@ export function TemplateEditor({
               <div className="flex items-center gap-3 rounded-[16px] bg-[#faf8f4] border border-[#121316]/08 p-4 text-xs text-[#62605c]">
                 <CornerDownRight className="h-4 w-4 text-[#ee382b] shrink-0" />
                 <div>
-                  <span className="font-bold text-[#121316]">In-Thread Reply:</span> Follow-up messages automatically send in the same email thread using the initial email's subject line (<code>Re: &lt;Step 1 Subject&gt;</code>).
+                  <span className="font-bold text-[#121316]">In-Thread Reply:</span> Follow-up messages automatically send in the same email thread using the initial email&apos;s subject line (<code>Re: &lt;Step 1 Subject&gt;</code>).
                 </div>
               </div>
             )}

@@ -127,7 +127,7 @@ export function GmailImapSmtpForm({ onAccountAdded }: GmailImapSmtpFormProps) {
       <div className="grid gap-4 sm:grid-cols-2" style={{ marginBottom: '16px' }}>
         <div>
           <label style={labelStyle}>Display Name</label>
-          <input style={inputStyle} placeholder="e.g. Outreach Inbox 2" value={form.displayName} onChange={set('displayName')} />
+          <input style={inputStyle} placeholder="e.g. Outbound Inbox 2" value={form.displayName} onChange={set('displayName')} />
         </div>
 
         <div>

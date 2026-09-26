@@ -1,7 +1,7 @@
 # frontoutbound
 
-Standalone Next.js frontend for **OutreachOS**. This repo contains only the UI —
-every page fetches its data from the OutreachOS backend (the `outbound` repo's
+Standalone Next.js frontend for **OutboundOS**. This repo contains only the UI —
+every page fetches its data from the OutboundOS backend (the `outbound` repo's
 `apps/web` deployment) over HTTP. There is no database client, no queue worker,
 and no mail transport in here.
 

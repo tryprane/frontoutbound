@@ -5,20 +5,20 @@ import { LegalPage } from '@/components/legal/LegalPage'
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
-    'How OutreachOS collects, uses, stores, and shares personal data, including data accessed through Google APIs.',
+    'How OutboundOS collects, uses, stores, and shares personal data, including data accessed through Google APIs.',
 }
 
 export default function PrivacyPolicyPage() {
   return (
     <LegalPage title="Privacy Policy" effectiveDate="6 August 2026">
       <p>
-        This policy explains what personal data OutreachOS (&ldquo;we&rdquo;, &ldquo;the
+        This policy explains what personal data OutboundOS (&ldquo;we&rdquo;, &ldquo;the
         Service&rdquo;) collects, why we collect it, how long we keep it, and who it is shared
         with. It applies to <Link href="/">prane.one</Link> and all associated subdomains and
         APIs.
       </p>
       <p>
-        OutreachOS is a business-to-business outbound email platform. Our customers are
+        OutboundOS is a business-to-business outbound email platform. Our customers are
         organizations who connect their own mailboxes, upload their own contact lists, and send
         their own campaigns. For the personal data inside those contact lists and mailboxes, the
         customer is the data controller and we act as a data processor on their instructions.
@@ -80,7 +80,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>3. How we use Google user data</h2>
       <p>
-        OutreachOS requests the following Google OAuth scopes. Each is used only for the purpose
+        OutboundOS requests the following Google OAuth scopes. Each is used only for the purpose
         stated:
       </p>
       <ul>
@@ -96,7 +96,7 @@ export default function PrivacyPolicyPage() {
         <li>
           <code>drive.file</code> &mdash; where you use the Google Drive channel, to upload the
           file you choose into your own Drive, and to grant read access on that file to the
-          recipients you specify. This scope is limited to files created through OutreachOS: we
+          recipients you specify. This scope is limited to files created through OutboundOS: we
           cannot see, list, or access anything else in your Drive.
         </li>
         <li>
@@ -105,7 +105,7 @@ export default function PrivacyPolicyPage() {
         </li>
       </ul>
       <p>
-        <strong>Limited Use disclosure.</strong> OutreachOS&rsquo;s use and transfer of
+        <strong>Limited Use disclosure.</strong> OutboundOS&rsquo;s use and transfer of
         information received from Google APIs to any other app adheres to the{' '}
         <a
           href="https://developers.google.com/terms/api-services-user-data-policy"
@@ -199,13 +199,13 @@ export default function PrivacyPolicyPage() {
         seven days.
       </p>
       <p>
-        If you are a recipient of a message sent through OutreachOS and want your data removed,
+        If you are a recipient of a message sent through OutboundOS and want your data removed,
         contact the sender named in that message &mdash; they control that list. If you cannot
         reach them, write to us and we will route your request and add you to our global
         suppression list.
       </p>
       <p>
-        You can revoke OutreachOS&rsquo;s access to your Google account at any time at{' '}
+        You can revoke OutboundOS&rsquo;s access to your Google account at any time at{' '}
         <a href="https://myaccount.google.com/permissions" target="_blank" rel="noreferrer">
           myaccount.google.com/permissions
         </a>

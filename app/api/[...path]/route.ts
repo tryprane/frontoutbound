@@ -1,5 +1,5 @@
 /**
- * Reverse proxy for every `/api/*` request, forwarding to the OutreachOS
+ * Reverse proxy for every `/api/*` request, forwarding to the OutboundOS
  * backend (the `outbound` repo's apps/web deployment).
  *
  * This replaces the `/api/:path*` entry that used to live in next.config.js
@@ -176,7 +176,7 @@ async function proxy(request: NextRequest) {
     console.error('[api proxy]', request.method, incoming.pathname, error)
     return Response.json(
       {
-        error: 'The OutreachOS backend could not be reached.',
+        error: 'The OutboundOS backend could not be reached.',
         code: 'API_UNREACHABLE',
       },
       { status: 502 }

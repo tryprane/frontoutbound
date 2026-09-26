@@ -73,12 +73,12 @@ export default function GetStartedPage() {
   return (
     <main className="access-page">
       <nav className="landing-nav">
-        <Link href="/" className="landing-brand" aria-label="OutreachOS home"><span className="landing-brand-mark">OS</span><span>OutreachOS</span></Link>
+        <Link href="/" className="landing-brand" aria-label="OutboundOS home"><span className="landing-brand-mark">OS</span><span>OutboundOS</span></Link>
         <Link href="/" className="access-back"><ArrowLeft size={16} /> Back to home</Link>
       </nav>
       <section className="access-shell" aria-labelledby="access-title">
         <div className="access-intro">
-          <span className="landing-kicker">OutreachOS access</span>
+          <span className="landing-kicker">OutboundOS access</span>
           <h1 id="access-title">Give your outbound work one reliable home.</h1>
           <p>Choose your preferred currency, then request access to campaigns, mailbox control, warmup, and response handling.</p>
           <div className="access-assurance"><ShieldCheck size={18} /> No payment is collected on this page yet.</div>
@@ -89,7 +89,7 @@ export default function GetStartedPage() {
             <button type="button" className={!isInr ? 'is-active' : ''} onClick={() => { setCurrency('USD'); setMessage('') }}>USD</button>
           </div>
           <div className="access-plan">
-            <div><span>OutreachOS</span><h2>{price}<small>/ month</small></h2></div>
+            <div><span>OutboundOS</span><h2>{price}<small>/ month</small></h2></div>
             <span className="access-plan-label">Monthly access</span>
           </div>
           <ul className="access-includes">
