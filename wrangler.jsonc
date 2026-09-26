@@ -26,9 +26,9 @@
   // existing origin: non-API paths are served by the Worker, while /api/*
   // paths are forwarded by app/api/[...path]/route.ts to API_ORIGIN (which
   // must point at the VPS through a separate grey-cloud subdomain such as
-  // api-origin.prane.one).
+  // api-origin.outboundoslabs.com).
   "routes": [
-    { "pattern": "prane.one/*", "zone_name": "prane.one" }
+    { "pattern": "outboundoslabs.com/*", "zone_name": "outboundoslabs.com" }
   ],
 
   // Runtime variables. API_ORIGIN is read by the /api proxy on every request,

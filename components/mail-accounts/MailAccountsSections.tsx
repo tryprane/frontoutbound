@@ -710,16 +710,14 @@ export function AccountsView(props: {
                             <span
                               className={`px-2 py-0.5 rounded-full border text-[11px] font-medium flex items-center gap-1 shrink-0 ${
                                 account.trulyInboxStatus === 'active' ||
-                                account.trulyInboxStatus === 'warming' ||
-                                account.warmupStatus === 'WARMING'
+                                account.trulyInboxStatus === 'warming'
                                   ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                                   : 'bg-green-50 text-green-700 border border-green-100'
                               }`}
                             >
                               <Sparkles className="h-3 w-3 text-[#10B981]" />
                               {account.trulyInboxStatus === 'active' ||
-                              account.trulyInboxStatus === 'warming' ||
-                              account.warmupStatus === 'WARMING'
+                              account.trulyInboxStatus === 'warming'
                                 ? 'TrulyInbox Warming'
                                 : 'TrulyInbox'}
                             </span>

@@ -15,7 +15,7 @@ Set `API_ORIGIN` to the backend origin. `app/api/[...path]/route.ts` forwards
 every `/api/*` request to that host:
 
 ```
-API_ORIGIN=https://api.example.com
+API_ORIGIN=https://api-origin.outboundoslabs.com
 ```
 
 The browser only ever sees this frontend's own origin, so:
@@ -90,6 +90,11 @@ dashboard would be wiped on the next deploy, because `wrangler.jsonc` declares
 `"vars": {}` and Wrangler treats that block as authoritative; secrets are left
 alone. It is not committed — this repo is public. `public/_headers` already marks
 `/_next/static/*` immutable.
+
+The production Worker route is `outboundoslabs.com/*`. Its `API_ORIGIN` secret
+must include the `https://` scheme and point to
+`https://api-origin.outboundoslabs.com` (the separate backend hostname), not
+the frontend hostname or the non-existent `api-origin.outboundos.com`.
 
 #### Cloudflare project settings
 

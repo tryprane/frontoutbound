@@ -84,6 +84,18 @@ curl -X POST "$BASE_URL/api/v1/email/send" \\
 const GET_REQUEST_CURL = `curl "$BASE_URL/api/v1/requests/REQUEST_ID" \\
   -H "Authorization: Bearer YOUR_API_KEY"`
 
+const CHECK_REPLY_CURL = `curl "$BASE_URL/api/v1/email/REQUEST_ID/reply-status" \\
+  -H "Authorization: Bearer YOUR_API_KEY"`
+
+const FOLLOW_UP_CURL = `curl -X POST "$BASE_URL/api/v1/email/follow-up" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: my-follow-up-1" \\
+  -d '{
+    "messageId": "REQUEST_ID",
+    "text": "Hi, just following up on my last note."
+  }'`
+
 const REPLY_EMAIL_CURL = `curl -X POST "$BASE_URL/api/v1/email/reply" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
@@ -416,6 +428,24 @@ export default function ApiManagementPage() {
               <p className="text-xs text-white/70">Use reply.mailboxMessageId from the email.reply.received webhook. The reply uses that message’s mailbox and thread. Supply html or text; subject is optional.</p>
               <pre className="font-mono text-xs overflow-x-auto whitespace-pre-wrap">{REPLY_EMAIL_CURL}</pre>
               <p className="text-xs text-white/70">Keep the same idempotency key and payload when retrying. If omitted, one automatic reply per inbound message is allowed per API key. A changed payload returns 409. A successful call returns requestId and status: replied; poll the request endpoint if processing.</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#121316] text-white space-y-2.5">
+              <div className="flex items-center justify-between gap-2 text-xs font-mono">
+                <span className="font-bold">GET /api/v1/email/:id/reply-status</span>
+                <button type="button" onClick={() => copySnippet(CHECK_REPLY_CURL, 'check-reply')} className="rounded-lg bg-white/10 px-2 py-1" aria-label="Copy reply status example">{copiedSnippet === 'check-reply' ? 'Copied' : 'Copy'}</button>
+              </div>
+              <p className="text-xs text-white/70">Use the original send requestId (or sentMailId/providerMessageId) after delivery. A false result means no reply has been found in synced mail; check lastMailboxSyncAt before acting.</p>
+              <pre className="font-mono text-xs overflow-x-auto whitespace-pre-wrap">{CHECK_REPLY_CURL}</pre>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#121316] text-white space-y-2.5">
+              <div className="flex items-center justify-between gap-2 text-xs font-mono">
+                <span className="font-bold">POST /api/v1/email/follow-up</span>
+                <button type="button" onClick={() => copySnippet(FOLLOW_UP_CURL, 'follow-up')} className="rounded-lg bg-white/10 px-2 py-1" aria-label="Copy follow-up example">{copiedSnippet === 'follow-up' ? 'Copied' : 'Copy'}</button>
+              </div>
+              <p className="text-xs text-white/70">Queues from the original mailbox and thread only if no reply has been recorded. The worker checks again before sending. Use a stable Idempotency-Key when retrying.</p>
+              <pre className="font-mono text-xs overflow-x-auto whitespace-pre-wrap">{FOLLOW_UP_CURL}</pre>
             </div>
 
             {/* GET /api/v1/requests/:id Example */}

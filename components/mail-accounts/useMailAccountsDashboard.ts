@@ -501,9 +501,25 @@ export function useMailAccountsDashboard() {
         showToast('error', data.error || 'Failed to connect TrulyInbox')
         return
       }
-      showToast('success', 'TrulyInbox connected — click "Start Warmup" to activate warmup')
+      setPendingTrulyInboxApiKeys((prev) => ({ ...prev, [id]: '' }))
+      setAccountsData((prev) => ({
+        ...prev,
+        items: prev.items.map((item) => item.id === id ? {
+          ...item,
+          trulyInboxConnected: true,
+          trulyInboxHasApiKey: true,
+          trulyInboxEmailAccountId: data.trulyInboxEmailAccountId,
+          trulyInboxStatus: data.trulyInboxStatus || 'connected',
+          trulyInboxLastError: null,
+        } : item),
+      }))
+      showToast('success', data.warmupStarted
+        ? 'TrulyInbox key updated; warmup is already active'
+        : 'TrulyInbox connected — click "Start Warmup" to activate warmup')
       void loadAll(true)
       void loadMailAccountDetail(id)
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'Could not reach TrulyInbox')
     } finally {
       setTrulyInboxConnecting((prev) => ({ ...prev, [id]: false }))
     }
@@ -538,6 +554,8 @@ export function useMailAccountsDashboard() {
       }
       void loadAll(true)
       void loadMailAccountDetail(id)
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'Could not start TrulyInbox warmup')
     } finally {
       setTrulyInboxStarting((prev) => ({ ...prev, [id]: false }))
     }

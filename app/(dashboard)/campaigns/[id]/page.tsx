@@ -36,6 +36,7 @@ import { CampaignPerformanceFunnel } from '@/components/campaigns/CampaignPerfor
 import { CampaignVelocityChart } from '@/components/campaigns/CampaignVelocityChart'
 import { CampaignSequenceTree } from '@/components/campaigns/CampaignSequenceTree'
 import { CampaignSenderFleet } from '@/components/campaigns/CampaignSenderFleet'
+import { CAMPAIGN_TIMEZONE_PRESETS } from '@/components/campaigns/timezonePresets'
 
 type CampaignChannel = 'EMAIL' | 'WHATSAPP' | 'GDRIVE'
 
@@ -55,6 +56,10 @@ interface CampaignDetail {
   guardrailReason: string | null
   createdAt: string
   gradualSendingEnabled: boolean
+  schedulingMode: 'ANYTIME' | 'BUSINESS_HOURS'
+  timezone: string | null
+  businessHoursStart: string | null
+  businessHoursEnd: string | null
   senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook' | 'microsoft' | 'google' | 'smtp' | string
   sequenceEnabled?: boolean
   sequenceSteps?: SequenceStepDraft[]
@@ -155,6 +160,8 @@ interface CampaignDetail {
   } | null
   stats: {
     sent: number
+    initialSent: number
+    followUpsSent: number
     failed: number
     bounced: number
     replies: number
@@ -208,6 +215,13 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
   const [showAllSenderPool, setShowAllSenderPool] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [scheduleMode, setScheduleMode] = useState<'ANYTIME' | 'BUSINESS_HOURS'>('ANYTIME')
+  const [scheduleTimezone, setScheduleTimezone] = useState('Asia/Kolkata')
+  const [scheduleStart, setScheduleStart] = useState('09:00')
+  const [scheduleEnd, setScheduleEnd] = useState('17:00')
+  const [scheduleSaving, setScheduleSaving] = useState(false)
+  const [scheduleMessage, setScheduleMessage] = useState<string | null>(null)
+  const [customScheduleTimezone, setCustomScheduleTimezone] = useState(false)
 
   const syncSequenceDraftFromCampaign = (data: CampaignDetail) => {
     if (data.channel !== 'EMAIL' || sequenceDirty) return
@@ -278,6 +292,12 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
         })
         if (view === 'full') {
           syncSequenceDraftFromCampaign(data)
+          setScheduleMode(data.schedulingMode || 'ANYTIME')
+          const loadedTimezone = data.timezone || 'Asia/Kolkata'
+          setScheduleTimezone(loadedTimezone)
+          setCustomScheduleTimezone(!CAMPAIGN_TIMEZONE_PRESETS.some((preset) => preset.value === loadedTimezone))
+          setScheduleStart(data.businessHoursStart || '09:00')
+          setScheduleEnd(data.businessHoursEnd || '17:00')
         }
         setLoading(false)
         setRefreshing(false)
@@ -444,6 +464,47 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
     }
   }
 
+  const handleScheduleSave = async () => {
+    if (!campaign) return
+    setScheduleSaving(true)
+    setScheduleMessage(null)
+    try {
+      const response = await fetch(`/api/campaigns/${campaign.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schedulingMode: scheduleMode,
+          timezone: scheduleMode === 'BUSINESS_HOURS' ? scheduleTimezone : null,
+          businessHoursStart: scheduleMode === 'BUSINESS_HOURS' ? scheduleStart : null,
+          businessHoursEnd: scheduleMode === 'BUSINESS_HOURS' ? scheduleEnd : null,
+        }),
+      })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(payload?.error || 'Failed to update sending schedule')
+      setScheduleMessage('Sending hours updated. Future queued emails are being replanned.')
+      await fetchCampaign('full')
+    } catch (error) {
+      setScheduleMessage(error instanceof Error ? error.message : 'Failed to update sending schedule')
+    } finally {
+      setScheduleSaving(false)
+    }
+  }
+
+  const handleScheduleTimezonePreset = (value: string) => {
+    if (value === '__custom__') {
+      setCustomScheduleTimezone(true)
+      return
+    }
+    setCustomScheduleTimezone(false)
+    setScheduleTimezone(value)
+    const preset = CAMPAIGN_TIMEZONE_PRESETS.find((item) => item.value === value)
+    if (preset?.hours) {
+      const [start, end] = preset.hours.split('-')
+      setScheduleStart(start)
+      setScheduleEnd(end)
+    }
+  }
+
   if (loading || !campaign) {
     return (
       <div className="flex h-72 items-center justify-center">
@@ -569,7 +630,7 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
               {campaign.progress}%
             </div>
             <div className="text-[10px] text-[#62605c] mt-0.5 truncate">
-              {totalSent} / {rowCount} sent
+              {campaign.stats?.initialSent ?? totalSent} / {rowCount} prospects
             </div>
           </div>
 
@@ -1072,6 +1133,38 @@ export default function CampaignDetailPage({ params }: { params?: { id?: string 
             <div className="text-xs font-mono font-bold text-[#8a8780]">
               Next Run: {campaign.upcomingSchedule?.nextRunAt ? formatDateTime(campaign.upcomingSchedule.nextRunAt) : 'Pending Cycle'}
             </div>
+          </div>
+
+          <div className="rounded-[20px] border border-[#121316]/08 bg-[#faf8f4] p-5 space-y-4">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-widest text-[#121316]">Campaign sending hours</div>
+              <p className="mt-1 text-xs text-[#62605c]">This can be changed while the campaign is running. Only future sends are replanned.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <select value={scheduleMode} onChange={(event) => setScheduleMode(event.target.value as 'ANYTIME' | 'BUSINESS_HOURS')} className="rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm">
+                <option value="ANYTIME">Anytime (24/7)</option>
+                <option value="BUSINESS_HOURS">Business hours</option>
+              </select>
+              {scheduleMode === 'BUSINESS_HOURS' && (
+                <select value={customScheduleTimezone ? '__custom__' : scheduleTimezone} onChange={(event) => handleScheduleTimezonePreset(event.target.value)} className="rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm">
+                  {CAMPAIGN_TIMEZONE_PRESETS.map((preset) => <option key={preset.value} value={preset.value}>{preset.label}</option>)}
+                </select>
+              )}
+            </div>
+            {scheduleMode === 'BUSINESS_HOURS' && customScheduleTimezone && (
+              <input value={scheduleTimezone} onChange={(event) => setScheduleTimezone(event.target.value)} placeholder="e.g. Asia/Kolkata" className="w-full rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm" />
+            )}
+            {scheduleMode === 'BUSINESS_HOURS' && (
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs text-[#62605c]">Start<input type="time" value={scheduleStart} onChange={(event) => setScheduleStart(event.target.value)} className="mt-1 block w-full rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm" /></label>
+                <label className="text-xs text-[#62605c]">End<input type="time" value={scheduleEnd} onChange={(event) => setScheduleEnd(event.target.value)} className="mt-1 block w-full rounded-xl border border-[#121316]/12 bg-white px-3 py-2.5 text-sm" /></label>
+              </div>
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs text-[#62605c]">Current: {campaign.schedulingMode === 'BUSINESS_HOURS' ? `${campaign.businessHoursStart}–${campaign.businessHoursEnd} · ${campaign.timezone}` : 'Anytime (24/7)'}</span>
+              <button type="button" onClick={handleScheduleSave} disabled={scheduleSaving} className="rounded-full bg-[#121316] px-5 py-2.5 text-xs font-bold text-white disabled:opacity-50">{scheduleSaving ? 'Saving…' : 'Save sending hours'}</button>
+            </div>
+            {scheduleMessage && <div className="text-xs font-medium text-[#62605c]">{scheduleMessage}</div>}
           </div>
 
           {campaign.upcomingSchedule?.slots?.length ? (

@@ -199,8 +199,7 @@ export function MailboxSettingsDrawer({
   const isTrulyWarming =
     account.trulyInboxStatus === 'active' ||
     account.trulyInboxStatus === 'warming' ||
-    account.trulyInboxStatus === 'enabled' ||
-    (Boolean(account.trulyInboxConnected) && account.warmupStatus === 'WARMING')
+    account.trulyInboxStatus === 'enabled'
 
   const copyEmailToClipboard = () => {
     if (!account.email) return
@@ -500,7 +499,7 @@ export function MailboxSettingsDrawer({
                         {account.trulyInboxConnected && (
                           <button
                             type="button"
-                            disabled={!!trulyInboxStarting[account.id] || isTrulyWarming}
+                          disabled={!!trulyInboxStarting[account.id] || !!trulyInboxConnecting[account.id] || isTrulyWarming}
                             onClick={() => handleStartTrulyInboxWarmup(account.id)}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-2xs ${
                               isTrulyWarming

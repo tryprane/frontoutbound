@@ -48,4 +48,14 @@ export type ResponseThreadDetail = {
     classification: 'interested' | 'not_interested' | 'automatic' | 'needs_review'
   }
   thread: ResponseThreadMessage[]
+  scheduledReplies: Array<{
+    id: string
+    subject: string | null
+    html: string
+    scheduledFor: string
+    status: 'PENDING' | 'PROCESSING' | 'FAILED' | 'RECONCILIATION_REQUIRED'
+    cancelReason: string | null
+    errorMessage: string | null
+    createdAt: string
+  }>
 }
