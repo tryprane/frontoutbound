@@ -189,7 +189,7 @@ export function Sidebar() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={[
-          'group/sidebar page-shell sticky top-4 lg:top-6 z-30 hidden md:flex h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] flex-col rounded-[28px] border border-white/60 px-4 py-4 select-none overflow-hidden shrink-0',
+          'group/sidebar page-shell sticky top-4 lg:top-6 z-30 hidden md:flex h-[calc(100vh-2rem)] lg:h-[calc(100vh-3rem)] self-start flex-col rounded-[28px] border border-white/60 px-4 py-4 select-none overflow-hidden shrink-0',
           'transition-[width,box-shadow,background-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[width]',
           isHovered
             ? 'w-[240px] bg-white/95 shadow-[0_25px_60px_rgba(60,45,25,0.12)]'

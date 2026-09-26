@@ -38,7 +38,7 @@ export function PraneSidebar() {
     typeof window === 'undefined' ? '/login' : `${window.location.origin}/login`
 
   return (
-    <aside className="page-shell sticky top-3 z-30 flex max-h-[calc(100svh-1.5rem)] min-w-0 flex-col rounded-[24px] border border-white/60 px-3 py-3 shadow-[0_18px_48px_rgba(60,45,25,0.08)] xl:top-6 xl:h-[calc(100vh-3rem)] xl:w-[250px] xl:shrink-0 xl:rounded-[30px] xl:px-4 xl:py-5">
+    <aside className="page-shell sticky top-3 z-30 flex max-h-[calc(100svh-1.5rem)] min-w-0 self-start flex-col rounded-[24px] border border-white/60 px-3 py-3 shadow-[0_18px_48px_rgba(60,45,25,0.08)] xl:top-6 xl:h-[calc(100vh-3rem)] xl:w-[250px] xl:shrink-0 xl:rounded-[30px] xl:px-4 xl:py-5">
       <div className="mb-4 px-2">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,#182234,#36506d)] text-sm font-semibold text-white shadow-[0_16px_38px_rgba(24,34,52,0.22)]">
