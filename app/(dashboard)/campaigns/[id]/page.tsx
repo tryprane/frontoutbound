@@ -55,7 +55,7 @@ interface CampaignDetail {
   guardrailReason: string | null
   createdAt: string
   gradualSendingEnabled: boolean
-  senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook'
+  senderAccountPreference: 'random' | 'gmail' | 'zoho' | 'outlook' | 'microsoft' | 'google' | 'smtp' | string
   sequenceEnabled?: boolean
   sequenceSteps?: SequenceStepDraft[]
   subjectTemplate: string | null

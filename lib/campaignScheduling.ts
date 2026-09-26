@@ -1,4 +1,11 @@
-export type CampaignSenderAccountPreference = 'random' | 'gmail' | 'zoho' | 'outlook'
+export type CampaignSenderAccountPreference =
+  | 'microsoft'
+  | 'google'
+  | 'smtp'
+  | 'zoho'
+  | 'random'
+  | 'outlook'
+  | 'gmail'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const MIN_INTERVAL_MS = 60_000
@@ -55,7 +62,13 @@ function getZonedParts(timeZone: string, now: Date) {
 }
 
 export function normalizeSenderAccountPreference(input: string | null | undefined): CampaignSenderAccountPreference {
-  return input === 'gmail' || input === 'zoho' || input === 'outlook' ? input : 'random'
+  const norm = (input || '').toLowerCase()
+  if (norm === 'microsoft' || norm === 'outlook') return 'microsoft'
+  if (norm === 'google' || norm === 'gmail') return 'google'
+  if (norm === 'smtp' || norm === 'smtp_imap' || norm === 'custom') return 'smtp'
+  if (norm === 'zoho') return 'zoho'
+  if (norm === 'random') return 'random'
+  return 'microsoft'
 }
 
 export function preferenceMatchesAccountType(
@@ -63,14 +76,33 @@ export function preferenceMatchesAccountType(
   accountType: string | null | undefined
 ): boolean {
   if (preference === 'random') return true
-  return accountType === preference
+  const normType = (accountType || '').toLowerCase()
+  if (preference === 'microsoft' || preference === 'outlook') {
+    return normType === 'outlook' || normType === 'microsoft' || normType === 'office365'
+  }
+  if (preference === 'google' || preference === 'gmail') {
+    return normType === 'gmail' || normType === 'google'
+  }
+  if (preference === 'smtp') {
+    return normType === 'smtp' || normType === 'smtp_imap' || normType === 'custom'
+  }
+  if (preference === 'zoho') {
+    return normType === 'zoho'
+  }
+  return normType === preference
 }
 
 export function preferencesOverlap(
   left: CampaignSenderAccountPreference,
   right: CampaignSenderAccountPreference
 ): boolean {
-  return left === 'random' || right === 'random' || left === right
+  if (left === 'random' || right === 'random') return true
+  const norm = (p: string) => {
+    if (p === 'outlook') return 'microsoft'
+    if (p === 'gmail') return 'google'
+    return p
+  }
+  return norm(left) === norm(right)
 }
 
 export function getGradualSendingPercent(

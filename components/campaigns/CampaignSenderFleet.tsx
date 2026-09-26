@@ -147,7 +147,15 @@ export function CampaignSenderFleet({
         <div className="flex items-center gap-2">
           <span className="text-[#62605c]">Rotation Strategy:</span>
           <span className="font-mono font-bold uppercase text-[#121316] bg-white border border-[#121316]/10 px-2.5 py-0.5 rounded-full">
-            {preference}
+            {preference === 'smtp'
+              ? 'Custom SMTP'
+              : preference === 'zoho'
+              ? 'ZOHO'
+              : preference === 'microsoft' || preference === 'outlook'
+              ? 'Microsoft'
+              : preference === 'google' || preference === 'gmail'
+              ? 'Google'
+              : preference}
           </span>
         </div>
         <div className="text-[11px] text-[#62605c]">

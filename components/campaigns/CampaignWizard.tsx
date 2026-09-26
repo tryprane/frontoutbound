@@ -18,6 +18,7 @@ import {
   Mail,
   Plus,
   Rocket,
+  Server,
   ShieldCheck,
   Shuffle,
   Sparkles,
@@ -30,6 +31,7 @@ import {
   Check,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { OutlookLogo, GmailLogo, ZohoLogo } from '@/components/mail-accounts/MailboxAvatar'
 import {
   getGradualSendingPercent,
   type CampaignSenderAccountPreference,
@@ -120,8 +122,15 @@ function renderSelectablePanel(options: Array<{
   icon?: ReactNode
   onClick: () => void
 }>) {
+  const gridClass =
+    options.length === 4
+      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+      : options.length === 2
+      ? 'grid-cols-1 sm:grid-cols-2'
+      : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+    <div className={`grid ${gridClass} gap-3.5`}>
       {options.map((option) => {
         return (
           <button
@@ -178,7 +187,7 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
 
   const [gradualSendingEnabled, setGradualSendingEnabled] = useState(true)
   const [senderAccountPreference, setSenderAccountPreference] =
-    useState<CampaignSenderAccountPreference>('random')
+    useState<CampaignSenderAccountPreference>('microsoft')
 
   const [subjectTemplate, setSubjectTemplate] = useState(DEFAULT_EMAIL_SUBJECT)
   const [bodyTemplate, setBodyTemplate] = useState(
@@ -777,7 +786,7 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                         <span className="text-[11px] text-[#62605c]">
-                          (Opens in new tab so you don't lose your progress)
+                          (Opens in new tab so you don&apos;t lose your progress)
                         </span>
                       </div>
                     </div>
@@ -822,25 +831,35 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
                 </label>
                 {renderSelectablePanel([
                   {
-                    key: 'random',
-                    label: 'Random Mailbox Pool',
-                    desc: 'Evenly distribute dispatch load across all connected and healthy accounts.',
-                    selected: senderAccountPreference === 'random',
-                    icon: <Shuffle className="h-4 w-4" />,
-                    onClick: () => setSenderAccountPreference('random'),
+                    key: 'microsoft',
+                    label: 'Microsoft',
+                    desc: 'Route specifically through Outlook and Microsoft 365 sender accounts.',
+                    selected: senderAccountPreference === 'microsoft' || senderAccountPreference === 'outlook',
+                    icon: <OutlookLogo className="w-4 h-4 shrink-0" />,
+                    onClick: () => setSenderAccountPreference('microsoft'),
                   },
                   {
-                    key: 'gmail',
-                    label: 'Google Workspace Only',
+                    key: 'google',
+                    label: 'Google',
                     desc: 'Route specifically through Gmail and Google Workspace sender accounts.',
-                    selected: senderAccountPreference === 'gmail',
-                    onClick: () => setSenderAccountPreference('gmail'),
+                    selected: senderAccountPreference === 'google' || senderAccountPreference === 'gmail',
+                    icon: <GmailLogo className="w-4 h-4 shrink-0" />,
+                    onClick: () => setSenderAccountPreference('google'),
+                  },
+                  {
+                    key: 'smtp',
+                    label: 'Custom SMTP',
+                    desc: 'Route specifically through Custom SMTP and IMAP sender accounts.',
+                    selected: senderAccountPreference === 'smtp',
+                    icon: <Server className="w-4 h-4 text-[#475569] shrink-0" />,
+                    onClick: () => setSenderAccountPreference('smtp'),
                   },
                   {
                     key: 'zoho',
-                    label: 'Zoho Mail Only',
+                    label: 'ZOHO',
                     desc: 'Route specifically through Zoho mail sender infrastructure.',
                     selected: senderAccountPreference === 'zoho',
+                    icon: <ZohoLogo className="w-4 h-4 shrink-0" />,
                     onClick: () => setSenderAccountPreference('zoho'),
                   },
                 ])}
@@ -1068,7 +1087,7 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
                 Compose GDrive Share Note
               </h2>
               <p className="text-xs sm:text-sm text-[#62605c]">
-                Craft the personalized message attached to Google Drive's official file share notification.
+                Craft the personalized message attached to Google Drive&apos;s official file share notification.
               </p>
             </div>
 
@@ -1320,7 +1339,17 @@ export function CampaignWizard({ initialMode = 'email' }: { initialMode?: Campai
                   {!isGDrive ? (
                     <div>
                       <span className="text-[#8a8780] block text-[10px]">Sender Pool</span>
-                      <strong className="text-[#121316] capitalize">{senderAccountPreference}</strong>
+                      <strong className="text-[#121316]">
+                        {senderAccountPreference === 'smtp'
+                          ? 'Custom SMTP'
+                          : senderAccountPreference === 'zoho'
+                          ? 'ZOHO'
+                          : senderAccountPreference === 'microsoft' || senderAccountPreference === 'outlook'
+                          ? 'Microsoft'
+                          : senderAccountPreference === 'google' || senderAccountPreference === 'gmail'
+                          ? 'Google'
+                          : senderAccountPreference}
+                      </strong>
                     </div>
                   ) : (
                     <div>
